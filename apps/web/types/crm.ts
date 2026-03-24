@@ -15,13 +15,13 @@ export type ApproachStatus =
 export type CallResultCode = ApproachStatus
 
 export const STATUS_STYLES: Record<ApproachStatus, { bg: string; text: string; dot: string }> = {
-  '未着手':      { bg: 'bg-[rgba(0,0,0,0.05)]',     text: 'text-[#6E6E73]', dot: 'bg-[#AEAEB2]' },
-  '不通':        { bg: 'bg-[rgba(255,59,48,0.1)]',  text: 'text-[#CF3131]', dot: 'bg-[#FF3B30]' },
-  '不在':        { bg: 'bg-[rgba(255,159,10,0.1)]', text: 'text-[#C07000]', dot: 'bg-[#FF9F0A]' },
-  '接続済み':    { bg: 'bg-[rgba(0,113,227,0.1)]',  text: 'text-[#0060C7]', dot: 'bg-[#0071E3]' },
-  'コール不可':  { bg: 'bg-[rgba(255,59,48,0.1)]',  text: 'text-[#CF3131]', dot: 'bg-[#FF3B30]' },
-  'アポ獲得':    { bg: 'bg-[rgba(52,199,89,0.1)]',  text: 'text-[#1A7A35]', dot: 'bg-[#34C759]' },
-  'Next Action': { bg: 'bg-[rgba(94,92,230,0.1)]',  text: 'text-[#4B48CC]', dot: 'bg-[#5E5CE6]' },
+  '未着手':      { bg: 'bg-[rgba(0,0,0,0.06)]',     text: 'text-[#6E6E73]', dot: 'bg-[#AEAEB2]' },
+  '不通':        { bg: 'bg-[rgba(255,59,48,0.13)]',  text: 'text-[#D92B1A]', dot: 'bg-[#FF3B30]' },
+  '不在':        { bg: 'bg-[rgba(255,159,10,0.13)]', text: 'text-[#C07000]', dot: 'bg-[#FF9F0A]' },
+  '接続済み':    { bg: 'bg-[rgba(0,85,255,0.1)]',    text: 'text-[#0044DD]', dot: 'bg-[#0055FF]' },
+  'コール不可':  { bg: 'bg-[rgba(255,59,48,0.13)]',  text: 'text-[#D92B1A]', dot: 'bg-[#FF3B30]' },
+  'アポ獲得':    { bg: 'bg-[rgba(0,200,83,0.12)]',   text: 'text-[#007A30]', dot: 'bg-[#00C853]' },
+  'Next Action': { bg: 'bg-[rgba(94,92,230,0.13)]',  text: 'text-[#3D3ABF]', dot: 'bg-[#5E5CE6]' },
 }
 
 export type RankConfig = { gradient: string; glow: string; color: string }

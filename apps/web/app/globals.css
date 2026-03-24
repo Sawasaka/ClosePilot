@@ -1,30 +1,35 @@
 @import "tailwindcss";
 
 @theme {
-  /* ===== Apple Design System ===== */
+  /* ===== ClosePilot Game Design System ===== */
 
-  /* Backgrounds — Apple's #F5F5F7 system */
-  --color-cp-bg:        #F5F5F7;
+  /* Backgrounds — slightly blue-tinted for game feel */
+  --color-cp-bg:        #E8EDF5;
   --color-cp-surface:   #FFFFFF;
-  --color-cp-surface-2: #FAFAFA;
-  --color-cp-border:    rgba(0, 0, 0, 0.08);
+  --color-cp-surface-2: #F5F7FC;
+  --color-cp-border:    rgba(0, 0, 0, 0.07);
 
-  /* Text — Apple's exact text colors */
-  --color-cp-text-1:  #1D1D1F;   /* Apple primary label */
-  --color-cp-text-2:  #6E6E73;   /* Apple secondary label */
-  --color-cp-text-3:  #AEAEB2;   /* Apple tertiary label */
+  /* Text */
+  --color-cp-text-1:  #1A1A2E;
+  --color-cp-text-2:  #6E6E73;
+  --color-cp-text-3:  #AEAEB2;
 
-  /* Accent — Apple blue */
-  --color-cp-primary:       #0071E3;
-  --color-cp-primary-hover: #0077ED;
-  --color-cp-primary-light: #EBF4FF;
+  /* Accent — vivid electric blue */
+  --color-cp-primary:       #0055FF;
+  --color-cp-primary-hover: #0044DD;
+  --color-cp-primary-light: #E8F0FF;
 
   /* Status */
-  --color-cp-success: #34C759;   /* Apple green */
-  --color-cp-warning: #FF9F0A;   /* Apple orange */
-  --color-cp-error:   #FF3B30;   /* Apple red */
+  --color-cp-success: #00C853;
+  --color-cp-warning: #FF9F0A;
+  --color-cp-error:   #FF3B30;
 
-  /* Typography — DM Sans (SF Pro-like geometric precision) */
+  /* Rank — Hot / Middle / Low */
+  --color-rank-hot: #FF3B30;
+  --color-rank-mid: #FFD60A;
+  --color-rank-low: #32ADE6;
+
+  /* Typography */
   --font-sans: 'DM Sans', -apple-system, 'Helvetica Neue', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
 }
 
@@ -39,8 +44,8 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background-color: #F5F5F7;
-  color: #1D1D1F;
+  background-color: #E8EDF5;
+  color: #1A1A2E;
   letter-spacing: -0.008em;
 }
 
@@ -53,23 +58,23 @@ body {
 }
 
 *:focus-visible {
-  outline: 2px solid #0071E3;
+  outline: 2px solid #0055FF;
   outline-offset: 2px;
   border-radius: 4px;
 }
 
-/* Apple-style scrollbar */
+/* Game-style scrollbar with color tint */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 ::-webkit-scrollbar-track {
   background: transparent;
 }
 ::-webkit-scrollbar-thumb {
-  background: rgba(0, 0, 0, 0.15);
+  background: rgba(0, 85, 255, 0.18);
   border-radius: 99px;
 }
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(0, 0, 0, 0.25);
+  background: rgba(0, 85, 255, 0.32);
 }

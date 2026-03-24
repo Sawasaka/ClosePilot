@@ -56,15 +56,15 @@ const MOCK_DEALS: Deal[] = [
 // ─── Config ────────────────────────────────────────────────────────────────────
 
 const STAGE_CONFIG: Record<DealStage, { label: string; color: string; bg: string }> = {
-  NEW_LEAD:      { label: '新規リード', color: 'text-[#6E6E73]',  bg: 'bg-[rgba(0,0,0,0.05)]' },
-  QUALIFIED:     { label: '有資格',     color: 'text-[#0060C7]',  bg: 'bg-[rgba(0,113,227,0.1)]' },
-  FIRST_MEETING: { label: '初回商談',   color: 'text-[#5E5CE6]',  bg: 'bg-[rgba(94,92,230,0.1)]' },
-  SOLUTION_FIT:  { label: '課題適合',   color: 'text-[#BF5AF2]',  bg: 'bg-[rgba(191,90,242,0.1)]' },
-  PROPOSAL:      { label: '提案',       color: 'text-[#C07000]',  bg: 'bg-[rgba(255,159,10,0.1)]' },
-  NEGOTIATION:   { label: '交渉',       color: 'text-[#CF3131]',  bg: 'bg-[rgba(255,59,48,0.1)]' },
-  VERBAL_COMMIT: { label: '口頭合意',   color: 'text-[#1A7A35]',  bg: 'bg-[rgba(52,199,89,0.1)]' },
-  CLOSED_WON:    { label: '受注',       color: 'text-[#1A7A35]',  bg: 'bg-[rgba(52,199,89,0.15)]' },
-  CLOSED_LOST:   { label: '失注',       color: 'text-[#AEAEB2]',  bg: 'bg-[rgba(0,0,0,0.05)]' },
+  NEW_LEAD:      { label: '新規リード', color: 'text-[#6E6E73]',  bg: 'bg-[rgba(0,0,0,0.06)]' },
+  QUALIFIED:     { label: '有資格',     color: 'text-[#0044DD]',  bg: 'bg-[rgba(0,85,255,0.11)]' },
+  FIRST_MEETING: { label: '初回商談',   color: 'text-[#4B48CC]',  bg: 'bg-[rgba(94,92,230,0.12)]' },
+  SOLUTION_FIT:  { label: '課題適合',   color: 'text-[#9B30D9]',  bg: 'bg-[rgba(191,90,242,0.12)]' },
+  PROPOSAL:      { label: '提案',       color: 'text-[#C07000]',  bg: 'bg-[rgba(255,159,10,0.12)]' },
+  NEGOTIATION:   { label: '交渉',       color: 'text-[#D92B1A]',  bg: 'bg-[rgba(255,59,48,0.12)]' },
+  VERBAL_COMMIT: { label: '口頭合意',   color: 'text-[#007A30]',  bg: 'bg-[rgba(0,200,83,0.12)]' },
+  CLOSED_WON:    { label: '受注',       color: 'text-[#007A30]',  bg: 'bg-[rgba(0,200,83,0.16)]' },
+  CLOSED_LOST:   { label: '失注',       color: 'text-[#AEAEB2]',  bg: 'bg-[rgba(0,0,0,0.06)]' },
 }
 
 type RankConfig = { gradient: string; glow: string; color: string }

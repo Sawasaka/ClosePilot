@@ -121,8 +121,8 @@ export function Sidebar() {
           <motion.div
             className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center shrink-0"
             style={{
-              background: 'linear-gradient(145deg, #0A84FF 0%, #5E5CE6 100%)',
-              boxShadow: '0 2px 8px rgba(10,132,255,0.35), 0 0 0 1px rgba(255,255,255,0.15) inset',
+              background: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 40%, #CC1A00 100%)',
+              boxShadow: '0 3px 10px rgba(255,59,48,0.45), 0 0 0 1px rgba(255,255,255,0.2) inset',
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}

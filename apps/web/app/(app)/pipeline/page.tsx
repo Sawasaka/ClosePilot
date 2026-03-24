@@ -64,14 +64,14 @@ interface StageConfig {
 }
 
 const STAGES: StageConfig[] = [
-  { key: 'NEW_LEAD',      label: '新規リード',  color: '#6E6E73', headerBg: 'rgba(0,0,0,0.03)',      dotColor: '#AEAEB2' },
-  { key: 'QUALIFIED',     label: '有資格',      color: '#0071E3', headerBg: 'rgba(0,113,227,0.07)',  dotColor: '#60A5FA' },
-  { key: 'FIRST_MEETING', label: '初回商談',    color: '#5E5CE6', headerBg: 'rgba(94,92,230,0.07)',  dotColor: '#8B8BE8' },
-  { key: 'SOLUTION_FIT',  label: '課題適合',    color: '#BF5AF2', headerBg: 'rgba(191,90,242,0.07)', dotColor: '#D09AF8' },
-  { key: 'PROPOSAL',      label: '提案',        color: '#FF9F0A', headerBg: 'rgba(255,159,10,0.08)', dotColor: '#FFB82E' },
-  { key: 'NEGOTIATION',   label: '交渉',        color: '#FF3B30', headerBg: 'rgba(255,59,48,0.07)',  dotColor: '#FF6B62' },
-  { key: 'VERBAL_COMMIT', label: '口頭合意',    color: '#34C759', headerBg: 'rgba(52,199,89,0.08)',  dotColor: '#5DDC79' },
-  { key: 'CLOSED_WON',    label: '受注',        color: '#1A7A35', headerBg: 'rgba(52,199,89,0.12)',  dotColor: '#34C759' },
+  { key: 'NEW_LEAD',      label: '新規リード',  color: '#6E6E73', headerBg: 'rgba(0,0,0,0.04)',       dotColor: '#AEAEB2' },
+  { key: 'QUALIFIED',     label: '有資格',      color: '#0055FF', headerBg: 'rgba(0,85,255,0.09)',    dotColor: '#3B82F6' },
+  { key: 'FIRST_MEETING', label: '初回商談',    color: '#4B48CC', headerBg: 'rgba(94,92,230,0.10)',   dotColor: '#8B8BE8' },
+  { key: 'SOLUTION_FIT',  label: '課題適合',    color: '#9B30D9', headerBg: 'rgba(191,90,242,0.10)',  dotColor: '#BF5AF2' },
+  { key: 'PROPOSAL',      label: '提案',        color: '#C07000', headerBg: 'rgba(255,159,10,0.10)',  dotColor: '#FFB82E' },
+  { key: 'NEGOTIATION',   label: '交渉',        color: '#D92B1A', headerBg: 'rgba(255,59,48,0.10)',   dotColor: '#FF6B62' },
+  { key: 'VERBAL_COMMIT', label: '口頭合意',    color: '#007A30', headerBg: 'rgba(0,200,83,0.10)',    dotColor: '#34C759' },
+  { key: 'CLOSED_WON',    label: '受注',        color: '#007A30', headerBg: 'rgba(0,200,83,0.14)',    dotColor: '#00C853' },
 ]
 
 // ─── Style Maps ────────────────────────────────────────────────────────────────

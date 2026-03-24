@@ -53,11 +53,11 @@ export function Header({ user }: HeaderProps) {
     <header
       className="fixed top-0 left-[224px] right-0 h-[56px] flex items-center px-6 gap-3 z-20"
       style={{
-        background: 'rgba(245,245,245,0.9)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        borderBottom: '1px solid rgba(0,0,0,0.06)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.5)',
+        background: 'rgba(232,237,245,0.88)',
+        backdropFilter: 'blur(24px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+        borderBottom: '1px solid rgba(0,55,255,0.08)',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.6)',
       }}
     >
       {/* Page title */}
@@ -87,8 +87,8 @@ export function Header({ user }: HeaderProps) {
           }}
           onFocus={e => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.95)'
-            e.currentTarget.style.border = '1px solid rgba(0,113,227,0.35)'
-            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,113,227,0.12)'
+            e.currentTarget.style.border = '1px solid rgba(79,70,229,0.4)'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(79,70,229,0.14)'
           }}
           onBlur={e => {
             e.currentTarget.style.background = 'rgba(0,0,0,0.055)'
@@ -106,8 +106,8 @@ export function Header({ user }: HeaderProps) {
           transition={{ duration: 0.1 }}
           className="hidden md:flex items-center gap-1 h-[32px] px-4 rounded-[8px] text-[13px] font-semibold text-white shrink-0"
           style={{
-            background: 'linear-gradient(180deg, #1484F5 0%, #0071E3 100%)',
-            boxShadow: '0 1px 3px rgba(0,113,227,0.4), 0 0 0 1px rgba(0,0,0,0.08), inset 0 1px 0 rgba(255,255,255,0.16)',
+            background: 'linear-gradient(135deg, #6E6BF0 0%, #4F46E5 55%, #3730A3 100%)',
+            boxShadow: '0 2px 8px rgba(79,70,229,0.45), inset 0 1px 0 rgba(255,255,255,0.22)',
             letterSpacing: '-0.01em',
           }}
         >
@@ -148,7 +148,7 @@ export function Header({ user }: HeaderProps) {
           {user?.image && <AvatarImage src={user.image} alt={user.name ?? ''} />}
           <AvatarFallback
             className="text-[10px] font-semibold text-white"
-            style={{ background: 'linear-gradient(145deg, #0A84FF, #5E5CE6)' }}
+            style={{ background: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 55%, #CC1A00 100%)' }}
           >
             {initials}
           </AvatarFallback>
