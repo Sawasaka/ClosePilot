@@ -53,11 +53,11 @@ export function Header({ user }: HeaderProps) {
     <header
       className="fixed top-0 left-[224px] right-0 h-[56px] flex items-center px-6 gap-3 z-20"
       style={{
-        background: 'rgba(238,242,255,0.90)',
-        backdropFilter: 'blur(24px) saturate(200%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-        borderBottom: '1px solid rgba(0,85,255,0.09)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.7), 0 2px 12px rgba(0,85,255,0.06)',
+        background: 'rgba(186, 219, 255, 0.82)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        borderBottom: '1px solid rgba(0, 100, 220, 0.14)',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.55), 0 2px 16px rgba(0,80,200,0.1)',
       }}
     >
       {/* Page title */}
@@ -81,18 +81,18 @@ export function Header({ user }: HeaderProps) {
           placeholder="検索"
           className="h-[32px] pl-8 pr-4 w-[160px] text-[13px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] transition-all duration-200 focus:w-[220px] focus:outline-none"
           style={{
-            background: 'rgba(0,0,0,0.055)',
-            border: '1px solid transparent',
+            background: 'rgba(255,255,255,0.5)',
+            border: '1px solid rgba(0,100,220,0.15)',
             letterSpacing: '-0.01em',
           }}
           onFocus={e => {
             e.currentTarget.style.background = 'rgba(255,255,255,0.95)'
-            e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'
-            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.14)'
+            e.currentTarget.style.border = '1px solid rgba(255,59,48,0.5)'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(255,59,48,0.15)'
           }}
           onBlur={e => {
-            e.currentTarget.style.background = 'rgba(0,0,0,0.055)'
-            e.currentTarget.style.border = '1px solid transparent'
+            e.currentTarget.style.background = 'rgba(255,255,255,0.5)'
+            e.currentTarget.style.border = '1px solid rgba(0,100,220,0.15)'
             e.currentTarget.style.boxShadow = 'none'
           }}
         />
@@ -133,7 +133,7 @@ export function Header({ user }: HeaderProps) {
         <Bell size={15} strokeWidth={1.8} />
         <span
           className="absolute top-[8px] right-[8px] w-[5px] h-[5px] rounded-full"
-          style={{ background: '#FF3B30', boxShadow: '0 0 0 1.5px rgba(238,242,255,0.9)' }}
+          style={{ background: '#FF3B30', boxShadow: '0 0 0 1.5px rgba(186,219,255,0.9)' }}
         />
       </motion.button>
 

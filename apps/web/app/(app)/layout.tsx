@@ -27,7 +27,7 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser()
 
   return (
-    <div className="min-h-screen" style={{ background: '#EEF2FF' }}>
+    <div className="min-h-screen" style={{ background: 'linear-gradient(180deg, #BADDFF 0%, #C2DCFF 40%, #C8E3FF 100%)' }}>
       <Sidebar />
       <Header user={user} />
       <main className="ml-[224px] pt-[56px] min-h-screen">

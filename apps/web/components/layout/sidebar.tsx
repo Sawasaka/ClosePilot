@@ -46,10 +46,10 @@ function NavItem({
       <motion.div
         className="relative flex items-center gap-2.5 px-3 py-[8px] rounded-[8px]"
         style={active ? {
-          background: 'linear-gradient(135deg, #0066FF 0%, #4338CA 100%)',
-          boxShadow: '0 3px 12px rgba(0,85,255,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
+          background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)',
+          boxShadow: '0 3px 14px rgba(255,59,48,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
         } : undefined}
-        whileHover={!active ? { background: 'rgba(0,85,255,0.07)' } : undefined}
+        whileHover={!active ? { background: 'rgba(0,0,0,0.05)' } : undefined}
         whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.1 }}
       >
@@ -172,7 +172,7 @@ export function Sidebar() {
         <motion.div
           className="flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] cursor-pointer"
           style={{ background: 'rgba(0,0,0,0.03)' }}
-          whileHover={{ background: 'rgba(0,85,255,0.06)' }}
+          whileHover={{ background: 'rgba(0,0,0,0.05)' }}
           transition={{ duration: 0.12 }}
         >
           <div
