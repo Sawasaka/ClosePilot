@@ -3,10 +3,10 @@
 @theme {
   /* ===== ClosePilot Game Design System ===== */
 
-  /* Backgrounds — deep space game feel */
-  --color-cp-bg:        #0C1220;
-  --color-cp-surface:   #141C30;
-  --color-cp-surface-2: #1A2438;
+  /* Backgrounds — dark navy game feel */
+  --color-cp-bg:        #1A2338;
+  --color-cp-surface:   #1E2840;
+  --color-cp-surface-2: #253050;
   --color-cp-border:    rgba(255, 255, 255, 0.07);
 
   /* Text */
@@ -44,7 +44,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background-color: #0C1220;
+  background-color: #1A2338;
   color: #F5F5F7;
   letter-spacing: -0.008em;
 }

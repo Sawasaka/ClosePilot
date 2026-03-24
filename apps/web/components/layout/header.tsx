@@ -53,11 +53,11 @@ export function Header({ user }: HeaderProps) {
     <header
       className="fixed top-0 left-[224px] right-0 h-[56px] flex items-center px-6 gap-3 z-20"
       style={{
-        background: 'rgba(8,13,26,0.90)',
-        backdropFilter: 'blur(32px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(32px) saturate(180%)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.04), 0 4px 24px rgba(0,0,0,0.5)',
+        background: 'rgba(20,28,44,0.92)',
+        backdropFilter: 'blur(24px) saturate(180%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
+        borderBottom: '1px solid rgba(255,255,255,0.08)',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.3)',
       }}
     >
       {/* Page title */}

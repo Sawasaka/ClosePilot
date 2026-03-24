@@ -107,8 +107,8 @@ export function Sidebar() {
     <aside
       className="fixed left-0 top-0 bottom-0 w-[224px] flex flex-col z-30 select-none"
       style={{
-        background: 'linear-gradient(180deg, #131A2E 0%, #0D1422 100%)',
-        boxShadow: '1px 0 0 rgba(255,255,255,0.05), 4px 0 32px rgba(0,0,0,0.6)',
+        background: 'linear-gradient(180deg, #151E30 0%, #111926 100%)',
+        boxShadow: '1px 0 0 rgba(255,255,255,0.07), 4px 0 24px rgba(0,0,0,0.35)',
       }}
     >
       {/* ── Logo ── */}
