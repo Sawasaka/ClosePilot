@@ -1,0 +1,75 @@
+@import "tailwindcss";
+
+@theme {
+  /* ===== Apple Design System ===== */
+
+  /* Backgrounds — Apple's #F5F5F7 system */
+  --color-cp-bg:        #F5F5F7;
+  --color-cp-surface:   #FFFFFF;
+  --color-cp-surface-2: #FAFAFA;
+  --color-cp-border:    rgba(0, 0, 0, 0.08);
+
+  /* Text — Apple's exact text colors */
+  --color-cp-text-1:  #1D1D1F;   /* Apple primary label */
+  --color-cp-text-2:  #6E6E73;   /* Apple secondary label */
+  --color-cp-text-3:  #AEAEB2;   /* Apple tertiary label */
+
+  /* Accent — Apple blue */
+  --color-cp-primary:       #0071E3;
+  --color-cp-primary-hover: #0077ED;
+  --color-cp-primary-light: #EBF4FF;
+
+  /* Status */
+  --color-cp-success: #34C759;   /* Apple green */
+  --color-cp-warning: #FF9F0A;   /* Apple orange */
+  --color-cp-error:   #FF3B30;   /* Apple red */
+
+  /* Typography — DM Sans (SF Pro-like geometric precision) */
+  --font-sans: 'DM Sans', -apple-system, 'Helvetica Neue', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+}
+
+html {
+  font-family: var(--font-sans, sans-serif);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  font-feature-settings: 'kern' 1, 'liga' 1;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  background-color: #F5F5F7;
+  color: #1D1D1F;
+  letter-spacing: -0.008em;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+*:focus {
+  outline: none;
+}
+
+*:focus-visible {
+  outline: 2px solid #0071E3;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Apple-style scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 99px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.25);
+}

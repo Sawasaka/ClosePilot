@@ -1,0 +1,538 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider   = "postgresql"
+  url        = env("DATABASE_URL")
+  extensions = [pgvector(map: "vector")]
+}
+
+// ============================
+// ORGANIZATION（テナント）
+// ============================
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  slug      String   @unique
+  plan      Plan     @default(FREE)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users         User[]
+  companies     Company[]
+  contacts      Contact[]
+  deals         Deal[]
+  activities    Activity[]
+  sequences     Sequence[]
+  knowledgeDocs KnowledgeDoc[]
+  ragQueries    RagQuery[]
+}
+
+enum Plan {
+  FREE
+  STARTER
+  GROWTH
+  ENTERPRISE
+}
+
+// ============================
+// USER
+// ============================
+model User {
+  id           String   @id @default(cuid())
+  orgId        String
+  email        String
+  name         String
+  role         UserRole @default(REP)
+  avatarUrl    String?
+  googleUserId String?
+  slackUserId  String?
+  createdAt    DateTime @default(now())
+
+  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ownedDeals     Deal[]       @relation("DealOwner")
+  ownedCompanies Company[]    @relation("CompanyOwner")
+  tasks          Task[]
+  activities     Activity[]
+
+  @@unique([orgId, email])
+  @@index([orgId])
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  REP
+}
+
+// ============================
+// COMPANY（企業）
+// ============================
+model Company {
+  id              String         @id @default(cuid())
+  orgId           String
+  name            String
+  domain          String?
+  phone           String?
+  industry        String?
+  employeeRange   EmployeeRange?
+  revenueRange    RevenueRange?
+  prefecture      String?
+  corporateNumber String?
+  leadSource      LeadSource?
+  leadScore       Int            @default(0)
+  leadRank        LeadRank       @default(D)
+  ownerId         String
+  lastScoreCalcAt DateTime?
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  owner       User         @relation("CompanyOwner", fields: [ownerId], references: [id])
+  contacts    Contact[]
+  deals       Deal[]
+  activities  Activity[]
+  scoreEvents ScoreEvent[]
+
+  @@index([orgId, leadScore(sort: Desc)])
+  @@index([orgId, domain])
+  @@index([orgId, leadRank])
+}
+
+enum EmployeeRange {
+  E1_10
+  E11_50
+  E51_200
+  E201_1000
+  E1000_PLUS
+}
+
+enum RevenueRange {
+  R_UNDER_10M
+  R10M_100M
+  R100M_1B
+  R1B_PLUS
+}
+
+enum LeadRank {
+  S
+  A
+  B
+  C
+  D
+}
+
+enum LeadSource {
+  HP_INQUIRY
+  PRICING_INQUIRY
+  DOCUMENT_REQUEST
+  SEMINAR_OWN
+  SEMINAR_CO
+  REFERRAL
+  EVENT
+  PAID_SEARCH
+  PAID_SOCIAL
+  ORGANIC
+  PARTNER
+  CSV_IMPORT
+}
+
+// ============================
+// CONTACT（担当者）
+// ============================
+model Contact {
+  id              String   @id @default(cuid())
+  orgId           String
+  companyId       String
+  name            String
+  email           String?
+  phone           String?
+  title           String?
+  department      String?
+  isDecisionMaker Boolean  @default(false)
+
+  // IS フィールド
+  isOwnerId        String?
+  approachStatus   ApproachStatus  @default(NOT_STARTED)
+  callAttempts     Int             @default(0)
+  lastCallAt       DateTime?
+  lastCallResult   CallResult?
+  emailSentCount   Int             @default(0)
+  lastEmailAt      DateTime?
+  lastEmailOpenAt  DateTime?
+  nextActionAt     DateTime?
+  currentSeqId     String?
+  sequenceStatus   SequenceStatus?
+  bestCallTimeSlot String?
+  doNotContact     Boolean         @default(false)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  company    Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deals      Deal[]
+  activities Activity[]
+  tasks      Task[]
+  currentSeq Sequence?    @relation(fields: [currentSeqId], references: [id])
+
+  @@index([orgId, approachStatus])
+  @@index([orgId, companyId])
+  @@index([orgId, doNotContact])
+}
+
+enum ApproachStatus {
+  NOT_STARTED
+  NO_ANSWER
+  ABSENT
+  CONNECTED
+  DO_NOT_CALL
+  APPOINTMENT_SET
+  NEXT_ACTION
+}
+
+enum SequenceStatus {
+  ACTIVE
+  COMPLETED
+  PAUSED
+  GRADUATED
+  DOWNGRADED
+}
+
+enum CallResult {
+  CONNECTED_INTERESTED
+  CONNECTED_FOLLOWUP_REQUESTED
+  CONNECTED_NO_INTEREST
+  MEETING_BOOKED
+  NO_ANSWER
+  CALLBACK_REQUESTED
+  DEPARTMENT_CONNECTED_ABSENT
+  WRONG_CONTACT
+  INVALID_NUMBER
+  DO_NOT_CALL
+}
+
+// ============================
+// DEAL（商談）
+// ============================
+model Deal {
+  id              String    @id @default(cuid())
+  orgId           String
+  name            String
+  companyId       String
+  contactId       String?
+  ownerId         String
+  stage           DealStage @default(NEW_LEAD)
+  amount          Int?
+  expectedCloseAt DateTime?
+  probability     Int?
+
+  // AI自動抽出フィールド（議事録から）
+  painPoints      String?
+  budget          String?
+  desiredService  String?
+  timeline        String?
+  decisionMaker   String?
+  competitors     String?
+  blockers        String?
+  currentSolution String?
+  nextActionUs    String?
+  nextActionCust  String?
+  fieldMeta       Json? // { fieldName: { source, confidence, updatedAt } }
+
+  lostReason      String?
+  lostReasonAiSug String?
+
+  stalledAt      DateTime?
+  stageChangedAt DateTime  @default(now())
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  org           Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id])
+  contact       Contact?       @relation(fields: [contactId], references: [id])
+  owner         User           @relation("DealOwner", fields: [ownerId], references: [id])
+  activities    Activity[]
+  tasks         Task[]
+  transcripts   Transcript[]
+  researchBrief ResearchBrief?
+  stageHistory  StageHistory[]
+
+  @@index([orgId, stage])
+  @@index([orgId, ownerId])
+  @@index([orgId, stalledAt])
+  @@index([orgId, updatedAt(sort: Desc)])
+}
+
+enum DealStage {
+  NEW_LEAD
+  QUALIFIED
+  FIRST_MEETING
+  SOLUTION_FIT
+  PROPOSAL
+  NEGOTIATION
+  VERBAL_COMMIT
+  CLOSED_WON
+  CLOSED_LOST
+}
+
+// ============================
+// ACTIVITY（活動記録）
+// ============================
+model Activity {
+  id         String       @id @default(cuid())
+  orgId      String
+  dealId     String?
+  contactId  String?
+  companyId  String?
+  userId     String
+  type       ActivityType
+  title      String
+  content    String?
+  resultCode CallResult?
+  metadata   Json?
+  occurredAt DateTime     @default(now())
+  createdAt  DateTime     @default(now())
+
+  org     Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  deal    Deal?        @relation(fields: [dealId], references: [id])
+  contact Contact?     @relation(fields: [contactId], references: [id])
+  company Company?     @relation(fields: [companyId], references: [id])
+  user    User         @relation(fields: [userId], references: [id])
+
+  @@index([orgId, dealId])
+  @@index([orgId, contactId])
+  @@index([orgId, occurredAt(sort: Desc)])
+}
+
+enum ActivityType {
+  CALL
+  EMAIL_SENT
+  EMAIL_RECEIVED
+  MEETING
+  NOTE
+  STAGE_CHANGED
+  TASK_COMPLETED
+  SEQUENCE_STARTED
+  SEQUENCE_COMPLETED
+  SCORE_CHANGED
+}
+
+// ============================
+// TASK（タスク）
+// ============================
+model Task {
+  id               String      @id @default(cuid())
+  orgId            String
+  dealId           String?
+  contactId        String?
+  companyId        String?
+  ownerId          String
+  type             TaskType
+  title            String
+  memo             String?
+  dueAt            DateTime
+  completedAt      DateTime?
+  resultCode       CallResult?
+  source           TaskSource
+  reminderSettings Json?
+  sequenceId       String?
+  sequenceStepIdx  Int?
+  createdAt        DateTime    @default(now())
+
+  deal    Deal?    @relation(fields: [dealId], references: [id])
+  contact Contact? @relation(fields: [contactId], references: [id])
+  owner   User     @relation(fields: [ownerId], references: [id])
+
+  @@index([ownerId, dueAt])
+  @@index([ownerId, completedAt])
+  @@index([orgId, dueAt])
+}
+
+enum TaskType {
+  CALL
+  EMAIL
+  DOCUMENT
+  MEETING_PREP
+  PROPOSAL
+  OTHER
+}
+
+enum TaskSource {
+  SEQUENCE_AUTO
+  MODAL_MANUAL
+  MEETING_NOTES
+  MANUAL
+}
+
+// ============================
+// SCORING
+// ============================
+model ScoreEvent {
+  id         String   @id @default(cuid())
+  companyId  String
+  signal     String
+  points     Int
+  metadata   Json?
+  occurredAt DateTime @default(now())
+
+  company Company @relation(fields: [companyId], references: [id], onDelete: Cascade)
+
+  @@index([companyId, occurredAt(sort: Desc)])
+}
+
+// ============================
+// SEQUENCE
+// ============================
+model Sequence {
+  id        String         @id @default(cuid())
+  orgId     String
+  name      String
+  rank      LeadRank
+  steps     SequenceStep[]
+  contacts  Contact[]
+  createdAt DateTime       @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, rank])
+}
+
+model SequenceStep {
+  id         String   @id @default(cuid())
+  sequenceId String
+  stepOrder  Int
+  type       TaskType
+  dayOffset  Int
+  subject    String?
+  bodyTmpl   String?
+
+  sequence Sequence @relation(fields: [sequenceId], references: [id], onDelete: Cascade)
+
+  @@index([sequenceId, stepOrder])
+}
+
+// ============================
+// TRANSCRIPT（文字起こし）
+// ============================
+model Transcript {
+  id              String         @id @default(cuid())
+  orgId           String
+  dealId          String?
+  companyId       String?
+  contactId       String?
+  type            TranscriptType
+  fullText        String
+  audioUrl        String?
+  durationSec     Int?
+  extractedFields Json?
+  confidence      Json?
+  stageAdvanced   Boolean        @default(false)
+  createdAt       DateTime       @default(now())
+
+  deal Deal? @relation(fields: [dealId], references: [id])
+
+  @@index([dealId, createdAt(sort: Desc)])
+}
+
+enum TranscriptType {
+  CALL
+  MEETING
+}
+
+// ============================
+// STAGE HISTORY
+// ============================
+model StageHistory {
+  id        String     @id @default(cuid())
+  dealId    String
+  fromStage DealStage?
+  toStage   DealStage
+  changedBy String
+  reason    String?
+  changedAt DateTime   @default(now())
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+
+  @@index([dealId, changedAt])
+}
+
+// ============================
+// RESEARCH BRIEF
+// ============================
+model ResearchBrief {
+  id                  String   @id @default(cuid())
+  dealId              String   @unique
+  companyName         String
+  businessSummary     String?
+  industry            String?
+  employeeCount       String?
+  foundedYear         String?
+  fundingStatus       String?
+  ceoName             String?
+  ceoBackground       String?
+  challenges          Json?
+  salesOrgHypothesis  String?
+  toolsUsed           Json?
+  recommendedApproach String?
+  questionsToAsk      Json?
+  rawData             Json?
+  confidence          Json?
+  generatedAt         DateTime @default(now())
+
+  deal Deal @relation(fields: [dealId], references: [id], onDelete: Cascade)
+}
+
+// ============================
+// KNOWLEDGE / RAG
+// ============================
+model KnowledgeDoc {
+  id           String   @id @default(cuid())
+  orgId        String
+  sourceType   String
+  sourceId     String
+  fileName     String
+  fileUrl      String
+  mimeType     String
+  lastModified DateTime
+  indexedAt    DateTime @default(now())
+
+  org    Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  chunks KnowledgeChunk[]
+
+  @@unique([orgId, sourceId])
+  @@index([orgId])
+}
+
+model KnowledgeChunk {
+  id         String                      @id @default(cuid())
+  docId      String
+  content    String
+  embedding  Unsupported("vector(1536)")?
+  metadata   Json?
+  chunkIndex Int
+  createdAt  DateTime                    @default(now())
+
+  doc KnowledgeDoc @relation(fields: [docId], references: [id], onDelete: Cascade)
+
+  @@index([docId])
+}
+
+model RagQuery {
+  id         String   @id @default(cuid())
+  orgId      String
+  userId     String?
+  query      String
+  answer     String
+  sources    Json?
+  confidence Float?
+  feedback   Int?
+  slackTs    String?
+  createdAt  DateTime @default(now())
+
+  org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
+
+  @@index([orgId, createdAt(sort: Desc)])
+}

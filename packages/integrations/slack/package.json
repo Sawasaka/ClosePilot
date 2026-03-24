@@ -1,0 +1,13 @@
+{
+  "name": "@closepilot/integrations-slack",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "dependencies": {
+    "@slack/bolt": "^4.4.0",
+    "@slack/web-api": "^7.8.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

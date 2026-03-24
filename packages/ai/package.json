@@ -1,0 +1,12 @@
+{
+  "name": "@closepilot/ai",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "dependencies": {
+    "openai": "^4.86.2"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}
