@@ -27,7 +27,19 @@ export default async function AppLayout({ children }: { children: ReactNode }) {
   const user = await getSessionUser()
 
   return (
-    <div className="min-h-screen" style={{ background: '#F5F5F7' }}>
+    <div
+      className="min-h-screen"
+      style={{
+        backgroundColor: '#F4F4F6',
+        backgroundImage: `
+          radial-gradient(ellipse 75% 50% at 28% 0%, rgba(255,59,48,0.10) 0%, transparent 62%),
+          radial-gradient(ellipse 55% 55% at 88% 100%, rgba(79,70,229,0.08) 0%, transparent 58%),
+          radial-gradient(ellipse 50% 40% at 75% 15%, rgba(255,159,10,0.05) 0%, transparent 50%),
+          radial-gradient(circle at 1px 1px, rgba(0,0,0,0.06) 1px, transparent 0)
+        `,
+        backgroundSize: '100% 100%, 100% 100%, 100% 100%, 22px 22px',
+      }}
+    >
       <Sidebar />
       <Header user={user} />
       <main className="ml-[224px] pt-[56px] min-h-screen">
