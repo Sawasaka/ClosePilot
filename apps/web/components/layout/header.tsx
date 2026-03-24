@@ -53,11 +53,11 @@ export function Header({ user }: HeaderProps) {
     <header
       className="fixed top-0 left-[224px] right-0 h-[56px] flex items-center px-6 gap-3 z-20"
       style={{
-        background: 'rgba(20,28,44,0.92)',
-        backdropFilter: 'blur(24px) saturate(180%)',
-        WebkitBackdropFilter: 'blur(24px) saturate(180%)',
-        borderBottom: '1px solid rgba(255,255,255,0.08)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.05), 0 4px 20px rgba(0,0,0,0.3)',
+        background: 'rgba(238,242,255,0.90)',
+        backdropFilter: 'blur(24px) saturate(200%)',
+        WebkitBackdropFilter: 'blur(24px) saturate(200%)',
+        borderBottom: '1px solid rgba(0,85,255,0.09)',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.7), 0 2px 12px rgba(0,85,255,0.06)',
       }}
     >
       {/* Page title */}
@@ -66,7 +66,7 @@ export function Header({ user }: HeaderProps) {
         initial={{ opacity: 0, y: -4 }}
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-        className="text-[15px] font-semibold text-white tracking-[-0.022em] shrink-0"
+        className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.022em] shrink-0"
       >
         {title}
       </motion.h1>
@@ -75,24 +75,24 @@ export function Header({ user }: HeaderProps) {
 
       {/* Search */}
       <div className="relative hidden md:flex items-center">
-        <Search size={13} className="absolute left-2.5 pointer-events-none" style={{ color: 'rgba(255,255,255,0.38)' }} />
+        <Search size={13} className="absolute left-2.5 text-[#AEAEB2] pointer-events-none" />
         <input
           type="text"
           placeholder="検索"
-          className="h-[32px] pl-8 pr-4 w-[160px] text-[13px] rounded-[8px] text-white placeholder:text-[rgba(255,255,255,0.38)] transition-all duration-200 focus:w-[220px] focus:outline-none"
+          className="h-[32px] pl-8 pr-4 w-[160px] text-[13px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] transition-all duration-200 focus:w-[220px] focus:outline-none"
           style={{
-            background: 'rgba(255,255,255,0.09)',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'rgba(0,0,0,0.055)',
+            border: '1px solid transparent',
             letterSpacing: '-0.01em',
           }}
           onFocus={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.14)'
-            e.currentTarget.style.border = '1px solid rgba(0,85,255,0.55)'
-            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.22)'
+            e.currentTarget.style.background = 'rgba(255,255,255,0.95)'
+            e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'
+            e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.14)'
           }}
           onBlur={e => {
-            e.currentTarget.style.background = 'rgba(255,255,255,0.09)'
-            e.currentTarget.style.border = '1px solid rgba(255,255,255,0.1)'
+            e.currentTarget.style.background = 'rgba(0,0,0,0.055)'
+            e.currentTarget.style.border = '1px solid transparent'
             e.currentTarget.style.boxShadow = 'none'
           }}
         />
@@ -107,7 +107,7 @@ export function Header({ user }: HeaderProps) {
           className="hidden md:flex items-center gap-1 h-[32px] px-4 rounded-[8px] text-[13px] font-semibold text-white shrink-0"
           style={{
             background: 'linear-gradient(135deg, #6E6BF0 0%, #4F46E5 55%, #3730A3 100%)',
-            boxShadow: '0 2px 10px rgba(79,70,229,0.5), inset 0 1px 0 rgba(255,255,255,0.22)',
+            boxShadow: '0 2px 10px rgba(79,70,229,0.45), inset 0 1px 0 rgba(255,255,255,0.22)',
             letterSpacing: '-0.01em',
           }}
         >
@@ -120,20 +120,20 @@ export function Header({ user }: HeaderProps) {
       <motion.button
         whileTap={{ scale: 0.94 }}
         className="relative w-[32px] h-[32px] flex items-center justify-center rounded-[8px] transition-colors duration-100"
-        style={{ color: 'rgba(255,255,255,0.55)' }}
+        style={{ color: '#6E6E73' }}
         onMouseEnter={e => {
-          e.currentTarget.style.background = 'rgba(255,255,255,0.1)'
-          e.currentTarget.style.color = '#FFFFFF'
+          e.currentTarget.style.background = 'rgba(0,0,0,0.06)'
+          e.currentTarget.style.color = '#1D1D1F'
         }}
         onMouseLeave={e => {
           e.currentTarget.style.background = 'transparent'
-          e.currentTarget.style.color = 'rgba(255,255,255,0.55)'
+          e.currentTarget.style.color = '#6E6E73'
         }}
       >
         <Bell size={15} strokeWidth={1.8} />
         <span
           className="absolute top-[8px] right-[8px] w-[5px] h-[5px] rounded-full"
-          style={{ background: '#FF3B30', boxShadow: '0 0 0 1.5px rgba(8,13,26,0.95)' }}
+          style={{ background: '#FF3B30', boxShadow: '0 0 0 1.5px rgba(238,242,255,0.9)' }}
         />
       </motion.button>
 
@@ -141,7 +141,7 @@ export function Header({ user }: HeaderProps) {
       <motion.button
         whileTap={{ scale: 0.97 }}
         className="flex items-center gap-2 px-2 py-1 rounded-[8px] transition-colors duration-100"
-        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.1)')}
+        onMouseEnter={e => (e.currentTarget.style.background = 'rgba(0,0,0,0.06)')}
         onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
       >
         <Avatar className="w-[26px] h-[26px]">
@@ -153,7 +153,7 @@ export function Header({ user }: HeaderProps) {
             {initials}
           </AvatarFallback>
         </Avatar>
-        <span className="hidden lg:block text-[13px] font-medium text-white max-w-[80px] truncate tracking-[-0.01em]">
+        <span className="hidden lg:block text-[13px] font-medium text-[#1D1D1F] max-w-[80px] truncate tracking-[-0.01em]">
           {user?.name ?? 'ユーザー'}
         </span>
       </motion.button>

@@ -114,10 +114,10 @@ export default function HomePage() {
 
       {/* Page Header */}
       <div>
-        <h2 className="text-[21px] font-semibold text-white tracking-[-0.03em]">
+        <h2 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">
           おはようございます、太郎さん
         </h2>
-        <p className="text-[13px] mt-0.5" style={{ color: 'rgba(255,255,255,0.5)' }}>本日のアクションを確認しましょう</p>
+        <p className="text-[13px] text-[#6E6E73] mt-0.5">本日のアクションを確認しましょう</p>
       </div>
 
       {/* Summary Cards */}

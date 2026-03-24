@@ -492,7 +492,7 @@ export default function CompaniesPage() {
 
       {/* ── Footer ── */}
       <div className="flex items-center justify-between">
-        <p className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <p className="text-xs text-[#AEAEB2]">
           {filtered.length}件中 {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}–{Math.min(page * PAGE_SIZE, filtered.length)} 件を表示
         </p>
 

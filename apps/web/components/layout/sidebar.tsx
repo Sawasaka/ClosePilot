@@ -8,7 +8,7 @@ import {
   CheckSquare, BookOpen, BarChart2, Settings, Zap, ChevronRight,
 } from 'lucide-react'
 
-// ── Navigation structure with groups ─────────────────────────────────────────
+// ── Navigation structure ──────────────────────────────────────────────────────
 const NAV_GROUPS = [
   {
     label: null,
@@ -35,7 +35,7 @@ const NAV_GROUPS = [
   },
 ]
 
-// ── NavItem ───────────────────────────────────────────────────────────────────
+// ── NavItem — Nintendo button style ──────────────────────────────────────────
 function NavItem({
   href, label, icon: Icon, active,
 }: {
@@ -44,41 +44,44 @@ function NavItem({
   return (
     <Link href={href} className="block mx-2">
       <motion.div
-        className="relative flex items-center gap-2.5 px-3 py-[8px] rounded-[8px] transition-colors duration-100"
-        style={active ? { background: 'rgba(0,85,255,0.24)' } : undefined}
-        whileHover={!active ? { background: 'rgba(255,255,255,0.07)' } : undefined}
-        whileTap={{ scale: 0.98 }}
+        className="relative flex items-center gap-2.5 px-3 py-[8px] rounded-[8px]"
+        style={active ? {
+          background: 'linear-gradient(135deg, #0066FF 0%, #4338CA 100%)',
+          boxShadow: '0 3px 12px rgba(0,85,255,0.35), inset 0 1px 0 rgba(255,255,255,0.2)',
+        } : undefined}
+        whileHover={!active ? { background: 'rgba(0,85,255,0.07)' } : undefined}
+        whileTap={{ scale: 0.97 }}
         transition={{ duration: 0.1 }}
       >
-        {/* Active indicator bar */}
-        <AnimatePresence>
-          {active && (
-            <motion.span
-              layoutId="sidebar-active-bar"
-              className="absolute left-0 top-[7px] bottom-[7px] w-[3px] rounded-full"
-              style={{ background: 'linear-gradient(180deg, #4F8EFF 0%, #0055FF 100%)' }}
-              initial={{ opacity: 0, scaleY: 0.6 }}
-              animate={{ opacity: 1, scaleY: 1 }}
-              exit={{ opacity: 0, scaleY: 0.6 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-            />
-          )}
-        </AnimatePresence>
-
         <Icon
           size={15}
           strokeWidth={active ? 2.4 : 1.75}
-          style={{ color: active ? '#FFFFFF' : 'rgba(255,255,255,0.45)', flexShrink: 0 }}
+          style={{ color: active ? '#FFFFFF' : '#8E8E93', flexShrink: 0 }}
         />
         <span
           className="leading-none tracking-[-0.01em] text-[13px]"
           style={{
-            color: active ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
+            color: active ? '#FFFFFF' : '#3C3C43',
             fontWeight: active ? 600 : 400,
           }}
         >
           {label}
         </span>
+
+        {/* Active badge dot */}
+        <AnimatePresence>
+          {active && (
+            <motion.span
+              layoutId="sidebar-active-dot"
+              className="ml-auto w-[5px] h-[5px] rounded-full bg-white shrink-0"
+              style={{ opacity: 0.7 }}
+              initial={{ opacity: 0, scale: 0 }}
+              animate={{ opacity: 0.7, scale: 1 }}
+              exit={{ opacity: 0, scale: 0 }}
+              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            />
+          )}
+        </AnimatePresence>
       </motion.div>
     </Link>
   )
@@ -89,7 +92,7 @@ function SectionLabel({ label }: { label: string }) {
   return (
     <p
       className="px-5 pt-4 pb-1.5 text-[10.5px] font-semibold uppercase"
-      style={{ color: 'rgba(255,255,255,0.28)', letterSpacing: '0.08em' }}
+      style={{ color: '#AEAEB2', letterSpacing: '0.08em' }}
     >
       {label}
     </p>
@@ -107,14 +110,14 @@ export function Sidebar() {
     <aside
       className="fixed left-0 top-0 bottom-0 w-[224px] flex flex-col z-30 select-none"
       style={{
-        background: 'linear-gradient(180deg, #151E30 0%, #111926 100%)',
-        boxShadow: '1px 0 0 rgba(255,255,255,0.07), 4px 0 24px rgba(0,0,0,0.35)',
+        background: '#FFFFFF',
+        boxShadow: '1px 0 0 rgba(0,0,0,0.06), 4px 0 20px rgba(0,0,0,0.05)',
       }}
     >
       {/* ── Logo ── */}
       <div
         className="h-[56px] flex items-center px-5 shrink-0"
-        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+        style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}
       >
         <Link href="/" className="flex items-center gap-3">
           <motion.div
@@ -129,7 +132,7 @@ export function Sidebar() {
           >
             <Zap size={14} className="text-white" strokeWidth={2.5} />
           </motion.div>
-          <span className="text-[15px] font-semibold text-white tracking-[-0.03em]">
+          <span className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">
             ClosePilot
           </span>
         </Link>
@@ -157,7 +160,7 @@ export function Sidebar() {
       </nav>
 
       {/* ── Divider ── */}
-      <div className="mx-4 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
+      <div className="mx-4 h-px" style={{ background: 'rgba(0,0,0,0.05)' }} />
 
       {/* ── Settings ── */}
       <div className="py-1.5">
@@ -168,8 +171,8 @@ export function Sidebar() {
       <div className="mx-2 mb-3">
         <motion.div
           className="flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] cursor-pointer"
-          style={{ background: 'rgba(255,255,255,0.05)' }}
-          whileHover={{ background: 'rgba(255,255,255,0.1)' }}
+          style={{ background: 'rgba(0,0,0,0.03)' }}
+          whileHover={{ background: 'rgba(0,85,255,0.06)' }}
           transition={{ duration: 0.12 }}
         >
           <div
@@ -179,11 +182,11 @@ export function Sidebar() {
             <span className="text-[8px] font-bold text-white leading-none">CP</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[12.5px] font-medium truncate tracking-[-0.01em]" style={{ color: 'rgba(255,255,255,0.8)' }}>
+            <p className="text-[12.5px] font-medium text-[#3C3C43] truncate tracking-[-0.01em]">
               ワークスペース
             </p>
           </div>
-          <ChevronRight size={12} style={{ color: 'rgba(255,255,255,0.28)' }} className="shrink-0" />
+          <ChevronRight size={12} style={{ color: '#C7C7CC' }} className="shrink-0" />
         </motion.div>
       </div>
     </aside>

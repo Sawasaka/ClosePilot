@@ -370,14 +370,14 @@ export default function ContactsPage() {
           { label: '未着手', count: contacts.filter(c => c.status === '未着手').length, color: 'text-[#AEAEB2]', active: false },
         ].map(s => (
           <div key={s.label} className="flex items-center gap-1.5">
-            <span className={`text-lg font-semibold tabular-nums tracking-tight ${s.color ?? 'text-white'}`}>
+            <span className={`text-lg font-semibold tabular-nums tracking-tight ${s.color ?? 'text-[#1D1D1F]'}`}>
               {s.count}
             </span>
-            <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>{s.label}</span>
-            {s !== [].at(-1) && <span className="w-px h-3 ml-1.5" style={{ background: 'rgba(255,255,255,0.12)' }} />}
+            <span className="text-xs text-[#AEAEB2]">{s.label}</span>
+            {s !== [].at(-1) && <span className="w-px h-3 bg-[rgba(0,0,0,0.07)] ml-1.5" />}
           </div>
         ))}
-        <span className="text-xs ml-auto" style={{ color: 'rgba(255,255,255,0.4)' }}>
+        <span className="text-xs text-[#AEAEB2] ml-auto">
           {filtered.length}件表示
         </span>
       </div>
