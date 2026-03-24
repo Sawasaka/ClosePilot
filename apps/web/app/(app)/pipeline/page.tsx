@@ -64,14 +64,14 @@ interface StageConfig {
 }
 
 const STAGES: StageConfig[] = [
-  { key: 'NEW_LEAD',      label: '新規リード',  color: '#6E6E73', headerBg: 'rgba(0,0,0,0.04)',       dotColor: '#AEAEB2' },
-  { key: 'QUALIFIED',     label: '有資格',      color: '#0055FF', headerBg: 'rgba(0,85,255,0.09)',    dotColor: '#3B82F6' },
-  { key: 'FIRST_MEETING', label: '初回商談',    color: '#4B48CC', headerBg: 'rgba(94,92,230,0.10)',   dotColor: '#8B8BE8' },
-  { key: 'SOLUTION_FIT',  label: '課題適合',    color: '#9B30D9', headerBg: 'rgba(191,90,242,0.10)',  dotColor: '#BF5AF2' },
-  { key: 'PROPOSAL',      label: '提案',        color: '#C07000', headerBg: 'rgba(255,159,10,0.10)',  dotColor: '#FFB82E' },
-  { key: 'NEGOTIATION',   label: '交渉',        color: '#D92B1A', headerBg: 'rgba(255,59,48,0.10)',   dotColor: '#FF6B62' },
-  { key: 'VERBAL_COMMIT', label: '口頭合意',    color: '#007A30', headerBg: 'rgba(0,200,83,0.10)',    dotColor: '#34C759' },
-  { key: 'CLOSED_WON',    label: '受注',        color: '#007A30', headerBg: 'rgba(0,200,83,0.14)',    dotColor: '#00C853' },
+  { key: 'NEW_LEAD',      label: '新規リード',  color: 'rgba(255,255,255,0.55)', headerBg: 'rgba(255,255,255,0.04)',  dotColor: 'rgba(255,255,255,0.35)' },
+  { key: 'QUALIFIED',     label: '有資格',      color: '#60A5FA',                headerBg: 'rgba(0,85,255,0.22)',     dotColor: '#60A5FA' },
+  { key: 'FIRST_MEETING', label: '初回商談',    color: '#8B8BE8',                headerBg: 'rgba(94,92,230,0.22)',    dotColor: '#8B8BE8' },
+  { key: 'SOLUTION_FIT',  label: '課題適合',    color: '#C97DF8',                headerBg: 'rgba(191,90,242,0.22)',   dotColor: '#C97DF8' },
+  { key: 'PROPOSAL',      label: '提案',        color: '#FFB82E',                headerBg: 'rgba(255,159,10,0.22)',   dotColor: '#FFB82E' },
+  { key: 'NEGOTIATION',   label: '交渉',        color: '#FF6B62',                headerBg: 'rgba(255,59,48,0.22)',    dotColor: '#FF6B62' },
+  { key: 'VERBAL_COMMIT', label: '口頭合意',    color: '#4ADE80',                headerBg: 'rgba(0,200,83,0.22)',     dotColor: '#4ADE80' },
+  { key: 'CLOSED_WON',    label: '受注',        color: '#00C853',                headerBg: 'rgba(0,200,83,0.30)',     dotColor: '#00C853' },
 ]
 
 // ─── Style Maps ────────────────────────────────────────────────────────────────
@@ -224,13 +224,9 @@ function PipelineColumn({
               className="w-2 h-2 rounded-full"
               style={{ backgroundColor: stage.dotColor }}
             />
-            {isWon ? (
-              <span className="text-[12px] font-semibold" style={{ color: stage.color }}>
-                {stage.label}
-              </span>
-            ) : (
-              <span className="text-[12px] font-semibold text-[#374151]">{stage.label}</span>
-            )}
+            <span className="text-[12px] font-semibold" style={{ color: stage.color }}>
+              {stage.label}
+            </span>
           </div>
           <div className="flex items-center gap-1.5">
             {stalledCount > 0 && (
@@ -281,7 +277,7 @@ function PipelineColumn({
           }}
           whileHover={{ scale: 1.01 }}
           whileTap={{ scale: 0.99 }}
-          className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-[8px] border border-dashed border-[rgba(0,0,0,0.1)] text-[12px] text-[#AEAEB2] hover:border-[rgba(0,113,227,0.4)] hover:text-[#0071E3] hover:bg-[rgba(0,113,227,0.05)] transition-all duration-150"
+          className="flex items-center justify-center gap-1.5 w-full py-2.5 rounded-[8px] border border-dashed border-[rgba(255,255,255,0.12)] text-[12px] text-[rgba(255,255,255,0.35)] hover:border-[rgba(0,85,255,0.5)] hover:text-[#60A5FA] hover:bg-[rgba(0,85,255,0.12)] transition-all duration-150"
         >
           <Plus size={13} />
           追加
@@ -333,33 +329,33 @@ export default function PipelinePage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
         className="flex items-center gap-5 mb-5 pb-5"
-        style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.08)' }}
       >
         <div>
-          <p className="text-[11px] text-[#AEAEB2] uppercase tracking-[0.06em] font-medium mb-0.5">パイプライン総額</p>
-          <p className="text-2xl font-semibold text-[#1D1D1F] tabular-nums tracking-tight">
+          <p className="text-[11px] uppercase tracking-[0.06em] font-medium mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>パイプライン総額</p>
+          <p className="text-2xl font-semibold text-white tabular-nums tracking-tight">
             {formatAmount(totalPipeline)}
           </p>
         </div>
-        <div className="w-px h-8" style={{ background: 'rgba(0,0,0,0.06)' }} />
+        <div className="w-px h-8" style={{ background: 'rgba(255,255,255,0.1)' }} />
         <div>
-          <p className="text-[11px] text-[#AEAEB2] uppercase tracking-[0.06em] font-medium mb-0.5">案件数</p>
-          <p className="text-2xl font-semibold text-[#1D1D1F] tabular-nums tracking-tight">{activeDeals.length}</p>
+          <p className="text-[11px] uppercase tracking-[0.06em] font-medium mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>案件数</p>
+          <p className="text-2xl font-semibold text-white tabular-nums tracking-tight">{activeDeals.length}</p>
         </div>
-        <div className="w-px h-8" style={{ background: 'rgba(0,0,0,0.06)' }} />
+        <div className="w-px h-8" style={{ background: 'rgba(255,255,255,0.1)' }} />
         <div>
-          <p className="text-[11px] text-[#AEAEB2] uppercase tracking-[0.06em] font-medium mb-0.5">停滞中</p>
-          <p className="text-2xl font-semibold text-[#FF3B30] tabular-nums tracking-tight">
+          <p className="text-[11px] uppercase tracking-[0.06em] font-medium mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>停滞中</p>
+          <p className="text-2xl font-semibold text-[#FF6B62] tabular-nums tracking-tight">
             {DEALS.filter(d => d.stalled).length}件
           </p>
-          <p className="text-[11px] text-[#AEAEB2] tabular-nums">{formatAmount(stalledTotal)}</p>
+          <p className="text-[11px] tabular-nums" style={{ color: 'rgba(255,255,255,0.4)' }}>{formatAmount(stalledTotal)}</p>
         </div>
-        <div className="w-px h-8" style={{ background: 'rgba(0,0,0,0.06)' }} />
+        <div className="w-px h-8" style={{ background: 'rgba(255,255,255,0.1)' }} />
         <div className="flex items-center gap-2">
-          <Trophy size={16} className="text-[#34C759]" />
+          <Trophy size={16} style={{ color: '#4ADE80' }} />
           <div>
-            <p className="text-[11px] text-[#AEAEB2] uppercase tracking-[0.06em] font-medium mb-0.5">今月受注</p>
-            <p className="text-2xl font-semibold text-[#1A7A35] tabular-nums tracking-tight">{formatAmount(wonTotal)}</p>
+            <p className="text-[11px] uppercase tracking-[0.06em] font-medium mb-0.5" style={{ color: 'rgba(255,255,255,0.4)' }}>今月受注</p>
+            <p className="text-2xl font-semibold text-[#4ADE80] tabular-nums tracking-tight">{formatAmount(wonTotal)}</p>
           </div>
         </div>
         <div className="ml-auto flex items-center gap-2">

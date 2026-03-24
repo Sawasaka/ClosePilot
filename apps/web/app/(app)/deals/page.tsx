@@ -273,16 +273,16 @@ export default function DealsPage() {
       {/* ── Stats ── */}
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-1.5">
-          <TrendingUp size={14} style={{ color: '#0071E3' }} />
-          <span className="text-sm font-semibold text-[#1D1D1F] tabular-nums">{formatAmount(totalAmount)}</span>
-          <span className="text-xs text-[#AEAEB2]">パイプライン総額</span>
+          <TrendingUp size={14} style={{ color: '#60A5FA' }} />
+          <span className="text-sm font-semibold text-white tabular-nums">{formatAmount(totalAmount)}</span>
+          <span className="text-xs" style={{ color: 'rgba(255,255,255,0.45)' }}>パイプライン総額</span>
         </div>
-        <span className="w-px h-3 bg-[rgba(0,0,0,0.07)]" />
-        <span className="text-xs text-[#AEAEB2]">{filtered.length}件表示</span>
+        <span className="w-px h-3" style={{ background: 'rgba(255,255,255,0.12)' }} />
+        <span className="text-xs" style={{ color: 'rgba(255,255,255,0.4)' }}>{filtered.length}件表示</span>
         {stalledCount > 0 && (
           <>
-            <span className="w-px h-3 bg-[rgba(0,0,0,0.07)]" />
-            <span className="flex items-center gap-1 text-xs text-[#EF4444] font-medium">
+            <span className="w-px h-3" style={{ background: 'rgba(255,255,255,0.12)' }} />
+            <span className="flex items-center gap-1 text-xs text-[#FF6B62] font-medium">
               <AlertTriangle size={12} />
               停滞中 {stalledCount}件
             </span>

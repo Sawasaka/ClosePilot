@@ -8,7 +8,7 @@ import {
   CheckSquare, BookOpen, BarChart2, Settings, Zap, ChevronRight,
 } from 'lucide-react'
 
-// ── Navigation structure with groups (Apple-style) ──────────────────────────
+// ── Navigation structure with groups ─────────────────────────────────────────
 const NAV_GROUPS = [
   {
     label: null,
@@ -35,7 +35,7 @@ const NAV_GROUPS = [
   },
 ]
 
-// ── NavItem ──────────────────────────────────────────────────────────────────
+// ── NavItem ───────────────────────────────────────────────────────────────────
 function NavItem({
   href, label, icon: Icon, active,
 }: {
@@ -45,10 +45,8 @@ function NavItem({
     <Link href={href} className="block mx-2">
       <motion.div
         className="relative flex items-center gap-2.5 px-3 py-[8px] rounded-[8px] transition-colors duration-100"
-        style={active ? {
-          background: 'rgba(0,113,227,0.09)',
-        } : undefined}
-        whileHover={!active ? { background: 'rgba(0,0,0,0.05)' } : undefined}
+        style={active ? { background: 'rgba(0,85,255,0.24)' } : undefined}
+        whileHover={!active ? { background: 'rgba(255,255,255,0.07)' } : undefined}
         whileTap={{ scale: 0.98 }}
         transition={{ duration: 0.1 }}
       >
@@ -57,7 +55,8 @@ function NavItem({
           {active && (
             <motion.span
               layoutId="sidebar-active-bar"
-              className="absolute left-0 top-[7px] bottom-[7px] w-[3px] rounded-full bg-[#0071E3]"
+              className="absolute left-0 top-[7px] bottom-[7px] w-[3px] rounded-full"
+              style={{ background: 'linear-gradient(180deg, #4F8EFF 0%, #0055FF 100%)' }}
               initial={{ opacity: 0, scaleY: 0.6 }}
               animate={{ opacity: 1, scaleY: 1 }}
               exit={{ opacity: 0, scaleY: 0.6 }}
@@ -69,12 +68,12 @@ function NavItem({
         <Icon
           size={15}
           strokeWidth={active ? 2.4 : 1.75}
-          style={{ color: active ? '#0071E3' : '#8E8E93', flexShrink: 0 }}
+          style={{ color: active ? '#FFFFFF' : 'rgba(255,255,255,0.45)', flexShrink: 0 }}
         />
         <span
           className="leading-none tracking-[-0.01em] text-[13px]"
           style={{
-            color: active ? '#0071E3' : '#3C3C43',
+            color: active ? '#FFFFFF' : 'rgba(255,255,255,0.7)',
             fontWeight: active ? 600 : 400,
           }}
         >
@@ -85,19 +84,19 @@ function NavItem({
   )
 }
 
-// ── Section label ────────────────────────────────────────────────────────────
+// ── Section label ─────────────────────────────────────────────────────────────
 function SectionLabel({ label }: { label: string }) {
   return (
     <p
-      className="px-5 pt-4 pb-1.5 text-[10.5px] font-semibold uppercase tracking-[0.07em]"
-      style={{ color: '#AEAEB2', letterSpacing: '0.06em' }}
+      className="px-5 pt-4 pb-1.5 text-[10.5px] font-semibold uppercase"
+      style={{ color: 'rgba(255,255,255,0.28)', letterSpacing: '0.08em' }}
     >
       {label}
     </p>
   )
 }
 
-// ── Sidebar ──────────────────────────────────────────────────────────────────
+// ── Sidebar ───────────────────────────────────────────────────────────────────
 export function Sidebar() {
   const pathname = usePathname()
 
@@ -108,21 +107,21 @@ export function Sidebar() {
     <aside
       className="fixed left-0 top-0 bottom-0 w-[224px] flex flex-col z-30 select-none"
       style={{
-        background: '#FFFFFF',
-        boxShadow: '1px 0 0 rgba(0,0,0,0.06), 4px 0 16px rgba(0,0,0,0.04)',
+        background: 'linear-gradient(180deg, #131A2E 0%, #0D1422 100%)',
+        boxShadow: '1px 0 0 rgba(255,255,255,0.05), 4px 0 32px rgba(0,0,0,0.6)',
       }}
     >
       {/* ── Logo ── */}
       <div
         className="h-[56px] flex items-center px-5 shrink-0"
-        style={{ borderBottom: '1px solid rgba(0,0,0,0.05)' }}
+        style={{ borderBottom: '1px solid rgba(255,255,255,0.06)' }}
       >
         <Link href="/" className="flex items-center gap-3">
           <motion.div
             className="w-[28px] h-[28px] rounded-[8px] flex items-center justify-center shrink-0"
             style={{
               background: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 40%, #CC1A00 100%)',
-              boxShadow: '0 3px 10px rgba(255,59,48,0.45), 0 0 0 1px rgba(255,255,255,0.2) inset',
+              boxShadow: '0 3px 12px rgba(255,59,48,0.55), 0 0 0 1px rgba(255,255,255,0.2) inset',
             }}
             whileHover={{ scale: 1.05 }}
             whileTap={{ scale: 0.95 }}
@@ -130,9 +129,7 @@ export function Sidebar() {
           >
             <Zap size={14} className="text-white" strokeWidth={2.5} />
           </motion.div>
-          <span
-            className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.03em]"
-          >
+          <span className="text-[15px] font-semibold text-white tracking-[-0.03em]">
             ClosePilot
           </span>
         </Link>
@@ -160,7 +157,7 @@ export function Sidebar() {
       </nav>
 
       {/* ── Divider ── */}
-      <div className="mx-4 h-px" style={{ background: 'rgba(0,0,0,0.05)' }} />
+      <div className="mx-4 h-px" style={{ background: 'rgba(255,255,255,0.07)' }} />
 
       {/* ── Settings ── */}
       <div className="py-1.5">
@@ -171,8 +168,8 @@ export function Sidebar() {
       <div className="mx-2 mb-3">
         <motion.div
           className="flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] cursor-pointer"
-          style={{ background: 'rgba(0,0,0,0.03)' }}
-          whileHover={{ background: 'rgba(0,0,0,0.06)' }}
+          style={{ background: 'rgba(255,255,255,0.05)' }}
+          whileHover={{ background: 'rgba(255,255,255,0.1)' }}
           transition={{ duration: 0.12 }}
         >
           <div
@@ -182,11 +179,11 @@ export function Sidebar() {
             <span className="text-[8px] font-bold text-white leading-none">CP</span>
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-[12.5px] font-medium text-[#3C3C43] truncate tracking-[-0.01em]">
+            <p className="text-[12.5px] font-medium truncate tracking-[-0.01em]" style={{ color: 'rgba(255,255,255,0.8)' }}>
               ワークスペース
             </p>
           </div>
-          <ChevronRight size={12} style={{ color: '#C7C7CC' }} className="shrink-0" />
+          <ChevronRight size={12} style={{ color: 'rgba(255,255,255,0.28)' }} className="shrink-0" />
         </motion.div>
       </div>
     </aside>
