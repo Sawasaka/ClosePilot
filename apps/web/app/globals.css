@@ -3,10 +3,10 @@
 @theme {
   /* ===== ClosePilot — Nintendo Light Design System ===== */
 
-  /* Backgrounds — professional neutral */
-  --color-cp-bg:        #F5F5F7;
+  /* Backgrounds */
+  --color-cp-bg:        #E8E8EE;
   --color-cp-surface:   #FFFFFF;
-  --color-cp-surface-2: #F2F2F4;
+  --color-cp-surface-2: #F2F2F5;
   --color-cp-border:    rgba(0, 0, 0, 0.07);
 
   /* Text */
@@ -44,7 +44,7 @@ html {
 body {
   margin: 0;
   padding: 0;
-  background-color: #F5F5F7;
+  background-color: #E8E8EE;
   color: #1A1A2E;
   letter-spacing: -0.008em;
 }
