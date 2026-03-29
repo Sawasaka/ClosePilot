@@ -5,16 +5,19 @@ import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home, Columns3, Building2, Users, Briefcase,
-  CheckSquare, BookOpen, BarChart2, Settings, Zap, ChevronRight,
+  List, CheckSquare, BookOpen, BarChart2, LayoutDashboard,
+  Workflow, FileStack, AlertCircle, Settings, Zap, ChevronRight,
 } from 'lucide-react'
 
 // ── Navigation structure ──────────────────────────────────────────────────────
 const NAV_GROUPS = [
+  // ── MVP ──
   {
     label: null,
     items: [
-      { href: '/',         label: "Today's Action", icon: Home },
-      { href: '/pipeline', label: 'パイプライン',       icon: Columns3 },
+      { href: '/',          label: '今日のタスク', icon: Home, badge: 8 },
+      { href: '/overdue',   label: '期限超過タスク',       icon: AlertCircle, badge: 4 },
+      { href: '/pipeline',  label: 'パイプライン',       icon: Columns3 },
     ],
   },
   {
@@ -26,20 +29,30 @@ const NAV_GROUPS = [
     ],
   },
   {
-    label: 'ツール',
+    label: null,
     items: [
-      { href: '/tasks',     label: 'タスク',         icon: CheckSquare },
-      { href: '/knowledge', label: 'ナレッジ',        icon: BookOpen },
-      { href: '/analytics', label: 'アナリティクス',  icon: BarChart2 },
+      { href: '/lists',       label: 'リスト',           icon: List },
+      { href: '/tasks',       label: 'タスク',           icon: CheckSquare },
+      { href: '/automation',  label: 'オートメーション', icon: Workflow },
+      { href: '/documents',   label: '資料',             icon: FileStack },
+    ],
+  },
+  // ── 開発ロードマップ ──
+  {
+    label: 'ロードマップ',
+    items: [
+      { href: '/dashboard', label: 'ダッシュボード',    icon: LayoutDashboard, roadmap: 'v2' },
+      { href: '/analytics', label: 'アナリティクス',    icon: BarChart2, roadmap: 'v2' },
+      { href: '/knowledge', label: 'ナレッジ',          icon: BookOpen, roadmap: 'v3' },
     ],
   },
 ]
 
 // ── NavItem — Nintendo button style ──────────────────────────────────────────
 function NavItem({
-  href, label, icon: Icon, active,
+  href, label, icon: Icon, active, badge, roadmap,
 }: {
-  href: string; label: string; icon: React.ElementType; active: boolean
+  href: string; label: string; icon: React.ElementType; active: boolean; badge?: number; roadmap?: string
 }) {
   return (
     <Link href={href} className="block mx-2">
@@ -67,6 +80,30 @@ function NavItem({
         >
           {label}
         </span>
+
+        {badge != null && badge > 0 && (
+          <span
+            className="ml-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold leading-none shrink-0"
+            style={{
+              background: active ? 'rgba(255,255,255,0.25)' : href === '/overdue' ? '#FF3B30' : '#0071E3',
+              color: '#FFFFFF',
+            }}
+          >
+            {badge}
+          </span>
+        )}
+
+        {roadmap && !active && (
+          <span
+            className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-[4px] shrink-0 uppercase tracking-[0.03em]"
+            style={{
+              background: roadmap === 'v2' ? 'rgba(0,113,227,0.08)' : 'rgba(94,92,230,0.08)',
+              color: roadmap === 'v2' ? '#0071E3' : '#5E5CE6',
+            }}
+          >
+            {roadmap === 'v2' ? 'Phase 2' : 'Phase 3'}
+          </span>
+        )}
 
         {/* Active badge dot */}
         <AnimatePresence>
@@ -111,7 +148,7 @@ export function Sidebar() {
       className="fixed left-0 top-0 bottom-0 w-[224px] flex flex-col z-30 select-none"
       style={{
         background: '#FFFFFF',
-        boxShadow: '1px 0 0 rgba(0,0,0,0.06), 4px 0 20px rgba(0,0,0,0.05)',
+        boxShadow: '1px 0 0 rgba(0,0,0,0.06), 4px 0 20px rgba(0,0,0,0.04)',
       }}
     >
       {/* ── Logo ── */}
@@ -152,6 +189,8 @@ export function Sidebar() {
                   label={item.label}
                   icon={item.icon}
                   active={isActive(item.href)}
+                  badge={'badge' in item ? (item as { badge: number }).badge : undefined}
+                  roadmap={'roadmap' in item ? (item as { roadmap: string }).roadmap : undefined}
                 />
               ))}
             </div>

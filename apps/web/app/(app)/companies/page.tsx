@@ -13,20 +13,22 @@ import {
   ExternalLink,
   ChevronLeft,
   ChevronRight,
+  BarChart2,
   X,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Rank = 'A' | 'B' | 'C'
-type SortKey = 'name' | 'score' | 'lastCallAt' | 'rank'
+type Signal = 'Hot' | 'Middle' | 'Low'
+type ScoreGrade = 'A' | 'B' | 'C' | 'D' | 'E'
+type SortKey = 'name' | 'score' | 'lastCallAt' | 'signal'
 type SortDir = 'asc' | 'desc'
 
 interface Company {
   id: string
   name: string
   domain: string
-  rank: Rank
+  signal: Signal
   score: number
   industry: string
   owner: string
@@ -36,33 +38,60 @@ interface Company {
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const MOCK_COMPANIES: Company[] = [
-  { id: '1', name: '株式会社テクノリード',    domain: 'techno-lead.co.jp',     rank: 'A', score: 8.5, industry: 'IT・SaaS',    owner: '田中太郎', lastCallAt: '2026-03-20' },
-  { id: '2', name: '合同会社フューチャー',    domain: 'future-llc.jp',          rank: 'A', score: 7.2, industry: '製造業',       owner: '鈴木花子', lastCallAt: '2026-03-19' },
-  { id: '3', name: '株式会社イノベーション',  domain: 'innovation-corp.jp',     rank: 'A', score: 6.8, industry: 'コンサル',     owner: '田中太郎', lastCallAt: '2026-03-18' },
-  { id: '4', name: '株式会社グロース',        domain: 'growth-inc.jp',          rank: 'B', score: 5.1, industry: 'HR・人材',    owner: '佐藤次郎', lastCallAt: '2026-03-15' },
-  { id: '5', name: '有限会社サクセス',        domain: 'success-ltd.jp',         rank: 'B', score: 4.7, industry: '小売・EC',    owner: '鈴木花子', lastCallAt: '2026-03-14' },
-  { id: '6', name: '株式会社ネクスト',        domain: 'next-company.jp',        rank: 'C', score: 3.2, industry: '不動産',       owner: '田中太郎', lastCallAt: '2026-03-10' },
-  { id: '7', name: '合同会社ビジョン',        domain: 'vision-llc.jp',          rank: 'C', score: 2.9, industry: '広告・マーケ', owner: '佐藤次郎', lastCallAt: '2026-03-08' },
-  { id: '8', name: '株式会社スタート',        domain: 'start-corp.jp',          rank: 'C', score: 1.5, industry: 'その他',       owner: '田中太郎', lastCallAt: null },
-  { id: '9', name: '有限会社フォース',        domain: 'force-ltd.jp',           rank: 'C', score: 1.2, industry: '建設',         owner: '鈴木花子', lastCallAt: null },
-  { id: '10', name: '株式会社アドバンス',     domain: 'advance-co.jp',          rank: 'C', score: 0.8, industry: '物流',         owner: '佐藤次郎', lastCallAt: null },
+  { id: '1',  name: '株式会社テクノリード',    domain: 'techno-lead.co.jp',     signal: 'Hot',    score: 4.5, industry: 'IT・SaaS',    owner: '田中太郎', lastCallAt: '2026-03-20' },
+  { id: '2',  name: '合同会社フューチャー',    domain: 'future-llc.jp',          signal: 'Hot',    score: 4.0, industry: '製造業',       owner: '鈴木花子', lastCallAt: '2026-03-19' },
+  { id: '3',  name: '株式会社イノベーション',  domain: 'innovation-corp.jp',     signal: 'Hot',    score: 3.5, industry: 'コンサル',     owner: '田中太郎', lastCallAt: '2026-03-18' },
+  { id: '4',  name: '株式会社グロース',        domain: 'growth-inc.jp',          signal: 'Middle', score: 3.0, industry: 'HR・人材',    owner: '佐藤次郎', lastCallAt: '2026-03-15' },
+  { id: '5',  name: '有限会社サクセス',        domain: 'success-ltd.jp',         signal: 'Middle', score: 2.5, industry: '小売・EC',    owner: '鈴木花子', lastCallAt: '2026-03-14' },
+  { id: '6',  name: '株式会社ネクスト',        domain: 'next-company.jp',        signal: 'Low',    score: 2.0, industry: '不動産',       owner: '田中太郎', lastCallAt: '2026-03-10' },
+  { id: '7',  name: '合同会社ビジョン',        domain: 'vision-llc.jp',          signal: 'Low',    score: 1.5, industry: '広告・マーケ', owner: '佐藤次郎', lastCallAt: '2026-03-08' },
+  { id: '8',  name: '株式会社スタート',        domain: 'start-corp.jp',          signal: 'Low',    score: 1.0, industry: 'その他',       owner: '田中太郎', lastCallAt: null },
+  { id: '9',  name: '有限会社フォース',        domain: 'force-ltd.jp',           signal: 'Low',    score: 0.5, industry: '建設',         owner: '鈴木花子', lastCallAt: null },
+  { id: '10', name: '株式会社アドバンス',      domain: 'advance-co.jp',          signal: 'Low',    score: 0.5, industry: '物流',         owner: '佐藤次郎', lastCallAt: null },
 ]
 
 const INITIAL_COMPANIES = MOCK_COMPANIES
 
 const ALL_INDUSTRIES = Array.from(new Set(MOCK_COMPANIES.map(c => c.industry)))
 const ALL_OWNERS    = Array.from(new Set(MOCK_COMPANIES.map(c => c.owner)))
-const ALL_RANKS: Rank[] = ['A', 'B', 'C']
+const ALL_SIGNALS: Signal[] = ['Hot', 'Middle', 'Low']
 
 const PAGE_SIZE = 8
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-type RankConfig = { gradient: string; glow: string; color: string }
-const RANK_CONFIG: Record<Rank, RankConfig> = {
-  A: { gradient: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 55%, #CC1A00 100%)', glow: '0 2px 8px rgba(255,59,48,0.5)',   color: '#fff' },
-  B: { gradient: 'linear-gradient(135deg, #FFE040 0%, #FFD60A 55%, #FF9F0A 100%)', glow: '0 2px 7px rgba(255,214,10,0.5)',  color: '#7B4000' },
-  C: { gradient: 'linear-gradient(135deg, #5AC8FA 0%, #32ADE6 55%, #0071E3 100%)', glow: '0 2px 6px rgba(50,173,230,0.45)', color: '#fff' },
+const SIGNAL_CONFIG: Record<Signal, { bg: string; text: string; dot: string; label: string }> = {
+  Hot:    { bg: 'rgba(255,59,48,0.1)',  text: '#CF3131', dot: '#FF3B30', label: 'Hot' },
+  Middle: { bg: 'rgba(255,159,10,0.1)', text: '#C07000', dot: '#FF9F0A', label: 'Middle' },
+  Low:    { bg: 'rgba(0,113,227,0.1)',  text: '#0060C7', dot: '#0071E3', label: 'Low' },
+}
+
+const SCORE_GRADE_CONFIG: Record<ScoreGrade, { color: string; bg: string }> = {
+  A: { color: '#CF3131', bg: 'rgba(255,59,48,0.1)' },
+  B: { color: '#C07000', bg: 'rgba(255,159,10,0.1)' },
+  C: { color: '#5E5CE6', bg: 'rgba(94,92,230,0.1)' },
+  D: { color: '#0060C7', bg: 'rgba(0,113,227,0.1)' },
+  E: { color: '#8E8E93', bg: 'rgba(0,0,0,0.05)' },
+}
+
+function scoreToGrade(score: number): ScoreGrade {
+  if (score >= 4.0) return 'A'
+  if (score >= 3.0) return 'B'
+  if (score >= 2.0) return 'C'
+  if (score >= 1.0) return 'D'
+  return 'E'
+}
+
+// アルゴリズム詳細のモックデータ
+function getScoreBreakdown(score: number) {
+  const total = score
+  return [
+    { label: 'Web行動スコア', value: +(total * 0.3).toFixed(1), max: 1.5, description: 'HP閲覧回数・滞在時間・料金ページ訪問' },
+    { label: '企業属性スコア', value: +(total * 0.25).toFixed(1), max: 1.25, description: '業種適合度・従業員規模・売上規模' },
+    { label: 'エンゲージメント', value: +(total * 0.2).toFixed(1), max: 1.0, description: 'メール開封率・資料閲覧・セミナー参加' },
+    { label: 'タイミングスコア', value: +(total * 0.15).toFixed(1), max: 0.75, description: '問い合わせ時期・予算策定期・決算月' },
+    { label: 'ソーシャルシグナル', value: +(total * 0.1).toFixed(1), max: 0.5, description: '採用活動・プレスリリース・資金調達' },
+  ]
 }
 
 function formatDate(dateStr: string | null): string {
@@ -71,32 +100,76 @@ function formatDate(dateStr: string | null): string {
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
-function RankBadge({ rank }: { rank: Rank }) {
-  const r = RANK_CONFIG[rank]
+function SignalBadge({ signal }: { signal: Signal }) {
+  const s = SIGNAL_CONFIG[signal]
   return (
-    <span
-      className="inline-flex items-center justify-center rounded-[5px] text-[10px] font-bold shrink-0"
-      style={{ width: 22, height: 22, background: r.gradient, boxShadow: r.glow, color: r.color, letterSpacing: '0.03em' }}
-    >
-      {rank}
+    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{ background: s.bg, color: s.text }}>
+      <span className="w-[6px] h-[6px] rounded-full" style={{ background: s.dot }} />
+      {s.label}
     </span>
   )
 }
 
-function ScoreBar({ score, rank }: { score: number; rank: Rank }) {
-  const pct = (score / 10) * 100
+function ScoreDisplay({ score, companyName }: { score: number; companyName: string }) {
+  const [showDetail, setShowDetail] = useState(false)
+  const grade = scoreToGrade(score)
+  const cfg = SCORE_GRADE_CONFIG[grade]
+  const breakdown = getScoreBreakdown(score)
+
   return (
-    <div className="flex items-center gap-2">
-      <span className="text-sm font-semibold text-[#1D1D1F] tabular-nums w-7 text-right">{score.toFixed(1)}</span>
-      <div className="w-16 h-[7px] rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)' }}>
-        <motion.div
-          className="h-full rounded-full"
-          style={{ background: RANK_CONFIG[rank].gradient }}
-          initial={{ width: 0 }}
-          animate={{ width: `${pct}%` }}
-          transition={{ duration: 0.6, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-        />
-      </div>
+    <div className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); setShowDetail(!showDetail) }}
+        className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+      >
+        <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[5px] text-[11px] font-bold" style={{ background: cfg.bg, color: cfg.color }}>
+          {grade}
+        </span>
+        <span className="text-[13px] font-semibold tabular-nums text-[#1D1D1F]">{score.toFixed(1)}</span>
+      </button>
+
+      <AnimatePresence>
+        {showDetail && (
+          <>
+            <div className="fixed inset-0 z-40" onClick={() => setShowDetail(false)} />
+            <motion.div
+              initial={{ opacity: 0, y: -4, scale: 0.97 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -4, scale: 0.97 }}
+              transition={{ duration: 0.15 }}
+              className="absolute left-0 top-[32px] z-50 w-[300px] rounded-[12px] p-4 bg-white"
+              style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.14)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="flex items-center justify-between mb-3">
+                <p className="text-[13px] font-semibold text-[#1D1D1F]">スコア詳細</p>
+                <div className="flex items-center gap-1.5">
+                  <span className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[4px] text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.color }}>{grade}</span>
+                  <span className="text-[15px] font-bold tabular-nums" style={{ color: cfg.color }}>{score.toFixed(1)}</span>
+                  <span className="text-[11px] text-[#AEAEB2]">/ 5.0</span>
+                </div>
+              </div>
+              <div className="space-y-2.5">
+                {breakdown.map(item => (
+                  <div key={item.label}>
+                    <div className="flex items-center justify-between mb-0.5">
+                      <span className="text-[11px] font-medium text-[#6E6E73]">{item.label}</span>
+                      <span className="text-[11px] font-semibold tabular-nums text-[#1D1D1F]">{item.value}</span>
+                    </div>
+                    <p className="text-[10px] text-[#AEAEB2] mb-1">{item.description}</p>
+                    <div className="h-[4px] rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.05)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(item.value / item.max) * 100}%`, background: cfg.color, transition: 'width 0.3s ease' }} />
+                    </div>
+                  </div>
+                ))}
+              </div>
+              <p className="text-[10px] text-[#AEAEB2] mt-3 pt-2" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                スコアは上記5要素の重み付けで自動算出されます
+              </p>
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
     </div>
   )
 }
@@ -136,25 +209,26 @@ interface CreateCompanyForm {
   name: string
   domain: string
   industry: string
-  rank: Rank
+  signal: Signal
   owner: string
 }
 
 const DEFAULT_CREATE_FORM: CreateCompanyForm = {
-  name: '', domain: '', industry: '', rank: 'B', owner: '',
+  name: '', domain: '', industry: '', signal: 'Middle', owner: '',
 }
 
 export default function CompaniesPage() {
   const router = useRouter()
   const [companies, setCompanies] = useState<Company[]>(INITIAL_COMPANIES)
   const [search, setSearch]         = useState('')
-  const [filterRanks, setFilterRanks]       = useState<Rank[]>([])
+  const [filterSignals, setFilterSignals]   = useState<Signal[]>([])
   const [filterIndustry, setFilterIndustry] = useState('')
   const [filterOwner, setFilterOwner]       = useState('')
   const [sortKey, setSortKey]       = useState<SortKey>('score')
   const [sortDir, setSortDir]       = useState<SortDir>('desc')
   const [page, setPage]             = useState(1)
-  const [showRankFilter, setShowRankFilter] = useState(false)
+  const [showSignalFilter, setShowSignalFilter] = useState(false)
+  const [showScoreLogic, setShowScoreLogic] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createForm, setCreateForm] = useState<CreateCompanyForm>(DEFAULT_CREATE_FORM)
 
@@ -164,8 +238,8 @@ export default function CompaniesPage() {
       name: createForm.name.trim(),
       domain: createForm.domain.trim(),
       industry: createForm.industry || 'その他',
-      rank: createForm.rank,
-      score: 3.0,
+      signal: createForm.signal,
+      score: 2.0,
       owner: createForm.owner.trim() || '未割当',
       lastCallAt: null,
     }
@@ -184,8 +258,8 @@ export default function CompaniesPage() {
         c.name.toLowerCase().includes(q) || c.domain.toLowerCase().includes(q)
       )
     }
-    if (filterRanks.length > 0) {
-      list = list.filter(c => filterRanks.includes(c.rank))
+    if (filterSignals.length > 0) {
+      list = list.filter(c => filterSignals.includes(c.signal))
     }
     if (filterIndustry) {
       list = list.filter(c => c.industry === filterIndustry)
@@ -198,14 +272,14 @@ export default function CompaniesPage() {
       let cmp = 0
       if (sortKey === 'name')      cmp = a.name.localeCompare(b.name, 'ja')
       if (sortKey === 'score')     cmp = a.score - b.score
-      if (sortKey === 'rank')      cmp = ALL_RANKS.indexOf(a.rank) - ALL_RANKS.indexOf(b.rank)
+      if (sortKey === 'signal')    cmp = ALL_SIGNALS.indexOf(a.signal) - ALL_SIGNALS.indexOf(b.signal)
       if (sortKey === 'lastCallAt')
         cmp = (a.lastCallAt ?? '').localeCompare(b.lastCallAt ?? '')
       return sortDir === 'desc' ? -cmp : cmp
     })
 
     return list
-  }, [companies, search, filterRanks, filterIndustry, filterOwner, sortKey, sortDir])
+  }, [companies, search, filterSignals, filterIndustry, filterOwner, sortKey, sortDir])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -216,12 +290,12 @@ export default function CompaniesPage() {
     setPage(1)
   }
 
-  function toggleRank(r: Rank) {
-    setFilterRanks(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
+  function toggleSignal(s: Signal) {
+    setFilterSignals(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
     setPage(1)
   }
 
-  const hasFilters = filterRanks.length > 0 || filterIndustry || filterOwner
+  const hasFilters = filterSignals.length > 0 || filterIndustry || filterOwner
 
   return (
     <div className="space-y-4">
@@ -241,48 +315,49 @@ export default function CompaniesPage() {
             />
           </div>
 
-          {/* Rank filter dropdown */}
+          {/* Signal filter dropdown */}
           <div className="relative">
             <button
-              onClick={() => setShowRankFilter(v => !v)}
+              onClick={() => setShowSignalFilter(v => !v)}
               className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-[8px] border transition-all duration-150 ${
-                filterRanks.length > 0
+                filterSignals.length > 0
                   ? 'border-[rgba(0,113,227,0.3)] text-[#0071E3]'
                   : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB] hover:text-[#374151]'
               }`}
-              style={filterRanks.length > 0 ? { background: 'rgba(0,113,227,0.08)' } : undefined}
+              style={filterSignals.length > 0 ? { background: 'rgba(0,113,227,0.08)' } : undefined}
             >
-              ランク
-              {filterRanks.length > 0 && (
+              シグナル
+              {filterSignals.length > 0 && (
                 <span className="w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] flex items-center justify-center font-bold">
-                  {filterRanks.length}
+                  {filterSignals.length}
                 </span>
               )}
               <ChevronDown size={13} />
             </button>
             <AnimatePresence>
-              {showRankFilter && (
+              {showSignalFilter && (
                 <motion.div
                   initial={{ opacity: 0, y: -6, scale: 0.97 }}
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -6, scale: 0.97 }}
                   transition={{ duration: 0.12 }}
-                  className="absolute top-full mt-1.5 left-0 z-20 bg-white rounded-[10px] p-2 flex gap-1"
+                  className="absolute top-full mt-1.5 left-0 z-20 bg-white rounded-[10px] p-2 flex flex-col gap-0.5 min-w-[120px]"
                   style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.10), 0 16px 48px rgba(0,0,0,0.08)' }}
                 >
-                  {ALL_RANKS.map(r => {
-                    const cfg = RANK_CONFIG[r]
-                    const active = filterRanks.includes(r)
+                  {ALL_SIGNALS.map(s => {
+                    const cfg = SIGNAL_CONFIG[s]
+                    const active = filterSignals.includes(s)
                     return (
                       <button
-                        key={r}
-                        onClick={() => toggleRank(r)}
-                        className={`w-8 h-8 rounded-[6px] text-[11px] font-bold transition-all duration-100 ${
-                          !active ? 'hover:bg-[rgba(0,0,0,0.04)] text-[#6E6E73]' : ''
+                        key={s}
+                        onClick={() => toggleSignal(s)}
+                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] text-[12px] font-medium transition-all ${
+                          active ? '' : 'hover:bg-[rgba(0,0,0,0.04)] text-[#3C3C43]'
                         }`}
-                        style={active ? { background: cfg.gradient, boxShadow: cfg.glow, color: cfg.color } : undefined}
+                        style={active ? { background: cfg.bg, color: cfg.text } : undefined}
                       >
-                        {r}
+                        <span className="w-[6px] h-[6px] rounded-full" style={{ background: cfg.dot }} />
+                        {s}
                       </button>
                     )
                   })}
@@ -335,6 +410,80 @@ export default function CompaniesPage() {
         </motion.button>
       </div>
 
+      {/* ── Scoring Logic Panel ── */}
+      <div className="bg-white rounded-[14px] overflow-hidden" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.04)' }}>
+        <button
+          onClick={() => setShowScoreLogic(!showScoreLogic)}
+          className="w-full flex items-center gap-3 px-5 py-3 hover:bg-[rgba(0,0,0,0.015)] transition-colors"
+        >
+          <div className="w-[24px] h-[24px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(94,92,230,0.1)' }}>
+            <BarChart2 size={13} style={{ color: '#5E5CE6' }} />
+          </div>
+          <div className="flex-1 text-left">
+            <p className="text-[13px] font-semibold text-[#1D1D1F]">スコアリングロジック</p>
+            <p className="text-[11px] text-[#8E8E93]">スコアの算出方法と各要素の重み付けを確認</p>
+          </div>
+          <motion.div animate={{ rotate: showScoreLogic ? 90 : 0 }} transition={{ duration: 0.15 }}>
+            <ChevronRight size={14} style={{ color: '#AEAEB2' }} />
+          </motion.div>
+        </button>
+
+        <AnimatePresence>
+          {showScoreLogic && (
+            <motion.div
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+              className="overflow-hidden"
+            >
+              <div className="px-5 pb-5" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+                {/* Grade scale */}
+                <div className="flex items-center gap-3 py-3 mb-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+                  <span className="text-[11px] text-[#8E8E93]">グレード:</span>
+                  {(['A', 'B', 'C', 'D', 'E'] as const).map(g => {
+                    const cfg = SCORE_GRADE_CONFIG[g]
+                    const range = g === 'A' ? '4.0-5.0' : g === 'B' ? '3.0-3.9' : g === 'C' ? '2.0-2.9' : g === 'D' ? '1.0-1.9' : '0-0.9'
+                    return (
+                      <div key={g} className="flex items-center gap-1">
+                        <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-[4px] text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.color }}>{g}</span>
+                        <span className="text-[10px] text-[#AEAEB2] tabular-nums">{range}</span>
+                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Algorithm breakdown */}
+                <div className="space-y-3">
+                  {[
+                    { label: 'Web行動スコア', weight: '30%', color: '#FF3B30', description: 'HP閲覧回数・滞在時間・料金ページ訪問・資料ダウンロード回数から算出。直近7日間の行動を重み付け。' },
+                    { label: '企業属性スコア', weight: '25%', color: '#FF9F0A', description: '業種適合度・従業員規模・売上規模・所在地をマスタデータと照合。ターゲットICP（理想顧客像）との一致度。' },
+                    { label: 'エンゲージメント', weight: '20%', color: '#5E5CE6', description: 'メール開封率・クリック率・資料閲覧深度・セミナー参加履歴。過去30日間のインタラクション頻度。' },
+                    { label: 'タイミングスコア', weight: '15%', color: '#0071E3', description: '問い合わせ時期・予算策定期（決算月の3ヶ月前）・年度切り替え時期を考慮した購買タイミング推定。' },
+                    { label: 'ソーシャルシグナル', weight: '10%', color: '#34C759', description: '採用活動の活発さ・プレスリリース発行・資金調達ニュース・業界イベント登壇。外部データソースから収集。' },
+                  ].map(item => (
+                    <div key={item.label} className="flex items-start gap-3">
+                      <div className="w-[6px] h-[6px] rounded-full mt-1.5 shrink-0" style={{ background: item.color }} />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className="text-[12px] font-semibold text-[#1D1D1F]">{item.label}</span>
+                          <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[3px]" style={{ background: `${item.color}14`, color: item.color }}>{item.weight}</span>
+                        </div>
+                        <p className="text-[11px] text-[#8E8E93] mt-0.5 leading-relaxed">{item.description}</p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <p className="text-[10px] text-[#AEAEB2] mt-3 pt-2" style={{ borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                  各要素は0〜5.0の範囲で算出され、重み付けにより最終スコア（5.0満点）が決定されます。スコアは日次で自動更新されます。
+                </p>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
+
       {/* ── Active Filter Chips ── */}
       <AnimatePresence>
         {hasFilters && (
@@ -347,8 +496,8 @@ export default function CompaniesPage() {
           >
             <span className="text-xs text-[#AEAEB2]">フィルター:</span>
             <AnimatePresence>
-              {filterRanks.map(r => (
-                <FilterChip key={r} label={`ランク ${r}`} onRemove={() => toggleRank(r)} />
+              {filterSignals.map(s => (
+                <FilterChip key={s} label={s} onRemove={() => toggleSignal(s)} />
               ))}
               {filterIndustry && (
                 <FilterChip label={filterIndustry} onRemove={() => setFilterIndustry('')} />
@@ -358,7 +507,7 @@ export default function CompaniesPage() {
               )}
             </AnimatePresence>
             <button
-              onClick={() => { setFilterRanks([]); setFilterIndustry(''); setFilterOwner('') }}
+              onClick={() => { setFilterSignals([]); setFilterIndustry(''); setFilterOwner('') }}
               className="text-xs text-[#6E6E73] hover:text-[#1D1D1F] underline ml-1 transition-colors"
             >
               すべてクリア
@@ -375,7 +524,7 @@ export default function CompaniesPage() {
           {[
             { label: '企業名', key: 'name' as SortKey, sortable: true },
             { label: 'ドメイン', key: null, sortable: false },
-            { label: 'ランク', key: 'rank' as SortKey, sortable: true },
+            { label: 'シグナル', key: 'signal' as SortKey, sortable: true },
             { label: 'スコア', key: 'score' as SortKey, sortable: true },
             { label: '業種', key: null, sortable: false },
             { label: '担当者', key: null, sortable: false },
@@ -446,14 +595,14 @@ export default function CompaniesPage() {
                     </a>
                   </div>
 
-                  {/* ランク */}
+                  {/* シグナル */}
                   <div>
-                    <RankBadge rank={company.rank} />
+                    <SignalBadge signal={company.signal} />
                   </div>
 
                   {/* スコア */}
                   <div>
-                    <ScoreBar score={company.score} rank={company.rank} />
+                    <ScoreDisplay score={company.score} companyName={company.name} />
                   </div>
 
                   {/* 業種 */}
@@ -604,13 +753,13 @@ export default function CompaniesPage() {
                     />
                   </div>
                   <div className="w-28">
-                    <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">ランク</label>
+                    <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">シグナル</label>
                     <select
-                      value={createForm.rank}
-                      onChange={e => setCreateForm(f => ({ ...f, rank: e.target.value as Rank }))}
+                      value={createForm.signal}
+                      onChange={e => setCreateForm(f => ({ ...f, signal: e.target.value as Signal }))}
                       className="w-full px-3 py-2 text-[13px] bg-[#F5F5F7] rounded-[8px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-white transition-all appearance-none cursor-pointer"
                     >
-                      {ALL_RANKS.map(r => <option key={r} value={r}>{r}</option>)}
+                      {ALL_SIGNALS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
                   </div>
                 </div>

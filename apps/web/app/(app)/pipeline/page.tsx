@@ -18,17 +18,20 @@ type ViewMode = 'all' | 'focused'
 
 type Rank = 'A' | 'B' | 'C'
 type StageKey =
-  | 'NEW_LEAD'
-  | 'QUALIFIED'
-  | 'FIRST_MEETING'
-  | 'SOLUTION_FIT'
-  | 'PROPOSAL'
-  | 'NEGOTIATION'
-  | 'VERBAL_COMMIT'
+  | 'IS'
+  | 'MEETING_DONE'
+  | 'PROJECT_PLANNED'
+  | 'POC'
+  | 'DECISION_MAKER_OK'
   | 'CLOSED_WON'
+  | 'NURTURING'
+  | 'LOST_DEAL'
+  | 'CHURN'
+  | 'LOST'
 
 interface Deal {
   id: string
+  name: string
   company: string
   contact: string
   amount: number
@@ -41,16 +44,18 @@ interface Deal {
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
 const DEALS: Deal[] = [
-  { id: 'd1',  company: '株式会社テクノリード',         contact: '田中 誠',    amount: 1200000, rank: 'A', owner: '田中太郎', stalled: false, stage: 'NEW_LEAD' },
-  { id: 'd2',  company: '合同会社ビジョン',             contact: '加藤 雄介',  amount: 480000,  rank: 'C', owner: '佐藤次郎', stalled: false, stage: 'NEW_LEAD' },
-  { id: 'd3',  company: '合同会社フューチャー',         contact: '山本 佳子',  amount: 2400000, rank: 'A', owner: '鈴木花子', stalled: false, stage: 'QUALIFIED' },
-  { id: 'd4',  company: '株式会社グロース',             contact: '中村 理恵',  amount: 900000,  rank: 'B', owner: '佐藤次郎', stalled: true,  stage: 'QUALIFIED' },
-  { id: 'd5',  company: '株式会社イノベーション',       contact: '佐々木 拓也', amount: 3600000, rank: 'A', owner: '田中太郎', stalled: false, stage: 'FIRST_MEETING' },
-  { id: 'd6',  company: '有限会社サクセス',             contact: '小林 健太',  amount: 1800000, rank: 'B', owner: '鈴木花子', stalled: true,  stage: 'SOLUTION_FIT' },
-  { id: 'd7',  company: '株式会社ネクスト',             contact: '鈴木 美香',  amount: 720000,  rank: 'C', owner: '田中太郎', stalled: false, stage: 'PROPOSAL' },
-  { id: 'd8',  company: '株式会社テクノリード（2回目）', contact: '田中 誠',    amount: 4800000, rank: 'A', owner: '田中太郎', stalled: false, stage: 'NEGOTIATION' },
-  { id: 'd9',  company: '株式会社イノベーション（大型）', contact: '佐々木 拓也', amount: 6000000, rank: 'A', owner: '田中太郎', stalled: false, stage: 'VERBAL_COMMIT' },
-  { id: 'd10', company: '株式会社グロース（受注）',     contact: '中村 理恵',  amount: 1200000, rank: 'A', owner: '佐藤次郎', stalled: false, stage: 'CLOSED_WON' },
+  { id: 'd1',  name: 'CRM導入プロジェクト',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 1200000, rank: 'A', owner: '田中太郎', stalled: false, stage: 'IS' },
+  { id: 'd2',  name: 'MA連携提案',                company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 480000,  rank: 'C', owner: '佐藤次郎', stalled: false, stage: 'IS' },
+  { id: 'd3',  name: 'SFA刷新案件',               company: '合同会社フューチャー',    contact: '山本 佳子',  amount: 2400000, rank: 'A', owner: '鈴木花子', stalled: false, stage: 'MEETING_DONE' },
+  { id: 'd4',  name: 'コンサルティング契約',       company: '株式会社グロース',        contact: '中村 理恵',  amount: 900000,  rank: 'B', owner: '佐藤次郎', stalled: true,  stage: 'MEETING_DONE' },
+  { id: 'd5',  name: 'DX推進パッケージ',          company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3600000, rank: 'A', owner: '田中太郎', stalled: false, stage: 'PROJECT_PLANNED' },
+  { id: 'd6',  name: 'セールスオートメーション導入', company: '有限会社サクセス',       contact: '小林 健太',  amount: 1800000, rank: 'B', owner: '鈴木花子', stalled: false, stage: 'POC' },
+  { id: 'd7',  name: 'ライトプラン契約',           company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 720000,  rank: 'C', owner: '田中太郎', stalled: false, stage: 'DECISION_MAKER_OK' },
+  { id: 'd8',  name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 4800000, rank: 'A', owner: '田中太郎', stalled: false, stage: 'CLOSED_WON' },
+  { id: 'd9',  name: 'スタータープラン再提案',     company: '株式会社スタート',        contact: '吉田 千春',  amount: 600000,  rank: 'C', owner: '佐藤次郎', stalled: false, stage: 'NURTURING' },
+  { id: 'd10', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1500000, rank: 'B', owner: '鈴木花子', stalled: true,  stage: 'LOST_DEAL' },
+  { id: 'd11', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960000,  rank: 'B', owner: '田中太郎', stalled: false, stage: 'CHURN' },
+  { id: 'd12', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2100000, rank: 'A', owner: '佐藤次郎', stalled: false, stage: 'LOST' },
 ]
 
 // ─── Stage Config ──────────────────────────────────────────────────────────────
@@ -64,14 +69,16 @@ interface StageConfig {
 }
 
 const STAGES: StageConfig[] = [
-  { key: 'NEW_LEAD',      label: '新規リード',  color: '#6E6E73', headerBg: 'rgba(0,0,0,0.04)',       dotColor: '#AEAEB2' },
-  { key: 'QUALIFIED',     label: '有資格',      color: '#0044DD', headerBg: 'rgba(0,85,255,0.10)',    dotColor: '#3B82F6' },
-  { key: 'FIRST_MEETING', label: '初回商談',    color: '#4B48CC', headerBg: 'rgba(94,92,230,0.10)',   dotColor: '#8B8BE8' },
-  { key: 'SOLUTION_FIT',  label: '課題適合',    color: '#9B30D9', headerBg: 'rgba(191,90,242,0.10)',  dotColor: '#BF5AF2' },
-  { key: 'PROPOSAL',      label: '提案',        color: '#C07000', headerBg: 'rgba(255,159,10,0.10)',  dotColor: '#FFB82E' },
-  { key: 'NEGOTIATION',   label: '交渉',        color: '#D92B1A', headerBg: 'rgba(255,59,48,0.10)',   dotColor: '#FF6B62' },
-  { key: 'VERBAL_COMMIT', label: '口頭合意',    color: '#007A30', headerBg: 'rgba(0,200,83,0.10)',    dotColor: '#34C759' },
-  { key: 'CLOSED_WON',    label: '受注',        color: '#007A30', headerBg: 'rgba(0,200,83,0.14)',    dotColor: '#00C853' },
+  { key: 'IS',                label: 'IS',              color: '#6E6E73', headerBg: 'rgba(0,0,0,0.04)',       dotColor: '#AEAEB2' },
+  { key: 'MEETING_DONE',      label: '商談済み',        color: '#0044DD', headerBg: 'rgba(0,85,255,0.10)',    dotColor: '#3B82F6' },
+  { key: 'PROJECT_PLANNED',   label: 'PJ化予定あり',    color: '#4B48CC', headerBg: 'rgba(94,92,230,0.10)',   dotColor: '#8B8BE8' },
+  { key: 'POC',               label: 'POC実施中',       color: '#9B30D9', headerBg: 'rgba(191,90,242,0.10)',  dotColor: '#BF5AF2' },
+  { key: 'DECISION_MAKER_OK', label: '決裁者合意済み',  color: '#C07000', headerBg: 'rgba(255,159,10,0.10)',  dotColor: '#FFB82E' },
+  { key: 'CLOSED_WON',        label: '受注',            color: '#007A30', headerBg: 'rgba(0,200,83,0.14)',    dotColor: '#00C853' },
+  { key: 'NURTURING',         label: 'ナーチャリング',  color: '#5E5CE6', headerBg: 'rgba(94,92,230,0.08)',   dotColor: '#5E5CE6' },
+  { key: 'LOST_DEAL',         label: '失注',            color: '#D92B1A', headerBg: 'rgba(255,59,48,0.10)',   dotColor: '#FF6B62' },
+  { key: 'CHURN',             label: 'チャーン',        color: '#CF3131', headerBg: 'rgba(255,59,48,0.06)',   dotColor: '#FF3B30' },
+  { key: 'LOST',              label: 'ロスト',          color: '#8E8E93', headerBg: 'rgba(0,0,0,0.03)',       dotColor: '#AEAEB2' },
 ]
 
 // ─── Style Maps ────────────────────────────────────────────────────────────────
@@ -92,11 +99,6 @@ const OWNER_COLORS: Record<string, string> = {
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
 function formatAmount(n: number): string {
-  if (n >= 1000000) return `¥${(n / 1000000).toFixed(1)}M`
-  return `¥${(n / 10000).toFixed(0)}万`
-}
-
-function formatAmountFull(n: number): string {
   return `¥${n.toLocaleString('ja-JP')}`
 }
 
@@ -153,17 +155,14 @@ function DealCard({ deal }: { deal: Deal }) {
         </div>
       </div>
 
-      {/* Company */}
-      <p className="text-[13px] font-semibold text-[#1D1D1F] leading-snug mb-0.5 truncate">
-        {deal.company}
+      {/* Deal name */}
+      <p className="text-[13px] font-semibold text-[#1D1D1F] leading-snug mb-3 truncate">
+        {deal.name}
       </p>
-
-      {/* Contact */}
-      <p className="text-[11px] text-[#AEAEB2] mb-3 truncate">{deal.contact}</p>
 
       {/* Amount */}
       <p className="text-[15px] font-semibold text-[#1D1D1F] tracking-tight tabular-nums mb-3">
-        {formatAmountFull(deal.amount)}
+        {formatAmount(deal.amount)}
       </p>
 
       {/* Owner */}
@@ -302,7 +301,7 @@ export default function PipelinePage() {
   const [period, setPeriod] = useState<Period>('this_month')
   const [ownerFilter, setOwnerFilter] = useState('全員')
   const [viewMode, setViewMode] = useState<ViewMode>('all')
-  const [focusedStage, setFocusedStage] = useState<StageKey>('PROPOSAL')
+  const [focusedStage, setFocusedStage] = useState<StageKey>('POC')
 
   // Group deals by stage
   const dealsByStage = STAGES.reduce<Record<StageKey, Deal[]>>((acc, s) => {
@@ -316,9 +315,8 @@ export default function PipelinePage() {
   const stalledTotal  = DEALS.filter(d => d.stalled).reduce((s, d) => s + d.amount, 0)
   const wonTotal      = dealsByStage['CLOSED_WON'].reduce((s, d) => s + d.amount, 0)
 
-  // Visible stages (exclude CLOSED_WON from main board)
-  const boardStages   = STAGES.filter(s => s.key !== 'CLOSED_WON')
-  const wonStage      = STAGES.find(s => s.key === 'CLOSED_WON')!
+  // All stages visible on board
+  const boardStages   = STAGES
 
   return (
     <div className="flex flex-col h-full">
@@ -487,27 +485,6 @@ export default function PipelinePage() {
             />
           ))}
 
-          {/* Divider before CLOSED_WON */}
-          <motion.div
-            variants={{
-              hidden: { opacity: 0 },
-              visible: { opacity: 1, transition: { duration: 0.4 } },
-            }}
-            className="flex items-start pt-0"
-          >
-            <div className="flex items-center h-10">
-              <TrendingUp size={16} className="text-[#D1D5DB] mx-2" />
-            </div>
-          </motion.div>
-
-          {/* CLOSED_WON */}
-          <PipelineColumn
-            stage={wonStage}
-            deals={dealsByStage['CLOSED_WON']}
-            ownerFilter={ownerFilter}
-            isFocused={viewMode === 'focused' && focusedStage === 'CLOSED_WON'}
-            isDimmed={viewMode === 'focused' && focusedStage !== 'CLOSED_WON'}
-          />
         </motion.div>
       </div>
     </div>

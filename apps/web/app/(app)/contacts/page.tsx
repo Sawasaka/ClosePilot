@@ -28,7 +28,9 @@ type ApproachStatus =
   | 'アポ獲得'
   | 'Next Action'
 
-type SortKey = 'name' | 'callAttempts' | 'lastCallAt' | 'nextActionAt' | 'status'
+type ContactStatus = 'リード' | '商談中' | '顧客' | '休眠' | '失注'
+
+type SortKey = 'name' | 'callAttempts' | 'lastCallAt' | 'nextActionAt' | 'status' | 'contactStatus'
 type SortDir = 'asc' | 'desc'
 
 interface Contact {
@@ -39,6 +41,7 @@ interface Contact {
   companyId: string
   rank: Rank
   status: ApproachStatus
+  contactStatus: ContactStatus
   callAttempts: number
   lastCallAt: string | null
   nextActionAt: string | null
@@ -47,17 +50,18 @@ interface Contact {
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
 const MOCK_CONTACTS: Contact[] = [
-  { id: '1', name: '田中 誠',    title: '営業部長',   company: '株式会社テクノリード',    companyId: '1', rank: 'A', status: 'アポ獲得',   callAttempts: 3, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28' },
-  { id: '2', name: '山本 佳子',  title: 'マネージャー', company: '合同会社フューチャー',    companyId: '2', rank: 'A', status: '接続済み',   callAttempts: 5, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22' },
-  { id: '3', name: '佐々木 拓也', title: '代表取締役',  company: '株式会社イノベーション',  companyId: '3', rank: 'A', status: 'Next Action', callAttempts: 2, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25' },
-  { id: '4', name: '中村 理恵',  title: '購買担当',   company: '株式会社グロース',        companyId: '4', rank: 'B', status: '不在',      callAttempts: 4, lastCallAt: '2026-03-15', nextActionAt: null },
-  { id: '5', name: '小林 健太',  title: '部長',      company: '有限会社サクセス',        companyId: '5', rank: 'B', status: '不通',      callAttempts: 6, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23' },
-  { id: '6', name: '鈴木 美香',  title: '課長',      company: '株式会社ネクスト',        companyId: '6', rank: 'C', status: '未着手',    callAttempts: 0, lastCallAt: null,          nextActionAt: null },
-  { id: '7', name: '加藤 雄介',  title: '取締役',    company: '合同会社ビジョン',        companyId: '7', rank: 'C', status: '未着手',    callAttempts: 0, lastCallAt: null,          nextActionAt: null },
-  { id: '8', name: '吉田 千春',  title: '部長',      company: '株式会社スタート',        companyId: '8', rank: 'C', status: 'コール不可', callAttempts: 8, lastCallAt: '2026-03-01', nextActionAt: null },
+  { id: '1', name: '田中 誠',    title: '営業部長',   company: '株式会社テクノリード',    companyId: '1', rank: 'A', status: 'アポ獲得',   contactStatus: '商談中', callAttempts: 3, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28' },
+  { id: '2', name: '山本 佳子',  title: 'マネージャー', company: '合同会社フューチャー',    companyId: '2', rank: 'A', status: '接続済み',   contactStatus: '商談中', callAttempts: 5, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22' },
+  { id: '3', name: '佐々木 拓也', title: '代表取締役',  company: '株式会社イノベーション',  companyId: '3', rank: 'A', status: 'Next Action', contactStatus: 'リード', callAttempts: 2, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25' },
+  { id: '4', name: '中村 理恵',  title: '購買担当',   company: '株式会社グロース',        companyId: '4', rank: 'B', status: '不在',      contactStatus: 'リード', callAttempts: 4, lastCallAt: '2026-03-15', nextActionAt: null },
+  { id: '5', name: '小林 健太',  title: '部長',      company: '有限会社サクセス',        companyId: '5', rank: 'B', status: '不通',      contactStatus: 'リード', callAttempts: 6, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23' },
+  { id: '6', name: '鈴木 美香',  title: '課長',      company: '株式会社ネクスト',        companyId: '6', rank: 'C', status: '未着手',    contactStatus: 'リード', callAttempts: 0, lastCallAt: null,          nextActionAt: null },
+  { id: '7', name: '加藤 雄介',  title: '取締役',    company: '合同会社ビジョン',        companyId: '7', rank: 'C', status: '未着手',    contactStatus: '休眠',  callAttempts: 0, lastCallAt: null,          nextActionAt: null },
+  { id: '8', name: '吉田 千春',  title: '部長',      company: '株式会社スタート',        companyId: '8', rank: 'C', status: 'コール不可', contactStatus: '失注',  callAttempts: 8, lastCallAt: '2026-03-01', nextActionAt: null },
 ]
 
 const ALL_STATUSES: ApproachStatus[] = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得', 'Next Action']
+const ALL_CONTACT_STATUSES: ContactStatus[] = ['リード', '商談中', '顧客', '休眠', '失注']
 const ALL_RANKS: Rank[] = ['A', 'B', 'C']
 
 // ─── Style Maps ───────────────────────────────────────────────────────────────
@@ -77,6 +81,14 @@ const RANK_CONFIG: Record<Rank, RankConfig> = {
   A: { gradient: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 55%, #CC1A00 100%)', glow: '0 2px 8px rgba(255,59,48,0.5)',   color: '#fff' },
   B: { gradient: 'linear-gradient(135deg, #FFE040 0%, #FFD60A 55%, #FF9F0A 100%)', glow: '0 2px 7px rgba(255,214,10,0.5)',  color: '#7B4000' },
   C: { gradient: 'linear-gradient(135deg, #5AC8FA 0%, #32ADE6 55%, #0071E3 100%)', glow: '0 2px 6px rgba(50,173,230,0.45)', color: '#fff' },
+}
+
+const CONTACT_STATUS_STYLES: Record<ContactStatus, { bg: string; text: string; dot: string }> = {
+  'リード':  { bg: 'bg-[rgba(0,113,227,0.1)]',   text: 'text-[#0060C7]',  dot: 'bg-[#0071E3]' },
+  '商談中':  { bg: 'bg-[rgba(94,92,230,0.1)]',    text: 'text-[#4B48CC]',  dot: 'bg-[#5E5CE6]' },
+  '顧客':    { bg: 'bg-[rgba(52,199,89,0.1)]',    text: 'text-[#1A7A35]',  dot: 'bg-[#34C759]' },
+  '休眠':    { bg: 'bg-[rgba(0,0,0,0.05)]',       text: 'text-[#6E6E73]',  dot: 'bg-[#AEAEB2]' },
+  '失注':    { bg: 'bg-[rgba(255,59,48,0.1)]',    text: 'text-[#CF3131]',  dot: 'bg-[#FF3B30]' },
 }
 
 // ─── Priority: should call now?
@@ -115,6 +127,16 @@ function StatusBadge({ status }: { status: ApproachStatus }) {
   )
 }
 
+function ContactStatusBadge({ status }: { status: ContactStatus }) {
+  const s = CONTACT_STATUS_STYLES[status]
+  return (
+    <span className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${s.bg} ${s.text}`}>
+      <span className={`w-1.5 h-1.5 rounded-full ${s.dot} shrink-0`} />
+      {status}
+    </span>
+  )
+}
+
 function RankBadge({ rank }: { rank: Rank }) {
   const r = RANK_CONFIG[rank]
   return (
@@ -144,12 +166,14 @@ export default function ContactsPage() {
   const [filterRanks, setFilterRanks]     = useState<Rank[]>([])
   const [sortKey, setSortKey]             = useState<SortKey>('status')
   const [sortDir, setSortDir]             = useState<SortDir>('asc')
+  const [filterContactStatuses, setFilterContactStatuses] = useState<ContactStatus[]>([])
   const [showStatusFilter, setShowStatusFilter] = useState(false)
   const [showRankFilter, setShowRankFilter]     = useState(false)
+  const [showContactStatusFilter, setShowContactStatusFilter] = useState(false)
   const [showCreateModal, setShowCreateModal]   = useState(false)
   const [createForm, setCreateForm] = useState({
     name: '', company: '', title: '', email: '', phone: '',
-    rank: 'B' as Rank, isDecisionMaker: false,
+    rank: 'B' as Rank, contactStatus: 'リード' as ContactStatus, isDecisionMaker: false,
   })
 
   function handleCreateSubmit() {
@@ -158,11 +182,11 @@ export default function ContactsPage() {
       id: `c-${Date.now()}`, name: createForm.name.trim(),
       title: createForm.title, company: createForm.company.trim(),
       companyId: `new-${Date.now()}`, rank: createForm.rank,
-      status: '未着手', callAttempts: 0, lastCallAt: null, nextActionAt: null,
+      status: '未着手', contactStatus: createForm.contactStatus, callAttempts: 0, lastCallAt: null, nextActionAt: null,
     }
     setContacts(prev => [newContact, ...prev])
     setShowCreateModal(false)
-    setCreateForm({ name: '', company: '', title: '', email: '', phone: '', rank: 'B', isDecisionMaker: false })
+    setCreateForm({ name: '', company: '', title: '', email: '', phone: '', rank: 'B', contactStatus: 'リード', isDecisionMaker: false })
   }
 
   // ── Filter + Sort ────────────────────────────────────────────────────────────
@@ -178,6 +202,7 @@ export default function ContactsPage() {
       )
     }
     if (filterStatuses.length > 0) list = list.filter(c => filterStatuses.includes(c.status))
+    if (filterContactStatuses.length > 0) list = list.filter(c => filterContactStatuses.includes(c.contactStatus))
     if (filterRanks.length > 0)    list = list.filter(c => filterRanks.includes(c.rank))
 
     const STATUS_ORDER: Record<ApproachStatus, number> = {
@@ -187,6 +212,7 @@ export default function ContactsPage() {
 
     list = [...list].sort((a, b) => {
       let cmp = 0
+      if (sortKey === 'contactStatus') cmp = a.contactStatus.localeCompare(b.contactStatus, 'ja')
       if (sortKey === 'status')      cmp = STATUS_ORDER[a.status] - STATUS_ORDER[b.status]
       if (sortKey === 'name')        cmp = a.name.localeCompare(b.name, 'ja')
       if (sortKey === 'callAttempts') cmp = a.callAttempts - b.callAttempts
@@ -196,7 +222,7 @@ export default function ContactsPage() {
     })
 
     return list
-  }, [contacts, search, filterStatuses, filterRanks, sortKey, sortDir])
+  }, [contacts, search, filterStatuses, filterContactStatuses, filterRanks, sortKey, sortDir])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -209,8 +235,11 @@ export default function ContactsPage() {
   function toggleRank(r: Rank) {
     setFilterRanks(prev => prev.includes(r) ? prev.filter(x => x !== r) : [...prev, r])
   }
+  function toggleContactStatus(s: ContactStatus) {
+    setFilterContactStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
+  }
 
-  const hasFilters = filterStatuses.length > 0 || filterRanks.length > 0
+  const hasFilters = filterStatuses.length > 0 || filterRanks.length > 0 || filterContactStatuses.length > 0
 
   return (
     <div className="space-y-4" onClick={() => { setShowStatusFilter(false); setShowRankFilter(false) }}>
@@ -332,6 +361,56 @@ export default function ContactsPage() {
             </AnimatePresence>
           </div>
 
+          {/* Contact status filter */}
+          <div className="relative" onClick={e => e.stopPropagation()}>
+            <button
+              onClick={() => { setShowContactStatusFilter(v => !v); setShowStatusFilter(false); setShowRankFilter(false) }}
+              className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-[8px] border transition-all duration-150 whitespace-nowrap ${
+                filterContactStatuses.length > 0
+                  ? 'border-[rgba(0,113,227,0.3)] text-[#0071E3]'
+                  : 'bg-white border-[#E5E7EB] text-[#6E6E73] hover:border-[#C7C7CC] hover:text-[#1D1D1F]'
+              }`}
+            >
+              フェーズ
+              {filterContactStatuses.length > 0 && (
+                <span className="w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] flex items-center justify-center font-bold">
+                  {filterContactStatuses.length}
+                </span>
+              )}
+              <ChevronDown size={13} />
+            </button>
+
+            <AnimatePresence>
+              {showContactStatusFilter && (
+                <motion.div
+                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
+                  animate={{ opacity: 1, y: 0, scale: 1 }}
+                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
+                  transition={{ duration: 0.12 }}
+                  className="absolute top-full mt-1.5 left-0 z-20 bg-white rounded-[10px] p-2 min-w-[140px] flex flex-col gap-0.5"
+                  style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.10), 0 16px 48px rgba(0,0,0,0.08)' }}
+                >
+                  {ALL_CONTACT_STATUSES.map(s => {
+                    const style = CONTACT_STATUS_STYLES[s]
+                    const active = filterContactStatuses.includes(s)
+                    return (
+                      <button
+                        key={s}
+                        onClick={() => toggleContactStatus(s)}
+                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] text-sm transition-colors text-left ${
+                          active ? `${style.bg} ${style.text}` : 'hover:bg-[rgba(0,0,0,0.04)] text-[#3C3C43]'
+                        }`}
+                      >
+                        <span className={`w-1.5 h-1.5 rounded-full ${style.dot} shrink-0`} />
+                        {s}
+                      </button>
+                    )
+                  })}
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+
           {/* Clear filters */}
           <AnimatePresence>
             {hasFilters && (
@@ -340,7 +419,7 @@ export default function ContactsPage() {
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15 }}
-                onClick={() => { setFilterStatuses([]); setFilterRanks([]) }}
+                onClick={() => { setFilterStatuses([]); setFilterContactStatuses([]); setFilterRanks([]) }}
                 className="flex items-center gap-1 text-xs text-[#6E6E73] hover:text-[#1D1D1F] transition-colors whitespace-nowrap overflow-hidden"
               >
                 <X size={12} />
@@ -386,15 +465,16 @@ export default function ContactsPage() {
       <div className="bg-white rounded-[14px] overflow-hidden" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)' }}>
 
         {/* Header */}
-        <div className="grid grid-cols-[1.8fr_1.6fr_160px_70px_80px_100px_130px] gap-0 px-5 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.018)' }}>
+        <div className="grid grid-cols-[1.6fr_1.4fr_100px_140px_70px_80px_100px_110px] gap-0 px-5 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.018)' }}>
           {[
-            { label: '氏名',     key: 'name' as SortKey,        sortable: true },
-            { label: '会社',     key: null,                     sortable: false },
-            { label: 'ステータス', key: 'status' as SortKey,     sortable: true },
-            { label: 'コール数',  key: 'callAttempts' as SortKey, sortable: true },
-            { label: '最終コール', key: 'lastCallAt' as SortKey,  sortable: true },
-            { label: '次回予定',  key: 'nextActionAt' as SortKey, sortable: true },
-            { label: '',         key: null,                     sortable: false },
+            { label: '氏名',     key: 'name' as SortKey,           sortable: true },
+            { label: '会社',     key: null,                        sortable: false },
+            { label: 'フェーズ',  key: 'contactStatus' as SortKey,  sortable: true },
+            { label: 'アプローチ', key: 'status' as SortKey,        sortable: true },
+            { label: 'コール数',  key: 'callAttempts' as SortKey,   sortable: true },
+            { label: '最終コール', key: 'lastCallAt' as SortKey,    sortable: true },
+            { label: '次回予定',  key: 'nextActionAt' as SortKey,   sortable: true },
+            { label: '',         key: null,                        sortable: false },
           ].map((col, i) => (
             <div
               key={i}
@@ -436,7 +516,7 @@ export default function ContactsPage() {
                     visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                   }}
                   onClick={() => router.push(`/contacts/${contact.id}`)}
-                  className={`grid grid-cols-[1.8fr_1.6fr_160px_70px_80px_100px_130px] gap-0 items-center px-5 py-3.5 last:border-0 transition-colors duration-100 group cursor-pointer ${
+                  className={`grid grid-cols-[1.6fr_1.4fr_100px_140px_70px_80px_100px_110px] gap-0 items-center px-5 py-3.5 last:border-0 transition-colors duration-100 group cursor-pointer ${
                     dnc ? 'opacity-35' : 'hover:bg-[rgba(0,0,0,0.02)]'
                   }`}
                   style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}
@@ -458,7 +538,12 @@ export default function ContactsPage() {
                   {/* 会社 */}
                   <span className="text-[13px] text-[#6E6E73] truncate tracking-[-0.01em]">{contact.company}</span>
 
-                  {/* ステータス */}
+                  {/* フェーズ */}
+                  <div>
+                    <ContactStatusBadge status={contact.contactStatus} />
+                  </div>
+
+                  {/* アプローチ */}
                   <div>
                     <StatusBadge status={contact.status} />
                   </div>

@@ -6,7 +6,7 @@ import { Search, Bell, Plus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const PAGE_TITLES: Record<string, string> = {
-  '/': "Today's Action",
+  '/': '今日のタスク',
   '/pipeline': 'パイプライン',
   '/companies': '企業',
   '/contacts': 'コンタクト',
@@ -53,11 +53,11 @@ export function Header({ user }: HeaderProps) {
     <header
       className="fixed top-0 left-[224px] right-0 h-[56px] flex items-center px-6 gap-3 z-20"
       style={{
-        background: 'rgba(245,245,247,0.88)',
+        background: 'rgba(255, 255, 255, 0.92)',
         backdropFilter: 'blur(24px) saturate(200%)',
         WebkitBackdropFilter: 'blur(24px) saturate(200%)',
-        borderBottom: '1px solid rgba(0,0,0,0.07)',
-        boxShadow: '0 1px 0 rgba(255,255,255,0.8), 0 2px 12px rgba(0,0,0,0.05)',
+        borderBottom: '1px solid rgba(0,0,0,0.06)',
+        boxShadow: '0 1px 0 rgba(255,255,255,0.9), 0 2px 12px rgba(0,0,0,0.04)',
       }}
     >
       {/* Page title */}

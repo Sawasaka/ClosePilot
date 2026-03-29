@@ -32,3 +32,166 @@ export const RANK_CONFIG: Record<Rank, RankConfig> = {
   B: { gradient: 'linear-gradient(135deg, #FFE040 0%, #FFD60A 55%, #FF9F0A 100%)', glow: '0 2px 7px rgba(255,214,10,0.5)',   color: '#7B4000' },
   C: { gradient: 'linear-gradient(135deg, #5AC8FA 0%, #32ADE6 55%, #0071E3 100%)', glow: '0 2px 6px rgba(50,173,230,0.45)',  color: '#fff' },
 }
+
+// ─── コールリスト型定義 ──────────────────────────────────────────────────────
+
+export interface CallList {
+  id: string
+  name: string
+  description: string | null
+  ownerName: string
+  contactCount: number
+  completedCount: number
+  appointmentCount: number
+  color: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface CallListItem {
+  id: string
+  listId: string
+  contactId: string
+  contactName: string
+  contactTitle: string
+  companyId: string
+  companyName: string
+  rank: Rank
+  status: ApproachStatus
+  callAttempts: number
+  lastCallAt: string | null
+  nextActionAt: string | null
+  priority: number
+}
+
+// ─── GA4連携型 ───────────────────────────────────────────────────────────────
+
+export interface GA4PageData {
+  path: string
+  title: string
+  pageViews: number
+  uniqueUsers: number
+  avgSessionDuration: number
+  bounceRate: number
+  conversions: number
+}
+
+export interface GA4DailyTraffic {
+  date: string
+  sessions: number
+  users: number
+  pageViews: number
+  cvRate: number
+}
+
+export interface GA4SourceMedium {
+  source: string
+  medium: string
+  sessions: number
+  users: number
+  cvRate: number
+}
+
+// ─── 資料トラッキング型 ─────────────────────────────────────────────────────
+
+export type DocumentType = 'proposal' | 'service_intro' | 'case_study' | 'pricing' | 'other'
+
+export interface TrackedDocument {
+  id: string
+  name: string
+  type: DocumentType
+  trackingUrl: string
+  totalPages: number
+  createdAt: string
+  createdBy: string
+  totalViews: number
+  uniqueViewers: number
+}
+
+export interface DocumentViewEvent {
+  id: string
+  documentId: string
+  viewedAt: string
+  resolvedCompany: string | null
+  companyId: string | null
+  totalDurationSec: number
+  pagesViewed: number
+  maxScrollDepth: number
+}
+
+// ─── ISアクティビティ型 ─────────────────────────────────────────────────────
+
+export interface ISRepActivity {
+  repId: string
+  repName: string
+  color: string
+  today: { calls: number; connected: number; appointments: number; emails: number }
+  thisWeek: {
+    calls: number; connected: number; appointments: number; emails: number
+    emailOpenRate: number; emailReplyRate: number
+  }
+}
+
+export type DashboardView = 'personal' | 'team'
+
+// ─── 資料管理型（拡張）─────────────────────────────────────────────────────
+
+export interface ManagedDocument extends TrackedDocument {
+  fileSize: number
+  mimeType: string
+  isPublished: boolean
+  password: string | null
+  expiresAt: string | null
+  tags: string[]
+}
+
+export interface DocumentShareLink {
+  id: string
+  documentId: string
+  url: string
+  contactId: string | null
+  contactName: string | null
+  companyName: string | null
+  createdAt: string
+  viewCount: number
+  lastViewedAt: string | null
+}
+
+// ─── オートメーション型 ─────────────────────────────────────────────────────
+
+export type SequenceStatus = 'active' | 'paused' | 'draft'
+export type StepType = 'wait' | 'email' | 'condition' | 'task'
+
+export interface SequenceStep {
+  type: StepType
+  label: string
+  detail: string
+}
+
+export interface Sequence {
+  id: string
+  name: string
+  description: string | null
+  status: SequenceStatus
+  triggerLabel: string
+  steps: SequenceStep[]
+  enrolledCount: number
+  completedCount: number
+  emailsSent: number
+  openRate: number
+  clickRate: number
+  replyRate: number
+  createdAt: string
+  updatedAt: string
+}
+
+export interface SequenceEnrollment {
+  id: string
+  sequenceId: string
+  contactName: string
+  companyName: string
+  currentStepIndex: number
+  status: 'active' | 'completed' | 'paused' | 'exited'
+  enrolledAt: string
+  lastActionAt: string | null
+}
