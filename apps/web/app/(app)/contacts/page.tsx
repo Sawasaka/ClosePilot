@@ -12,7 +12,6 @@ import {
   ChevronDown,
   User,
   X,
-  PhoneOff,
   CalendarClock,
 } from 'lucide-react'
 
@@ -29,6 +28,7 @@ type ApproachStatus =
   | 'Next Action'
 
 type ContactStatus = 'リード' | '商談中' | '顧客' | '休眠' | '失注'
+type NextAction = 'メールアプローチ' | 'コール' | '連絡待ち' | null
 
 type SortKey = 'name' | 'callAttempts' | 'lastCallAt' | 'nextActionAt' | 'status' | 'contactStatus'
 type SortDir = 'asc' | 'desc'
@@ -45,19 +45,20 @@ interface Contact {
   callAttempts: number
   lastCallAt: string | null
   nextActionAt: string | null
+  nextAction: NextAction
 }
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
 const MOCK_CONTACTS: Contact[] = [
-  { id: '1', name: '田中 誠',    title: '営業部長',   company: '株式会社テクノリード',    companyId: '1', rank: 'A', status: 'アポ獲得',   contactStatus: '商談中', callAttempts: 3, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28' },
-  { id: '2', name: '山本 佳子',  title: 'マネージャー', company: '合同会社フューチャー',    companyId: '2', rank: 'A', status: '接続済み',   contactStatus: '商談中', callAttempts: 5, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22' },
-  { id: '3', name: '佐々木 拓也', title: '代表取締役',  company: '株式会社イノベーション',  companyId: '3', rank: 'A', status: 'Next Action', contactStatus: 'リード', callAttempts: 2, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25' },
-  { id: '4', name: '中村 理恵',  title: '購買担当',   company: '株式会社グロース',        companyId: '4', rank: 'B', status: '不在',      contactStatus: 'リード', callAttempts: 4, lastCallAt: '2026-03-15', nextActionAt: null },
-  { id: '5', name: '小林 健太',  title: '部長',      company: '有限会社サクセス',        companyId: '5', rank: 'B', status: '不通',      contactStatus: 'リード', callAttempts: 6, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23' },
-  { id: '6', name: '鈴木 美香',  title: '課長',      company: '株式会社ネクスト',        companyId: '6', rank: 'C', status: '未着手',    contactStatus: 'リード', callAttempts: 0, lastCallAt: null,          nextActionAt: null },
-  { id: '7', name: '加藤 雄介',  title: '取締役',    company: '合同会社ビジョン',        companyId: '7', rank: 'C', status: '未着手',    contactStatus: '休眠',  callAttempts: 0, lastCallAt: null,          nextActionAt: null },
-  { id: '8', name: '吉田 千春',  title: '部長',      company: '株式会社スタート',        companyId: '8', rank: 'C', status: 'コール不可', contactStatus: '失注',  callAttempts: 8, lastCallAt: '2026-03-01', nextActionAt: null },
+  { id: '1', name: '田中 誠',    title: '営業部長',   company: '株式会社テクノリード',    companyId: '1', rank: 'A', status: 'アポ獲得',   contactStatus: '商談中', callAttempts: 3, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', nextAction: '連絡待ち' },
+  { id: '2', name: '山本 佳子',  title: 'マネージャー', company: '合同会社フューチャー',    companyId: '2', rank: 'A', status: '接続済み',   contactStatus: '商談中', callAttempts: 5, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22', nextAction: 'メールアプローチ' },
+  { id: '3', name: '佐々木 拓也', title: '代表取締役',  company: '株式会社イノベーション',  companyId: '3', rank: 'A', status: 'Next Action', contactStatus: 'リード', callAttempts: 2, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25', nextAction: 'コール' },
+  { id: '4', name: '中村 理恵',  title: '購買担当',   company: '株式会社グロース',        companyId: '4', rank: 'B', status: '不在',      contactStatus: 'リード', callAttempts: 4, lastCallAt: '2026-03-15', nextActionAt: null, nextAction: 'コール' },
+  { id: '5', name: '小林 健太',  title: '部長',      company: '有限会社サクセス',        companyId: '5', rank: 'B', status: '不通',      contactStatus: 'リード', callAttempts: 6, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', nextAction: 'コール' },
+  { id: '6', name: '鈴木 美香',  title: '課長',      company: '株式会社ネクスト',        companyId: '6', rank: 'C', status: '未着手',    contactStatus: 'リード', callAttempts: 0, lastCallAt: null,          nextActionAt: null, nextAction: null },
+  { id: '7', name: '加藤 雄介',  title: '取締役',    company: '合同会社ビジョン',        companyId: '7', rank: 'C', status: '未着手',    contactStatus: '休眠',  callAttempts: 0, lastCallAt: null,          nextActionAt: null, nextAction: null },
+  { id: '8', name: '吉田 千春',  title: '部長',      company: '株式会社スタート',        companyId: '8', rank: 'C', status: 'コール不可', contactStatus: '失注',  callAttempts: 8, lastCallAt: '2026-03-01', nextActionAt: null, nextAction: null },
 ]
 
 const ALL_STATUSES: ApproachStatus[] = ['未着手', '不通', '不在', '接続済み', 'コール不可', 'アポ獲得', 'Next Action']
@@ -74,6 +75,14 @@ const STATUS_STYLES: Record<ApproachStatus, { bg: string; text: string; dot: str
   'コール不可': { bg: 'bg-[rgba(255,59,48,0.1)]',  text: 'text-[#CF3131]',  dot: 'bg-[#FF3B30]' },
   'アポ獲得':  { bg: 'bg-[rgba(52,199,89,0.1)]',   text: 'text-[#1A7A35]',  dot: 'bg-[#34C759]' },
   'Next Action': { bg: 'bg-[rgba(94,92,230,0.1)]', text: 'text-[#4B48CC]',  dot: 'bg-[#5E5CE6]' },
+}
+
+const ALL_NEXT_ACTIONS: NextAction[] = ['メールアプローチ', 'コール', '連絡待ち']
+
+const NEXT_ACTION_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  'メールアプローチ': { bg: 'bg-[rgba(94,92,230,0.1)]',   text: 'text-[#4B48CC]',  dot: 'bg-[#5E5CE6]' },
+  'コール':          { bg: 'bg-[rgba(0,113,227,0.1)]',    text: 'text-[#0060C7]',  dot: 'bg-[#0071E3]' },
+  '連絡待ち':        { bg: 'bg-[rgba(255,159,10,0.1)]',   text: 'text-[#C07000]',  dot: 'bg-[#FF9F0A]' },
 }
 
 type RankConfig = { gradient: string; glow: string; color: string }
@@ -149,6 +158,77 @@ function RankBadge({ rank }: { rank: Rank }) {
   )
 }
 
+function NextActionSelect({ value, onChange }: { value: NextAction; onChange: (v: NextAction) => void }) {
+  const [open, setOpen] = useState(false)
+
+  if (!value) {
+    return (
+      <div className="relative">
+        <button
+          onClick={() => setOpen(v => !v)}
+          className="text-[11px] text-[#AEAEB2] hover:text-[#6E6E73] px-2 py-0.5 rounded-[4px] hover:bg-[rgba(0,0,0,0.04)] transition-colors"
+        >
+          + 設定
+        </button>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+            <div className="absolute top-full left-0 mt-1 z-40 bg-white rounded-[8px] py-1 min-w-[140px]"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)' }}>
+              {ALL_NEXT_ACTIONS.map(a => {
+                const s = NEXT_ACTION_STYLES[a]
+                return (
+                  <button key={a} onClick={() => { onChange(a); setOpen(false) }}
+                    className={`w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(0,0,0,0.03)] transition-colors ${s.text}`}>
+                    <span className={`w-1.5 h-1.5 rounded-full ${s.dot} shrink-0`} />
+                    {a}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
+
+  const style = NEXT_ACTION_STYLES[value]
+  return (
+    <div className="relative">
+      <button
+        onClick={() => setOpen(v => !v)}
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${style.bg} ${style.text} hover:opacity-80 transition-opacity`}
+      >
+        <span className={`w-1.5 h-1.5 rounded-full ${style.dot} shrink-0`} />
+        {value}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+          <div className="absolute top-full left-0 mt-1 z-40 bg-white rounded-[8px] py-1 min-w-[140px]"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)' }}>
+            {ALL_NEXT_ACTIONS.map(a => {
+              const s = NEXT_ACTION_STYLES[a]
+              const selected = a === value
+              return (
+                <button key={a} onClick={() => { onChange(a); setOpen(false) }}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left transition-colors ${selected ? `${s.bg} ${s.text} font-medium` : `hover:bg-[rgba(0,0,0,0.03)] ${s.text}`}`}>
+                  <span className={`w-1.5 h-1.5 rounded-full ${s.dot} shrink-0`} />
+                  {a}
+                </button>
+              )
+            })}
+            <button onClick={() => { onChange(null); setOpen(false) }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left text-[#AEAEB2] hover:bg-[rgba(0,0,0,0.03)] transition-colors">
+              クリア
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
   if (col !== sortKey) return <ArrowUpDown size={11} className="text-[#C7C7CC] ml-1 inline" />
   return sortDir === 'asc'
@@ -182,7 +262,7 @@ export default function ContactsPage() {
       id: `c-${Date.now()}`, name: createForm.name.trim(),
       title: createForm.title, company: createForm.company.trim(),
       companyId: `new-${Date.now()}`, rank: createForm.rank,
-      status: '未着手', contactStatus: createForm.contactStatus, callAttempts: 0, lastCallAt: null, nextActionAt: null,
+      status: '未着手', contactStatus: createForm.contactStatus, callAttempts: 0, lastCallAt: null, nextActionAt: null, nextAction: null,
     }
     setContacts(prev => [newContact, ...prev])
     setShowCreateModal(false)
@@ -442,20 +522,12 @@ export default function ContactsPage() {
 
       {/* ── Stats Strip ── */}
       <div className="flex items-center gap-3">
-        {[
-          { label: '全件', count: contacts.length, active: false },
-          { label: 'アポ獲得', count: contacts.filter(c => c.status === 'アポ獲得').length, color: 'text-[#34C759]', active: false },
-          { label: '要フォロー', count: contacts.filter(c => ['不通','不在','Next Action'].includes(c.status)).length, color: 'text-[#FF9F0A]', active: false },
-          { label: '未着手', count: contacts.filter(c => c.status === '未着手').length, color: 'text-[#AEAEB2]', active: false },
-        ].map(s => (
-          <div key={s.label} className="flex items-center gap-1.5">
-            <span className={`text-lg font-semibold tabular-nums tracking-tight ${s.color ?? 'text-[#1D1D1F]'}`}>
-              {s.count}
-            </span>
-            <span className="text-xs text-[#AEAEB2]">{s.label}</span>
-            {s !== [].at(-1) && <span className="w-px h-3 bg-[rgba(0,0,0,0.07)] ml-1.5" />}
-          </div>
-        ))}
+        <div className="flex items-center gap-1.5">
+          <span className="text-lg font-semibold tabular-nums tracking-tight text-[#1D1D1F]">
+            {contacts.length}
+          </span>
+          <span className="text-xs text-[#AEAEB2]">全件</span>
+        </div>
         <span className="text-xs text-[#AEAEB2] ml-auto">
           {filtered.length}件表示
         </span>
@@ -465,16 +537,16 @@ export default function ContactsPage() {
       <div className="bg-white rounded-[14px] overflow-hidden" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)' }}>
 
         {/* Header */}
-        <div className="grid grid-cols-[1.6fr_1.4fr_100px_140px_70px_80px_100px_110px] gap-0 px-5 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.018)' }}>
+        <div className="grid grid-cols-[1.6fr_1.2fr_100px_130px_120px_70px_80px_100px] gap-0 px-5 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.018)' }}>
           {[
-            { label: '氏名',     key: 'name' as SortKey,           sortable: true },
-            { label: '会社',     key: null,                        sortable: false },
-            { label: 'フェーズ',  key: 'contactStatus' as SortKey,  sortable: true },
-            { label: 'アプローチ', key: 'status' as SortKey,        sortable: true },
-            { label: 'コール数',  key: 'callAttempts' as SortKey,   sortable: true },
-            { label: '最終コール', key: 'lastCallAt' as SortKey,    sortable: true },
-            { label: '次回予定',  key: 'nextActionAt' as SortKey,   sortable: true },
-            { label: '',         key: null,                        sortable: false },
+            { label: '氏名',        key: 'name' as SortKey,           sortable: true },
+            { label: '会社',        key: null,                        sortable: false },
+            { label: 'フェーズ',     key: 'contactStatus' as SortKey,  sortable: true },
+            { label: 'アプローチ',    key: 'status' as SortKey,        sortable: true },
+            { label: 'Next Action', key: null,                        sortable: false },
+            { label: 'コール数',     key: 'callAttempts' as SortKey,   sortable: true },
+            { label: '最終コール',    key: 'lastCallAt' as SortKey,    sortable: true },
+            { label: '次回予定',     key: 'nextActionAt' as SortKey,   sortable: true },
           ].map((col, i) => (
             <div
               key={i}
@@ -516,7 +588,7 @@ export default function ContactsPage() {
                     visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                   }}
                   onClick={() => router.push(`/contacts/${contact.id}`)}
-                  className={`grid grid-cols-[1.6fr_1.4fr_100px_140px_70px_80px_100px_110px] gap-0 items-center px-5 py-3.5 last:border-0 transition-colors duration-100 group cursor-pointer ${
+                  className={`grid grid-cols-[1.6fr_1.2fr_100px_130px_120px_70px_80px_100px] gap-0 items-center px-5 py-3.5 last:border-0 transition-colors duration-100 group cursor-pointer ${
                     dnc ? 'opacity-35' : 'hover:bg-[rgba(0,0,0,0.02)]'
                   }`}
                   style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}
@@ -548,6 +620,14 @@ export default function ContactsPage() {
                     <StatusBadge status={contact.status} />
                   </div>
 
+                  {/* Next Action */}
+                  <div onClick={e => e.stopPropagation()}>
+                    <NextActionSelect
+                      value={contact.nextAction}
+                      onChange={val => setContacts(prev => prev.map(c => c.id === contact.id ? { ...c, nextAction: val } : c))}
+                    />
+                  </div>
+
                   {/* コール数 */}
                   <div className="flex items-center gap-1">
                     <Phone size={11} className="text-[#AEAEB2] shrink-0" />
@@ -567,36 +647,6 @@ export default function ContactsPage() {
                     {overdue && <CalendarClock size={11} className="shrink-0" />}
                     {formatDate(contact.nextActionAt)}
                   </span>
-
-                  {/* Action */}
-                  <div className="flex justify-end">
-                    {dnc ? (
-                      <span className="flex items-center gap-1 text-[11px] text-[#AEAEB2]">
-                        <PhoneOff size={11} />
-                        DNC
-                      </span>
-                    ) : (
-                      <motion.button
-                        whileTap={{ scale: 0.97 }}
-                        transition={{ duration: 0.1 }}
-                        onClick={e => e.stopPropagation()}
-                        className={`flex items-center gap-1.5 text-[12px] font-semibold px-3 py-1.5 rounded-[7px] transition-all duration-100 ${
-                          priority
-                            ? 'text-white opacity-0 group-hover:opacity-100'
-                            : 'text-[#6E6E73] opacity-0 group-hover:opacity-100'
-                        }`}
-                        style={priority ? {
-                          background: '#0071E3',
-                          boxShadow: '0 1px 3px rgba(0,113,227,0.3)',
-                        } : {
-                          background: 'rgba(0,0,0,0.06)',
-                        }}
-                      >
-                        <Phone size={11} strokeWidth={2.5} />
-                        今すぐコール
-                      </motion.button>
-                    )}
-                  </div>
                 </motion.div>
               )
             })

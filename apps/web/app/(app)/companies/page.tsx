@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -86,11 +86,9 @@ function scoreToGrade(score: number): ScoreGrade {
 function getScoreBreakdown(score: number) {
   const total = score
   return [
-    { label: 'Web行動スコア', value: +(total * 0.3).toFixed(1), max: 1.5, description: 'HP閲覧回数・滞在時間・料金ページ訪問' },
-    { label: '企業属性スコア', value: +(total * 0.25).toFixed(1), max: 1.25, description: '業種適合度・従業員規模・売上規模' },
-    { label: 'エンゲージメント', value: +(total * 0.2).toFixed(1), max: 1.0, description: 'メール開封率・資料閲覧・セミナー参加' },
-    { label: 'タイミングスコア', value: +(total * 0.15).toFixed(1), max: 0.75, description: '問い合わせ時期・予算策定期・決算月' },
-    { label: 'ソーシャルシグナル', value: +(total * 0.1).toFixed(1), max: 0.5, description: '採用活動・プレスリリース・資金調達' },
+    { label: 'Web行動スコア', value: +(total * 0.45).toFixed(1), max: 2.25, description: 'HP閲覧回数・滞在時間・料金ページ訪問' },
+    { label: 'エンゲージメント', value: +(total * 0.3).toFixed(1), max: 1.5, description: 'メール開封率・資料閲覧・セミナー参加' },
+    { label: 'タイミングスコア', value: +(total * 0.25).toFixed(1), max: 1.25, description: '問い合わせ時期・予算策定期・決算月' },
   ]
 }
 
@@ -205,16 +203,19 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
+type CompanyCategory = 'パートナー企業' | 'ダイレクト企業'
+
 interface CreateCompanyForm {
   name: string
   domain: string
   industry: string
   signal: Signal
   owner: string
+  category: CompanyCategory
 }
 
 const DEFAULT_CREATE_FORM: CreateCompanyForm = {
-  name: '', domain: '', industry: '', signal: 'Middle', owner: '',
+  name: '', domain: '', industry: '', signal: 'Middle', owner: '', category: 'ダイレクト企業',
 }
 
 export default function CompaniesPage() {
@@ -231,6 +232,12 @@ export default function CompaniesPage() {
   const [showScoreLogic, setShowScoreLogic] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createForm, setCreateForm] = useState<CreateCompanyForm>(DEFAULT_CREATE_FORM)
+
+  useEffect(() => {
+    const handler = () => setShowCreateModal(true)
+    window.addEventListener('header-action', handler)
+    return () => window.removeEventListener('header-action', handler)
+  }, [])
 
   function handleCreateSubmit() {
     const newCompany: Company = {
@@ -456,11 +463,9 @@ export default function CompaniesPage() {
                 {/* Algorithm breakdown */}
                 <div className="space-y-3">
                   {[
-                    { label: 'Web行動スコア', weight: '30%', color: '#FF3B30', description: 'HP閲覧回数・滞在時間・料金ページ訪問・資料ダウンロード回数から算出。直近7日間の行動を重み付け。' },
-                    { label: '企業属性スコア', weight: '25%', color: '#FF9F0A', description: '業種適合度・従業員規模・売上規模・所在地をマスタデータと照合。ターゲットICP（理想顧客像）との一致度。' },
-                    { label: 'エンゲージメント', weight: '20%', color: '#5E5CE6', description: 'メール開封率・クリック率・資料閲覧深度・セミナー参加履歴。過去30日間のインタラクション頻度。' },
-                    { label: 'タイミングスコア', weight: '15%', color: '#0071E3', description: '問い合わせ時期・予算策定期（決算月の3ヶ月前）・年度切り替え時期を考慮した購買タイミング推定。' },
-                    { label: 'ソーシャルシグナル', weight: '10%', color: '#34C759', description: '採用活動の活発さ・プレスリリース発行・資金調達ニュース・業界イベント登壇。外部データソースから収集。' },
+                    { label: 'Web行動スコア', weight: '45%', color: '#FF3B30', description: 'HP閲覧回数・滞在時間・料金ページ訪問・資料ダウンロード回数から算出。直近7日間の行動を重み付け。' },
+                    { label: 'エンゲージメント', weight: '30%', color: '#5E5CE6', description: 'メール開封率・クリック率・資料閲覧深度・セミナー参加履歴。過去30日間のインタラクション頻度。' },
+                    { label: 'タイミングスコア', weight: '25%', color: '#0071E3', description: '問い合わせ時期・予算策定期（決算月の3ヶ月前）・年度切り替え時期を考慮した購買タイミング推定。' },
                   ].map(item => (
                     <div key={item.label} className="flex items-start gap-3">
                       <div className="w-[6px] h-[6px] rounded-full mt-1.5 shrink-0" style={{ background: item.color }} />
@@ -703,7 +708,7 @@ export default function CompaniesPage() {
             >
               {/* Modal Header */}
               <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                <h2 className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.02em]">企業を追加</h2>
+                <h2 className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.02em]">企業を作成</h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
                   className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[rgba(0,0,0,0.06)]"
@@ -714,6 +719,27 @@ export default function CompaniesPage() {
 
               {/* Modal Body */}
               <div className="p-5 space-y-4">
+                {/* 区分 */}
+                <div>
+                  <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">区分 <span className="text-[#FF3B30]">*</span></label>
+                  <div className="flex gap-2">
+                    {(['パートナー企業', 'ダイレクト企業'] as CompanyCategory[]).map(cat => (
+                      <button
+                        key={cat}
+                        type="button"
+                        onClick={() => setCreateForm(f => ({ ...f, category: cat }))}
+                        className="flex-1 h-[36px] text-[13px] font-medium rounded-[8px] transition-all"
+                        style={{
+                          background: createForm.category === cat ? '#1D1D1F' : '#F5F5F7',
+                          color: createForm.category === cat ? '#FFFFFF' : '#6E6E73',
+                        }}
+                      >
+                        {cat}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
                 {/* 企業名 */}
                 <div>
                   <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">

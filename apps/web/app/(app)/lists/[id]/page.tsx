@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
-  ChevronLeft, Search, Plus, Phone, PhoneCall,
+  ChevronLeft, Search, Plus,
   ArrowUpDown, ChevronUp, ChevronDown, User,
 } from 'lucide-react'
 import type { Rank, ApproachStatus, CallList, CallListItem } from '@/types/crm'
@@ -62,8 +62,8 @@ const MOCK_ITEMS: Record<string, CallListItem[]> = {
 
 // ─── Filter / Sort types ─────────────────────────────────────────────────────
 
-type FilterKey = 'all' | '未着手' | '接続済み' | 'アポ獲得' | '不通' | '不在'
-type SortKey = 'priority' | 'name' | 'rank' | 'callAttempts' | 'lastCallAt'
+type FilterKey = 'all' | '未着手' | '接続済み' | 'アポ獲得' | '不通' | '不在' | 'Next Action'
+type SortKey = 'priority' | 'name' | 'rank'
 type SortDir = 'asc' | 'desc'
 
 const FILTERS: { key: FilterKey; label: string }[] = [
@@ -73,6 +73,7 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'アポ獲得', label: 'アポ獲得' },
   { key: '不通', label: '不通' },
   { key: '不在', label: '不在' },
+  { key: 'Next Action', label: 'Next Action' },
 ]
 
 const STATUS_ORDER: Record<ApproachStatus, number> = {
@@ -114,6 +115,93 @@ function RankBadge({ rank }: { rank: Rank }) {
   )
 }
 
+// ─── Next Action ────────────────────────────────────────────────────────────
+
+type NextActionValue = 'メールアプローチ' | 'コール' | '連絡待ち' | null
+const ALL_NEXT_ACTIONS: NextActionValue[] = ['メールアプローチ', 'コール', '連絡待ち']
+
+const NEXT_ACTION_STYLES: Record<string, { bg: string; text: string; dot: string }> = {
+  'メールアプローチ': { bg: 'bg-[rgba(94,92,230,0.1)]',  text: 'text-[#4B48CC]', dot: 'bg-[#5E5CE6]' },
+  'コール':          { bg: 'bg-[rgba(0,113,227,0.1)]',   text: 'text-[#0060C7]', dot: 'bg-[#0071E3]' },
+  '連絡待ち':        { bg: 'bg-[rgba(255,159,10,0.1)]',  text: 'text-[#C07000]', dot: 'bg-[#FF9F0A]' },
+}
+
+function NextActionSelect({ value, onChange }: { value: NextActionValue; onChange: (v: NextActionValue) => void }) {
+  const [open, setOpen] = useState(false)
+
+  // 未設定の場合
+  if (!value) {
+    return (
+      <div className="relative">
+        <button
+          onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+          className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium bg-[rgba(0,0,0,0.05)] text-[#AEAEB2] hover:text-[#6E6E73] transition-colors"
+        >
+          <span className="w-[5px] h-[5px] rounded-full bg-[#AEAEB2]" />
+          未設定
+        </button>
+        {open && (
+          <>
+            <div className="fixed inset-0 z-30" onClick={e => { e.stopPropagation(); setOpen(false) }} />
+            <div className="absolute top-full left-0 mt-1 z-40 bg-white rounded-[8px] py-1 min-w-[140px]"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)' }}>
+              {ALL_NEXT_ACTIONS.map(a => {
+                const s = NEXT_ACTION_STYLES[a!]
+                return (
+                  <button key={a} onClick={e => { e.stopPropagation(); onChange(a); setOpen(false) }}
+                    className={`w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(0,0,0,0.03)] transition-colors ${s.text}`}>
+                    <span className={`w-[5px] h-[5px] rounded-full ${s.dot} shrink-0`} />
+                    {a}
+                  </button>
+                )
+              })}
+            </div>
+          </>
+        )}
+      </div>
+    )
+  }
+
+  // 設定済みの場合 — StatusBadgeと同じUI
+  const style = NEXT_ACTION_STYLES[value]
+  return (
+    <div className="relative">
+      <button
+        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+        className={`inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium ${style.bg} ${style.text} hover:opacity-80 transition-opacity`}
+      >
+        <span className={`w-[5px] h-[5px] rounded-full ${style.dot}`} />
+        {value}
+      </button>
+      {open && (
+        <>
+          <div className="fixed inset-0 z-30" onClick={e => { e.stopPropagation(); setOpen(false) }} />
+          <div className="absolute top-full left-0 mt-1 z-40 bg-white rounded-[8px] py-1 min-w-[140px]"
+            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.12), 0 0 0 1px rgba(0,0,0,0.06)' }}>
+            {ALL_NEXT_ACTIONS.map(a => {
+              const s = NEXT_ACTION_STYLES[a!]
+              const selected = a === value
+              return (
+                <button key={a} onClick={e => { e.stopPropagation(); onChange(a); setOpen(false) }}
+                  className={`w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left transition-colors ${selected ? `${s.bg} ${s.text} font-medium` : `hover:bg-[rgba(0,0,0,0.03)] ${s.text}`}`}>
+                  <span className={`w-[5px] h-[5px] rounded-full ${s.dot} shrink-0`} />
+                  {a}
+                </button>
+              )
+            })}
+            <div className="mx-2 my-0.5 h-px" style={{ background: 'rgba(0,0,0,0.06)' }} />
+            <button onClick={e => { e.stopPropagation(); onChange(null); setOpen(false) }}
+              className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left text-[#AEAEB2] hover:bg-[rgba(0,0,0,0.03)] transition-colors">
+              <span className="w-[5px] h-[5px] rounded-full bg-[#AEAEB2] shrink-0" />
+              クリア
+            </button>
+          </div>
+        </>
+      )}
+    </div>
+  )
+}
+
 // ─── SortHeader ──────────────────────────────────────────────────────────────
 
 function SortHeader({
@@ -141,10 +229,13 @@ export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const list = MOCK_LISTS[id]
-  const items = MOCK_ITEMS[id] || []
+  const [items, setItems] = useState(MOCK_ITEMS[id] || [])
+  type ItemNextAction = Record<string, NextActionValue>
+  const [nextActions, setNextActions] = useState<ItemNextAction>({})
 
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('all')
+  const [filterNextAction, setFilterNextAction] = useState<NextActionValue | 'all'>('all')
   const [sortKey, setSortKey] = useState<SortKey>('priority')
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
@@ -162,6 +253,13 @@ export default function ListDetailPage() {
       )
     }
     if (filter !== 'all') result = result.filter(i => i.status === filter)
+    if (filterNextAction !== 'all') {
+      if (filterNextAction === null) {
+        result = result.filter(i => !nextActions[i.id])
+      } else {
+        result = result.filter(i => nextActions[i.id] === filterNextAction)
+      }
+    }
 
     result.sort((a, b) => {
       let cmp = 0
@@ -169,14 +267,11 @@ export default function ListDetailPage() {
         case 'priority': cmp = a.priority - b.priority; break
         case 'name': cmp = a.contactName.localeCompare(b.contactName); break
         case 'rank': cmp = a.rank.localeCompare(b.rank); break
-        case 'callAttempts': cmp = a.callAttempts - b.callAttempts; break
-        case 'lastCallAt':
-          cmp = (a.lastCallAt || '').localeCompare(b.lastCallAt || ''); break
       }
       return sortDir === 'asc' ? cmp : -cmp
     })
     return result
-  }, [items, search, filter, sortKey, sortDir])
+  }, [items, search, filter, filterNextAction, nextActions, sortKey, sortDir])
 
   if (!list) {
     return (
@@ -186,9 +281,7 @@ export default function ListDetailPage() {
     )
   }
 
-  const completedCount = items.filter(i => i.status === 'アポ獲得' || i.status === '接続済み' || i.status === 'Next Action').length
   const appointmentCount = items.filter(i => i.status === 'アポ獲得').length
-  const callableCount = items.filter(i => i.status === '未着手' || i.status === '不通' || i.status === '不在').length
 
   return (
     <>
@@ -230,11 +323,6 @@ export default function ListDetailPage() {
         </div>
         <div className="w-px h-4" style={{ background: 'rgba(0,0,0,0.08)' }} />
         <div className="flex items-center gap-1.5 text-[13px]">
-          <span className="text-[#8E8E93]">コール済み</span>
-          <span className="font-semibold text-[#34C759]">{completedCount}件</span>
-        </div>
-        <div className="w-px h-4" style={{ background: 'rgba(0,0,0,0.08)' }} />
-        <div className="flex items-center gap-1.5 text-[13px]">
           <span className="text-[#8E8E93]">アポ獲得</span>
           <span className="font-semibold text-[#FF9F0A]">{appointmentCount}件</span>
         </div>
@@ -247,20 +335,53 @@ export default function ListDetailPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
       >
-        <div className="flex items-center gap-1.5">
-          {FILTERS.map(f => (
+        <div className="flex flex-col gap-2">
+          {/* ステータス */}
+          <div className="flex items-center gap-1.5">
+            {FILTERS.map(f => (
+              <button
+                key={f.key}
+                onClick={() => setFilter(f.key)}
+                className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
+                style={{
+                  background: filter === f.key ? '#1D1D1F' : 'rgba(0,0,0,0.04)',
+                  color: filter === f.key ? '#FFFFFF' : '#6E6E73',
+                }}
+              >
+                {f.label}
+              </button>
+            ))}
+          </div>
+          {/* Next Action */}
+          <div className="flex items-center gap-1.5">
+            <span className="text-[10px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em] mr-1">Next Action</span>
+            {ALL_NEXT_ACTIONS.map(a => {
+              const active = filterNextAction === a
+              return (
+                <button
+                  key={a}
+                  onClick={() => setFilterNextAction(prev => prev === a ? 'all' : a)}
+                  className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
+                  style={{
+                    background: active ? '#1D1D1F' : 'rgba(0,0,0,0.04)',
+                    color: active ? '#FFFFFF' : '#6E6E73',
+                  }}
+                >
+                  {a}
+                </button>
+              )
+            })}
             <button
-              key={f.key}
-              onClick={() => setFilter(f.key)}
+              onClick={() => setFilterNextAction(prev => prev === null ? 'all' : null)}
               className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
               style={{
-                background: filter === f.key ? '#1D1D1F' : 'rgba(0,0,0,0.04)',
-                color: filter === f.key ? '#FFFFFF' : '#6E6E73',
+                background: filterNextAction === null ? '#1D1D1F' : 'rgba(0,0,0,0.04)',
+                color: filterNextAction === null ? '#FFFFFF' : '#6E6E73',
               }}
             >
-              {f.label}
+              未設定
             </button>
-          ))}
+          </div>
         </div>
 
         <div className="flex items-center gap-2">
@@ -281,18 +402,6 @@ export default function ListDetailPage() {
             <Plus size={12} />
             追加
           </button>
-          {callableCount > 0 && (
-            <button
-              className="h-[28px] px-3 flex items-center gap-1.5 text-[12px] font-semibold text-white rounded-[6px]"
-              style={{
-                background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)',
-                boxShadow: '0 2px 6px rgba(255,59,48,0.35)',
-              }}
-            >
-              <PhoneCall size={12} />
-              一括コール ({callableCount})
-            </button>
-          )}
         </div>
       </motion.div>
 
@@ -311,7 +420,7 @@ export default function ListDetailPage() {
         <div
           className="grid items-center px-4 py-2.5"
           style={{
-            gridTemplateColumns: '32px 1fr 1fr 60px 120px 70px 80px 80px',
+            gridTemplateColumns: '32px 1fr 1fr 60px 120px 120px',
             borderBottom: '1px solid rgba(0,0,0,0.06)',
           }}
         >
@@ -320,9 +429,7 @@ export default function ListDetailPage() {
           <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">企業</span>
           <SortHeader label="ランク" sortKey="rank" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
           <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">ステータス</span>
-          <SortHeader label="コール" sortKey="callAttempts" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-          <SortHeader label="最終" sortKey="lastCallAt" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-          <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">Next</span>
+          <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">Next Action</span>
         </div>
 
         {/* Rows */}
@@ -331,7 +438,7 @@ export default function ListDetailPage() {
             key={item.id}
             className="grid items-center px-4 py-2.5 cursor-pointer"
             style={{
-              gridTemplateColumns: '32px 1fr 1fr 60px 120px 70px 80px 80px',
+              gridTemplateColumns: '32px 1fr 1fr 60px 120px 120px',
               borderBottom: i < filtered.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none',
             }}
             whileHover={{ background: 'rgba(0,0,0,0.02)' }}
@@ -351,12 +458,10 @@ export default function ListDetailPage() {
             <p className="text-[12px] text-[#6E6E73] truncate">{item.companyName}</p>
             <RankBadge rank={item.rank} />
             <StatusBadge status={item.status} />
-            <div className="flex items-center gap-1">
-              <Phone size={10} style={{ color: '#AEAEB2' }} />
-              <span className="text-[12px] text-[#6E6E73]">{item.callAttempts}</span>
-            </div>
-            <span className="text-[12px] text-[#6E6E73]">{formatDate(item.lastCallAt)}</span>
-            <span className="text-[12px] text-[#6E6E73]">{formatDate(item.nextActionAt)}</span>
+            <NextActionSelect
+              value={nextActions[item.id] ?? null}
+              onChange={val => setNextActions(prev => ({ ...prev, [item.id]: val }))}
+            />
           </motion.div>
         ))}
 

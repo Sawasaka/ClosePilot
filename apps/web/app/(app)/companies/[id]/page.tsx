@@ -1,25 +1,24 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { motion } from 'framer-motion'
 import {
   ChevronLeft,
   Building2,
-  Globe,
   Phone,
   MapPin,
   Users,
   Calendar,
   Briefcase,
-  Phone as PhoneIcon,
-  Star,
   TrendingUp,
-  CalendarClock,
-  ExternalLink,
   Edit3,
+  Plus,
+  X,
+  Star,
 } from 'lucide-react'
+import { AnimatePresence } from 'framer-motion'
 import { useCallStore } from '@/lib/stores/callStore'
 import { STATUS_STYLES, RANK_CONFIG } from '@/types/crm'
 import type { Rank, ApproachStatus } from '@/types/crm'
@@ -176,7 +175,16 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
   const { id } = React.use(params)
   const router = useRouter()
   const { startCall } = useCallStore()
-  const [_activeTab, _setActiveTab] = useState<'all' | 'contacts' | 'deals'>('all')
+  const [companyCategory, setCompanyCategory] = useState<'パートナー企業' | 'ダイレクト企業'>('ダイレクト企業')
+  const [showEditModal, setShowEditModal] = useState(false)
+  const [showAddContact, setShowAddContact] = useState(false)
+  const [showAddDeal, setShowAddDeal] = useState(false)
+
+  useEffect(() => {
+    const handler = () => setShowAddContact(true)
+    window.addEventListener('header-action', handler)
+    return () => window.removeEventListener('header-action', handler)
+  }, [])
 
   const company = MOCK_COMPANIES[id]
   const contacts = MOCK_CONTACTS[id] ?? []
@@ -219,15 +227,6 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
           <p className="text-[13px] text-[#6E6E73]">{company.industry} · {company.address}</p>
         </div>
 
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          transition={{ duration: 0.1 }}
-          className="flex items-center gap-1.5 px-3.5 py-2 rounded-[8px] text-[13px] font-medium text-[#6E6E73] shrink-0"
-          style={{ background: 'rgba(0,0,0,0.06)' }}
-        >
-          <Edit3 size={13} />
-          編集
-        </motion.button>
       </div>
 
       {/* ── 2-Column Layout ── */}
@@ -253,20 +252,9 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="flex-1 min-w-0">
                 <h2 className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.02em]">{company.name}</h2>
-                <a
-                  href={`https://${company.domain}`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={e => e.stopPropagation()}
-                  className="inline-flex items-center gap-1 text-[12px] text-[#0071E3] hover:underline mt-0.5"
-                >
-                  <Globe size={11} />
-                  {company.domain}
-                  <ExternalLink size={10} />
-                </a>
               </div>
-              {/* Score bar */}
-              <div className="flex items-center gap-2 shrink-0">
+              {/* Score bar + Edit */}
+              <div className="flex items-center gap-3 shrink-0">
                 <div className="w-20 h-1.5 rounded-full bg-[#F5F5F7] overflow-hidden">
                   <motion.div
                     className="h-full rounded-full"
@@ -277,10 +265,20 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                   />
                 </div>
                 <span className="text-[13px] font-semibold text-[#1D1D1F] tabular-nums">{company.score.toFixed(1)}</span>
+                <button
+                  onClick={() => setShowEditModal(true)}
+                  className="flex items-center gap-1 px-2.5 py-1.5 rounded-[6px] text-[12px] font-medium text-[#6E6E73] hover:bg-[rgba(0,0,0,0.06)] transition-colors"
+                  style={{ border: '1px solid rgba(0,0,0,0.08)' }}
+                >
+                  <Edit3 size={11} />
+                  編集
+                </button>
               </div>
             </div>
 
             <div className="grid grid-cols-2 gap-0">
+              <InfoRow label="区分">{companyCategory}</InfoRow>
+              <div />
               <InfoRow label="業種">{company.industry}</InfoRow>
               <div />
               <InfoRow label="電話番号">
@@ -308,6 +306,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                 </span>
               </InfoRow>
             </div>
+
           </motion.div>
 
           {/* Related Contacts */}
@@ -319,13 +318,22 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
             style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
             <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-              <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">担当者</h3>
-              <span
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(0,0,0,0.06)', color: '#6E6E73' }}
+              <div className="flex items-center gap-2">
+                <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">コンタクト</h3>
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(0,0,0,0.06)', color: '#6E6E73' }}
+                >
+                  {contacts.length}名
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAddContact(true)}
+                className="flex items-center gap-1 text-[11px] font-medium text-[#0071E3] hover:text-[#0060C7] transition-colors"
               >
-                {contacts.length}名
-              </span>
+                <Plus size={12} />
+                追加
+              </button>
             </div>
 
             <motion.div
@@ -334,7 +342,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
               variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
             >
               {contacts.length === 0 ? (
-                <div className="py-8 text-center text-[13px] text-[#AEAEB2]">担当者なし</div>
+                <div className="py-8 text-center text-[13px] text-[#AEAEB2]">コンタクトなし</div>
               ) : (
                 contacts.map(contact => (
                   <motion.div
@@ -389,7 +397,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
                       className="flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-[12px] font-semibold text-white opacity-0 group-hover:opacity-100 transition-opacity duration-100 shrink-0"
                       style={{ background: '#0071E3', boxShadow: '0 1px 3px rgba(0,113,227,0.3)' }}
                     >
-                      <PhoneIcon size={11} strokeWidth={2.5} />
+                      <Phone size={11} strokeWidth={2.5} />
                       コール
                     </motion.button>
                   </motion.div>
@@ -407,13 +415,22 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
             style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
             <div className="flex items-center justify-between px-5 py-3.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-              <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">商談</h3>
-              <span
-                className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
-                style={{ background: 'rgba(0,0,0,0.06)', color: '#6E6E73' }}
+              <div className="flex items-center gap-2">
+                <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">取引</h3>
+                <span
+                  className="text-[11px] font-semibold px-2 py-0.5 rounded-full"
+                  style={{ background: 'rgba(0,0,0,0.06)', color: '#6E6E73' }}
+                >
+                  {deals.length}件
+                </span>
+              </div>
+              <button
+                onClick={() => setShowAddDeal(true)}
+                className="flex items-center gap-1 text-[11px] font-medium text-[#0071E3] hover:text-[#0060C7] transition-colors"
               >
-                {deals.length}件
-              </span>
+                <Plus size={12} />
+                追加
+              </button>
             </div>
 
             <motion.div
@@ -422,7 +439,7 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
               variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
             >
               {deals.length === 0 ? (
-                <div className="py-8 text-center text-[13px] text-[#AEAEB2]">商談なし</div>
+                <div className="py-8 text-center text-[13px] text-[#AEAEB2]">取引なし</div>
               ) : (
                 deals.map(deal => (
                   <motion.div
@@ -508,28 +525,108 @@ export default function CompanyDetailPage({ params }: { params: Promise<{ id: st
             </div>
           </motion.div>
 
-          {/* Next Action */}
-          <motion.div
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[12px] p-4"
-            style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-          >
-            <div className="flex items-center gap-2 mb-3">
-              <CalendarClock size={14} className="text-[#0071E3] shrink-0" />
-              <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">次回アクション</h3>
-            </div>
-            <div
-              className="rounded-[8px] p-3"
-              style={{ background: 'rgba(0,113,227,0.06)', border: '1px solid rgba(0,113,227,0.12)' }}
-            >
-              <p className="text-[12px] font-semibold text-[#0071E3]">3/28（土）14:00</p>
-              <p className="text-[12px] text-[#1D1D1F] mt-1">田中 誠と初回商談（Google Meet）</p>
-            </div>
-          </motion.div>
         </div>
       </div>
+
+      {/* ── Edit Company Modal ── */}
+      <AnimatePresence>
+        {showEditModal && (
+          <ModalWrapper onClose={() => setShowEditModal(false)} title="企業情報を編集">
+            <div className="space-y-3">
+              <ModalField label="企業名" defaultValue={company.name} />
+              <ModalField label="業種" defaultValue={company.industry} />
+              <ModalField label="電話番号" defaultValue={company.phone} />
+              <ModalField label="所在地" defaultValue={company.address} />
+              <ModalField label="従業員数" defaultValue={String(company.employeeCount)} />
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setShowEditModal(false)} className="h-[34px] px-4 text-[13px] font-medium text-[#6E6E73] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)]">キャンセル</button>
+              <button onClick={() => setShowEditModal(false)} className="h-[34px] px-4 text-[13px] font-semibold text-white rounded-[8px]"
+                style={{ background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)', boxShadow: '0 2px 8px rgba(255,59,48,0.35)' }}>
+                保存
+              </button>
+            </div>
+          </ModalWrapper>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add Contact Modal ── */}
+      <AnimatePresence>
+        {showAddContact && (
+          <ModalWrapper onClose={() => setShowAddContact(false)} title="コンタクトを追加">
+            <div className="space-y-3">
+              <ModalField label="氏名" placeholder="田中 誠" required />
+              <ModalField label="役職" placeholder="営業部長" />
+              <ModalField label="電話番号" placeholder="090-1234-5678" />
+              <ModalField label="メールアドレス" placeholder="tanaka@example.com" />
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setShowAddContact(false)} className="h-[34px] px-4 text-[13px] font-medium text-[#6E6E73] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)]">キャンセル</button>
+              <button onClick={() => setShowAddContact(false)} className="h-[34px] px-4 text-[13px] font-semibold text-white rounded-[8px]"
+                style={{ background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)', boxShadow: '0 2px 8px rgba(255,59,48,0.35)' }}>
+                追加
+              </button>
+            </div>
+          </ModalWrapper>
+        )}
+      </AnimatePresence>
+
+      {/* ── Add Deal Modal ── */}
+      <AnimatePresence>
+        {showAddDeal && (
+          <ModalWrapper onClose={() => setShowAddDeal(false)} title="取引を追加">
+            <div className="space-y-3">
+              <ModalField label="取引名" placeholder="株式会社テクノリード - 新規案件" required />
+              <ModalField label="金額" placeholder="1000000" />
+              <ModalField label="確度（%）" placeholder="50" />
+            </div>
+            <div className="flex justify-end gap-2 mt-5">
+              <button onClick={() => setShowAddDeal(false)} className="h-[34px] px-4 text-[13px] font-medium text-[#6E6E73] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)]">キャンセル</button>
+              <button onClick={() => setShowAddDeal(false)} className="h-[34px] px-4 text-[13px] font-semibold text-white rounded-[8px]"
+                style={{ background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)', boxShadow: '0 2px 8px rgba(255,59,48,0.35)' }}>
+                追加
+              </button>
+            </div>
+          </ModalWrapper>
+        )}
+      </AnimatePresence>
+    </div>
+  )
+}
+
+// ─── Shared Modal Components ────────────────────────────────────────────────
+
+function ModalWrapper({ onClose, title, children }: { onClose: () => void; title: string; children: React.ReactNode }) {
+  return (
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
+      <motion.div className="relative w-[440px] rounded-[16px] p-6 bg-white"
+        style={{ boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}
+        initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
+        <div className="flex items-center justify-between mb-5">
+          <h2 className="text-[17px] font-semibold text-[#1D1D1F]">{title}</h2>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(0,0,0,0.05)]"><X size={16} style={{ color: '#8E8E93' }} /></button>
+        </div>
+        {children}
+      </motion.div>
+    </motion.div>
+  )
+}
+
+function ModalField({ label, defaultValue, placeholder, required }: { label: string; defaultValue?: string; placeholder?: string; required?: boolean }) {
+  return (
+    <div>
+      <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">
+        {label} {required && <span className="text-[#FF3B30]">*</span>}
+      </label>
+      <input
+        type="text"
+        defaultValue={defaultValue}
+        placeholder={placeholder}
+        className="mt-1.5 w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none"
+        style={{ background: 'rgba(0,0,0,0.04)' }}
+      />
     </div>
   )
 }

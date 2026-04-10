@@ -3,7 +3,7 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plus, Phone, Users, CalendarCheck, X } from 'lucide-react'
+import { Search, Plus, Users, CalendarCheck, X, ChevronDown } from 'lucide-react'
 import type { CallList } from '@/types/crm'
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
@@ -116,9 +116,12 @@ function ListCard({ list, index }: { list: CallList; index: number }) {
 
 // ─── CreateListModal ─────────────────────────────────────────────────────────
 
+const OWNERS = ['田中太郎', '鈴木花子', '佐藤次郎']
+
 function CreateListModal({ open, onClose }: { open: boolean; onClose: () => void }) {
   const [name, setName] = useState('')
   const [description, setDescription] = useState('')
+  const [owner, setOwner] = useState(OWNERS[0])
 
   if (!open) return null
 
@@ -175,6 +178,20 @@ function CreateListModal({ open, onClose }: { open: boolean; onClose: () => void
                   onBlur={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }}
                 />
               </div>
+              <div>
+                <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">担当者</label>
+                <div className="relative mt-1.5">
+                  <select
+                    value={owner}
+                    onChange={e => setOwner(e.target.value)}
+                    className="w-full h-[36px] px-3 pr-8 text-[14px] rounded-[8px] text-[#1D1D1F] appearance-none cursor-pointer outline-none"
+                    style={{ background: 'rgba(0,0,0,0.04)' }}
+                  >
+                    {OWNERS.map(o => <option key={o} value={o}>{o}</option>)}
+                  </select>
+                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" />
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-end gap-2 mt-6">
@@ -218,10 +235,6 @@ export default function ListsPage() {
     )
   }, [search])
 
-  const totalContacts = MOCK_LISTS.reduce((s, l) => s + l.contactCount, 0)
-  const totalCompleted = MOCK_LISTS.reduce((s, l) => s + l.completedCount, 0)
-  const totalAppointments = MOCK_LISTS.reduce((s, l) => s + l.appointmentCount, 0)
-
   return (
     <>
       {/* Header */}
@@ -232,45 +245,11 @@ export default function ListsPage() {
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
         <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">
-          リスト
+          ISリスト
         </h1>
         <p className="text-[13px] text-[#8E8E93] mt-0.5">
           コール対象リストを管理
         </p>
-      </motion.div>
-
-      {/* Summary KPI */}
-      <motion.div
-        className="grid grid-cols-3 gap-3 mb-5"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.06, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {[
-          { label: '総コンタクト数', value: totalContacts, icon: Users, color: '#0071E3' },
-          { label: 'コール完了', value: totalCompleted, icon: Phone, color: '#34C759' },
-          { label: 'アポ獲得', value: totalAppointments, icon: CalendarCheck, color: '#FF9F0A' },
-        ].map((kpi, i) => (
-          <div
-            key={i}
-            className="rounded-[12px] px-4 py-3 flex items-center gap-3"
-            style={{
-              background: '#FFFFFF',
-              boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.05)',
-            }}
-          >
-            <div
-              className="w-[32px] h-[32px] rounded-[8px] flex items-center justify-center"
-              style={{ background: `${kpi.color}14` }}
-            >
-              <kpi.icon size={15} style={{ color: kpi.color }} />
-            </div>
-            <div>
-              <p className="text-[18px] font-semibold text-[#1D1D1F] tracking-[-0.02em]">{kpi.value}</p>
-              <p className="text-[11px] text-[#8E8E93]">{kpi.label}</p>
-            </div>
-          </div>
-        ))}
       </motion.div>
 
       {/* Toolbar */}

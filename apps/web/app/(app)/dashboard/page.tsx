@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { Phone, Mail, PhoneCall, CalendarCheck, ChevronDown } from 'lucide-react'
+import { Phone, Mail, PhoneCall, CalendarCheck, ChevronDown, TrendingUp, Trophy } from 'lucide-react'
 import type { ISRepActivity } from '@/types/crm'
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
@@ -25,7 +25,21 @@ const MOCK_IS_REPS: ISRepActivity[] = [
   },
 ]
 
+// Pipeline stage mock data for dashboard
+const PIPELINE_STAGES = [
+  { label: 'IS',             amount: 1680000,  count: 2, color: '#6E6E73' },
+  { label: '商談済み',       amount: 3300000,  count: 2, color: '#0044DD' },
+  { label: 'PJ化予定あり',   amount: 3600000,  count: 1, color: '#4B48CC' },
+  { label: 'POC実施中',     amount: 1800000,  count: 1, color: '#9B30D9' },
+  { label: '決裁者合意済み', amount: 720000,   count: 1, color: '#C07000' },
+  { label: '受注',           amount: 4800000,  count: 1, color: '#007A30' },
+]
+
 const CARD_SHADOW = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'
+
+function formatAmount(n: number): string {
+  return `¥${n.toLocaleString('ja-JP')}`
+}
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -35,6 +49,11 @@ export default function DashboardPage() {
 
   const rep = MOCK_IS_REPS.find(r => r.repId === selectedRepId) ?? MOCK_IS_REPS[0]
   const connectionRate = rep.today.calls > 0 ? ((rep.today.connected / rep.today.calls) * 100).toFixed(0) : '0'
+
+  const totalPipeline = PIPELINE_STAGES.filter(s => s.label !== '受注').reduce((s, st) => s + st.amount, 0)
+  const totalCount = PIPELINE_STAGES.filter(s => s.label !== '受注').reduce((s, st) => s + st.count, 0)
+  const wonStage = PIPELINE_STAGES.find(s => s.label === '受注')
+  const maxAmount = Math.max(...PIPELINE_STAGES.map(s => s.amount))
 
   return (
     <div className="space-y-5">
@@ -94,6 +113,66 @@ export default function DashboardPage() {
           )}
         </div>
       </div>
+
+      {/* Pipeline Summary */}
+      <motion.div
+        initial={{ opacity: 0, y: 8 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
+        className="bg-white rounded-[14px] p-5"
+        style={{ boxShadow: CARD_SHADOW }}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-[14px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">パイプライン</h3>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <TrendingUp size={13} style={{ color: '#0071E3' }} />
+              <span className="text-[13px] font-semibold text-[#1D1D1F] tabular-nums">{formatAmount(totalPipeline)}</span>
+              <span className="text-[11px] text-[#AEAEB2]">/ {totalCount}件</span>
+            </div>
+            {wonStage && (
+              <>
+                <span className="w-px h-3" style={{ background: 'rgba(0,0,0,0.07)' }} />
+                <div className="flex items-center gap-1.5">
+                  <Trophy size={13} style={{ color: '#34C759' }} />
+                  <span className="text-[13px] font-semibold text-[#007A30] tabular-nums">{formatAmount(wonStage.amount)}</span>
+                  <span className="text-[11px] text-[#AEAEB2]">受注</span>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+
+        <div className="space-y-2.5">
+          {PIPELINE_STAGES.map((stage, i) => (
+            <motion.div
+              key={stage.label}
+              initial={{ opacity: 0, x: -8 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.25, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
+              className="flex items-center gap-3"
+            >
+              <div className="w-[100px] shrink-0 flex items-center gap-2">
+                <div className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: stage.color }} />
+                <span className="text-[11px] text-[#6E6E73] truncate">{stage.label}</span>
+              </div>
+              <div className="flex-1 h-[22px] rounded-[4px] relative overflow-hidden" style={{ background: 'rgba(0,0,0,0.04)' }}>
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${(stage.amount / maxAmount) * 100}%` }}
+                  transition={{ duration: 0.5, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
+                  className="h-full rounded-[4px]"
+                  style={{ background: stage.color + 'CC', minWidth: 2 }}
+                />
+              </div>
+              <div className="w-[90px] shrink-0 text-right">
+                <span className="text-[12px] font-semibold text-[#1D1D1F] tabular-nums">{formatAmount(stage.amount)}</span>
+              </div>
+              <span className="w-[30px] shrink-0 text-right text-[11px] text-[#AEAEB2] tabular-nums">{stage.count}件</span>
+            </motion.div>
+          ))}
+        </div>
+      </motion.div>
 
       {/* Summary Cards */}
       <div className="grid grid-cols-3 gap-4">

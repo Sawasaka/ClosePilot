@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -7,120 +8,222 @@ import {
   Home, Columns3, Building2, Users, Briefcase,
   List, CheckSquare, BookOpen, BarChart2, LayoutDashboard,
   Workflow, FileStack, AlertCircle, Settings, Zap, ChevronRight,
+  Trophy, Rocket, Bot, Mail, Send, FileText, Target, GitBranch, Gift,
 } from 'lucide-react'
 
 // ── Navigation structure ──────────────────────────────────────────────────────
 const NAV_GROUPS = [
-  // ── MVP ──
+  // ── ホーム ──
   {
     label: null,
     items: [
-      { href: '/',          label: '今日のタスク', icon: Home, badge: 8 },
-      { href: '/overdue',   label: '期限超過タスク',       icon: AlertCircle, badge: 4 },
-      { href: '/pipeline',  label: 'パイプライン',       icon: Columns3 },
+      { href: '/',          label: 'ホーム',           icon: Bot },
     ],
   },
+  // ── デイリー ──
+  {
+    label: 'デイリー',
+    items: [
+      { href: '/today',     label: '今日のタスク',     icon: Home, badge: 8 },
+      { href: '/overdue',   label: '期限超過タスク',   icon: AlertCircle, badge: 4 },
+    ],
+  },
+  // ── 管理 ──
+  {
+    label: '管理',
+    items: [
+      { href: '/pipeline',  label: 'パイプライン',     icon: Columns3 },
+      { href: '/tasks',     label: 'タスク',           icon: CheckSquare },
+      { href: '/lists',     label: 'ISリスト',         icon: List },
+    ],
+  },
+  // ── データ ──
   {
     label: 'データ',
     items: [
-      { href: '/companies', label: '企業',       icon: Building2 },
-      { href: '/contacts',  label: 'コンタクト', icon: Users },
-      { href: '/deals',     label: '取引',       icon: Briefcase },
+      { href: '/companies', label: '企業',             icon: Building2 },
+      { href: '/contacts',  label: 'コンタクト',       icon: Users },
+      { href: '/deals',     label: '取引',             icon: Briefcase },
     ],
   },
+  // ── マーケティング ──
   {
-    label: null,
+    label: 'マーケティング',
     items: [
-      { href: '/lists',       label: 'リスト',           icon: List },
-      { href: '/tasks',       label: 'タスク',           icon: CheckSquare },
-      { href: '/automation',  label: 'オートメーション', icon: Workflow },
-      { href: '/documents',   label: '資料',             icon: FileStack },
+      { href: '/nurturing',  label: 'ナーチャリング',   icon: Mail },
+      { href: '/campaigns',  label: '配信管理',         icon: Send },
+      { href: '/leads',      label: 'リード分析',       icon: Target },
+    ],
+  },
+  // ── プロダクト ──
+  {
+    label: 'プロダクト',
+    items: [
+      { href: '/meetings',  label: '議事録',           icon: FileText },
+      { href: '/issues',    label: '課題ボード',       icon: GitBranch },
+      { href: '/priority',  label: '開発優先度',       icon: BarChart2 },
+    ],
+  },
+  // ── ツール ──
+  {
+    label: 'ツール',
+    items: [
+      { href: '/automation', label: 'オートメーション', icon: Workflow },
+      { href: '/documents', label: 'リンク資料',       icon: FileStack, roadmap: 'v2', tooltip: '顧客の閲覧状況・滞在時間を自動トラッキング' },
+      { href: '/knowledge', label: 'ナレッジ',         icon: BookOpen },
+    ],
+  },
+  // ── 分析 ──
+  {
+    label: '分析',
+    items: [
+      { href: '/dashboard', label: '成績',            icon: LayoutDashboard },
+      { href: '/analytics', label: 'アクション数',    icon: BarChart2 },
+    ],
+  },
+  // ── ゲーミフィケーション ──
+  {
+    label: 'ゲーミフィケーション',
+    items: [
+      { href: '/gamification',              label: 'ストーリー',       icon: BookOpen },
+      { href: '/gamification/tutorial',     label: 'チュートリアル',   icon: Target },
+      { href: '/gamification/quests',       label: 'クエスト',         icon: Zap },
+      { href: '/gamification/economy',      label: '仮想経済',         icon: Gift },
+      { href: '/gamification/team',         label: 'チームプレイ',     icon: Users },
+      { href: '/gamification/leaderboard',  label: 'リーダーボード',   icon: Trophy },
     ],
   },
   // ── 開発ロードマップ ──
   {
-    label: 'ロードマップ',
+    label: '開発ロードマップ',
     items: [
-      { href: '/dashboard', label: 'ダッシュボード',    icon: LayoutDashboard, roadmap: 'v2' },
-      { href: '/analytics', label: 'アナリティクス',    icon: BarChart2, roadmap: 'v2' },
-      { href: '/knowledge', label: 'ナレッジ',          icon: BookOpen, roadmap: 'v3' },
+      { href: '/onboarding',   label: 'オンボーディング',     icon: Rocket, devOrder: 1 },
     ],
   },
 ]
 
 // ── NavItem — Nintendo button style ──────────────────────────────────────────
 function NavItem({
-  href, label, icon: Icon, active, badge, roadmap,
+  href, label, icon: Icon, active, badge, roadmap, note, tooltip, devOrder,
 }: {
-  href: string; label: string; icon: React.ElementType; active: boolean; badge?: number; roadmap?: string
+  href: string; label: string; icon: React.ElementType; active: boolean; badge?: number; roadmap?: string; note?: string; tooltip?: string; devOrder?: number
 }) {
+  const [showTooltip, setShowTooltip] = useState(false)
+
   return (
-    <Link href={href} className="block mx-2">
-      <motion.div
-        className="relative flex items-center gap-2.5 px-3 py-[8px] rounded-[8px]"
-        style={active ? {
-          background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)',
-          boxShadow: '0 3px 14px rgba(255,59,48,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
-        } : undefined}
-        whileHover={!active ? { background: 'rgba(0,0,0,0.05)' } : undefined}
-        whileTap={{ scale: 0.97 }}
-        transition={{ duration: 0.1 }}
-      >
-        <Icon
-          size={15}
-          strokeWidth={active ? 2.4 : 1.75}
-          style={{ color: active ? '#FFFFFF' : '#8E8E93', flexShrink: 0 }}
-        />
-        <span
-          className="leading-none tracking-[-0.01em] text-[13px]"
-          style={{
-            color: active ? '#FFFFFF' : '#3C3C43',
-            fontWeight: active ? 600 : 400,
-          }}
+    <div className="relative mx-2">
+      <Link href={href} className="block">
+        <motion.div
+          className="relative flex flex-wrap items-center gap-2.5 px-3 py-[8px] rounded-[8px]"
+          style={active ? {
+            background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)',
+            boxShadow: '0 3px 14px rgba(255,59,48,0.45), inset 0 1px 0 rgba(255,255,255,0.25)',
+          } : undefined}
+          whileHover={!active ? { background: 'rgba(0,0,0,0.05)' } : undefined}
+          whileTap={{ scale: 0.97 }}
+          transition={{ duration: 0.1 }}
         >
-          {label}
-        </span>
-
-        {badge != null && badge > 0 && (
+          <Icon
+            size={15}
+            strokeWidth={active ? 2.4 : 1.75}
+            style={{ color: active ? '#FFFFFF' : '#8E8E93', flexShrink: 0 }}
+          />
           <span
-            className="ml-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold leading-none shrink-0"
+            className="leading-none tracking-[-0.01em] text-[13px]"
             style={{
-              background: active ? 'rgba(255,255,255,0.25)' : href === '/overdue' ? '#FF3B30' : '#0071E3',
-              color: '#FFFFFF',
+              color: active ? '#FFFFFF' : '#3C3C43',
+              fontWeight: active ? 600 : 400,
             }}
           >
-            {badge}
+            {label}
           </span>
-        )}
 
-        {roadmap && !active && (
-          <span
-            className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-[4px] shrink-0 uppercase tracking-[0.03em]"
-            style={{
-              background: roadmap === 'v2' ? 'rgba(0,113,227,0.08)' : 'rgba(94,92,230,0.08)',
-              color: roadmap === 'v2' ? '#0071E3' : '#5E5CE6',
-            }}
-          >
-            {roadmap === 'v2' ? 'Phase 2' : 'Phase 3'}
-          </span>
-        )}
-
-        {/* Active badge dot */}
-        <AnimatePresence>
-          {active && (
-            <motion.span
-              layoutId="sidebar-active-dot"
-              className="ml-auto w-[5px] h-[5px] rounded-full bg-white shrink-0"
-              style={{ opacity: 0.7 }}
-              initial={{ opacity: 0, scale: 0 }}
-              animate={{ opacity: 0.7, scale: 1 }}
-              exit={{ opacity: 0, scale: 0 }}
-              transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-            />
+          {badge != null && badge > 0 && (
+            <span
+              className="ml-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold leading-none shrink-0"
+              style={{
+                background: active ? 'rgba(255,255,255,0.25)' : href === '/overdue' ? '#FF3B30' : '#0071E3',
+                color: '#FFFFFF',
+              }}
+            >
+              {badge}
+            </span>
           )}
-        </AnimatePresence>
-      </motion.div>
-    </Link>
+
+          {roadmap && !active && (
+            <span
+              className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-[4px] shrink-0 uppercase tracking-[0.03em]"
+              style={{
+                background: roadmap === 'v2' ? 'rgba(0,113,227,0.08)' : 'rgba(94,92,230,0.08)',
+                color: roadmap === 'v2' ? '#0071E3' : '#5E5CE6',
+              }}
+            >
+              {roadmap === 'v2' ? 'Phase 2' : 'Phase 3'}
+            </span>
+          )}
+
+          {devOrder != null && !active && (
+            <span
+              className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-[4px] shrink-0 tracking-[0.03em]"
+              style={{ background: 'rgba(0,0,0,0.04)', color: '#AEAEB2' }}
+            >
+              #{devOrder}
+            </span>
+          )}
+
+          {tooltip && !active && (
+            <button
+              onClick={e => { e.preventDefault(); e.stopPropagation(); setShowTooltip(v => !v) }}
+              className="ml-auto w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[9px] font-bold hover:bg-[rgba(0,0,0,0.06)] transition-colors"
+              style={{ color: '#C7C7CC' }}
+            >
+              ?
+            </button>
+          )}
+
+          {/* Active badge dot */}
+          <AnimatePresence>
+            {active && (
+              <motion.span
+                layoutId="sidebar-active-dot"
+                className="ml-auto w-[5px] h-[5px] rounded-full bg-white shrink-0"
+                style={{ opacity: 0.7 }}
+                initial={{ opacity: 0, scale: 0 }}
+                animate={{ opacity: 0.7, scale: 1 }}
+                exit={{ opacity: 0, scale: 0 }}
+                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
+              />
+            )}
+          </AnimatePresence>
+          {note && !active && (
+            <span className="w-full pl-[27px] text-[9px] leading-tight -mt-1 mb-0.5" style={{ color: '#AEAEB2' }}>
+              {note}
+            </span>
+          )}
+        </motion.div>
+      </Link>
+      {/* Tooltip popover */}
+      <AnimatePresence>
+        {showTooltip && tooltip && (
+          <motion.div
+            initial={{ opacity: 0, y: -4 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -4 }}
+            transition={{ duration: 0.15 }}
+            className="absolute left-3 right-3 mt-1 px-3 py-2 rounded-[8px] z-40"
+            style={{ background: '#1D1D1F', boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}
+          >
+            <p className="text-[10px] text-white leading-relaxed">{tooltip}</p>
+            <button
+              onClick={() => setShowTooltip(false)}
+              className="absolute top-1 right-1.5 text-white/40 hover:text-white/80 transition-colors"
+            >
+              <X size={10} />
+            </button>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
   )
 }
 
@@ -169,9 +272,14 @@ export function Sidebar() {
           >
             <Zap size={14} className="text-white" strokeWidth={2.5} />
           </motion.div>
-          <span className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">
-            ClosePilot
-          </span>
+          <div className="flex flex-col">
+            <span className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.03em] leading-tight">
+              Intent Force
+            </span>
+            <span className="text-[9px] text-[#AEAEB2] tracking-[0.02em] leading-tight">
+              for First-Party CRM
+            </span>
+          </div>
         </Link>
       </div>
 
@@ -191,6 +299,9 @@ export function Sidebar() {
                   active={isActive(item.href)}
                   badge={'badge' in item ? (item as { badge: number }).badge : undefined}
                   roadmap={'roadmap' in item ? (item as { roadmap: string }).roadmap : undefined}
+                  note={'note' in item ? (item as { note: string }).note : undefined}
+                  tooltip={'tooltip' in item ? (item as { tooltip: string }).tooltip : undefined}
+                  devOrder={'devOrder' in item ? (item as { devOrder: number }).devOrder : undefined}
                 />
               ))}
             </div>

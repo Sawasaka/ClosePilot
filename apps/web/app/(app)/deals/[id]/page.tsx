@@ -12,7 +12,6 @@ import {
   Target,
   Calendar,
   TrendingUp,
-  AlertTriangle,
   Zap,
   BookOpen,
   CheckCircle2,
@@ -33,7 +32,7 @@ type DealStage =
   | 'NEW_LEAD' | 'QUALIFIED' | 'FIRST_MEETING' | 'SOLUTION_FIT'
   | 'PROPOSAL' | 'NEGOTIATION' | 'VERBAL_COMMIT' | 'CLOSED_WON' | 'CLOSED_LOST'
 
-type DealStatus = 'アクティブ' | '優先対応' | '停滞中' | '保留'
+type DealStatus = 'アクティブ' | '優先対応' | '保留'
 
 type ISContactStatus = '未着手' | '不通' | '不在' | '接続済み' | 'コール不可' | 'アポ獲得' | 'Next Action'
 
@@ -70,7 +69,6 @@ interface DealDetail {
   status: DealStatus
   amount: number
   probability: number
-  stalled: boolean
   expectedCloseAt: string | null
   updatedAt: string
 }
@@ -106,28 +104,28 @@ const MOCK_DEALS: Record<string, DealDetail> = {
     company: '株式会社テクノリード', companyId: '1',
     contact: '田中 誠', contactId: '1', contactPhone: '090-1234-5678',
     owner: '田中太郎', rank: 'A', stage: 'NEGOTIATION', status: 'アクティブ',
-    amount: 4800000, probability: 80, stalled: false, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22',
+    amount: 4800000, probability: 80, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22',
   },
   'd2': {
     id: 'd2', name: '株式会社イノベーション - 大型案件',
     company: '株式会社イノベーション', companyId: '3',
     contact: '佐々木 拓也', contactId: '3', contactPhone: '090-3456-7890',
     owner: '田中太郎', rank: 'A', stage: 'VERBAL_COMMIT', status: '優先対応',
-    amount: 6000000, probability: 90, stalled: false, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21',
+    amount: 6000000, probability: 90, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21',
   },
   'd3': {
     id: 'd3', name: '合同会社フューチャー - 2026/02/01',
     company: '合同会社フューチャー', companyId: '2',
     contact: '山本 佳子', contactId: '2', contactPhone: '090-2345-6789',
     owner: '鈴木花子', rank: 'A', stage: 'QUALIFIED', status: 'アクティブ',
-    amount: 2400000, probability: 40, stalled: false, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19',
+    amount: 2400000, probability: 40, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19',
   },
   'd4': {
     id: 'd4', name: '株式会社グロース - HR導入',
     company: '株式会社グロース', companyId: '4',
     contact: '中村 理恵', contactId: '4', contactPhone: '090-4567-8901',
-    owner: '佐藤次郎', rank: 'B', stage: 'QUALIFIED', status: '停滞中',
-    amount: 900000, probability: 30, stalled: true, expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10',
+    owner: '佐藤次郎', rank: 'B', stage: 'QUALIFIED', status: 'アクティブ',
+    amount: 900000, probability: 30, expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10',
   },
 }
 
@@ -150,7 +148,6 @@ const DEAL_CONTACTS: Record<string, ISContact[]> = {
 const DEAL_STATUS_STYLE: Record<DealStatus, { bg: string; text: string; dot: string }> = {
   'アクティブ': { bg: 'rgba(52,199,89,0.1)',  text: '#1A7A35', dot: '#34C759' },
   '優先対応':   { bg: 'rgba(0,113,227,0.1)',  text: '#0060C7', dot: '#0071E3' },
-  '停滞中':     { bg: 'rgba(255,159,10,0.1)', text: '#C07000', dot: '#FF9F0A' },
   '保留':       { bg: 'rgba(0,0,0,0.06)',     text: '#6E6E73', dot: '#AEAEB2' },
 }
 
@@ -377,24 +374,6 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
           </motion.button>
         </div>
 
-        {/* Stalled banner */}
-        <AnimatePresence>
-          {deal.stalled && (
-            <motion.div
-              initial={{ opacity: 0, y: -4, height: 0 }}
-              animate={{ opacity: 1, y: 0, height: 'auto' }}
-              exit={{ opacity: 0, y: -4, height: 0 }}
-              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              className="mt-3 flex items-center gap-2.5 px-4 py-3 rounded-[8px]"
-              style={{ background: 'rgba(255,159,10,0.1)', border: '1px solid rgba(255,159,10,0.25)' }}
-            >
-              <AlertTriangle size={14} style={{ color: '#FF9F0A' }} className="shrink-0" />
-              <p className="text-[13px] font-medium" style={{ color: '#D97706' }}>
-                この商談は停滞中です — 14日以上活動がありません
-              </p>
-            </motion.div>
-          )}
-        </AnimatePresence>
       </div>
 
       {/* ── 2-Column Layout ── */}

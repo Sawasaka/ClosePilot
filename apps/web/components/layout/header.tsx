@@ -6,19 +6,32 @@ import { Search, Bell, Plus } from 'lucide-react'
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar'
 
 const PAGE_TITLES: Record<string, string> = {
-  '/': '今日のタスク',
+  '/': 'ホーム',
+  '/today': '今日のタスク',
   '/pipeline': 'パイプライン',
   '/companies': '企業',
   '/contacts': 'コンタクト',
   '/deals': '取引',
   '/tasks': 'タスク',
   '/knowledge': 'ナレッジ',
-  '/analytics': 'アナリティクス',
+  '/analytics': 'アクション数',
   '/settings': '設定',
+  '/nurturing': 'ナーチャリング',
+  '/campaigns': '配信管理',
+  '/leads': 'リード分析',
+  '/meetings': '議事録',
+  '/issues': '課題ボード',
+  '/priority': '開発優先度',
+  '/gamification': 'ストーリー',
+  '/gamification/tutorial': 'チュートリアル',
+  '/gamification/quests': 'クエスト',
+  '/gamification/economy': '仮想経済',
+  '/gamification/team': 'チームプレイ',
+  '/gamification/leaderboard': 'リーダーボード',
 }
 
 const PAGE_ACTIONS: Record<string, { label: string }> = {
-  '/companies': { label: '追加' },
+  '/companies': { label: '企業作成' },
   '/contacts': { label: '追加' },
   '/deals': { label: '作成' },
   '/tasks': { label: '追加' },
@@ -26,10 +39,14 @@ const PAGE_ACTIONS: Record<string, { label: string }> = {
 
 function getPageTitle(pathname: string): string {
   if (pathname === '/') return PAGE_TITLES['/'] ?? ''
-  for (const [key, title] of Object.entries(PAGE_TITLES)) {
+  // 完全一致を先にチェック
+  if (PAGE_TITLES[pathname]) return PAGE_TITLES[pathname]
+  // 前方一致（長いパスから順にチェック）
+  const sorted = Object.entries(PAGE_TITLES).sort((a, b) => b[0].length - a[0].length)
+  for (const [key, title] of sorted) {
     if (key !== '/' && pathname.startsWith(key)) return title
   }
-  return 'ClosePilot'
+  return 'Intent Force'
 }
 
 interface HeaderProps {
@@ -71,10 +88,8 @@ export function Header({ user }: HeaderProps) {
         {title}
       </motion.h1>
 
-      <div className="flex-1" />
-
       {/* Search */}
-      <div className="relative hidden md:flex items-center">
+      <div className="relative hidden md:flex items-center ml-4">
         <Search size={13} className="absolute left-2.5 text-[#AEAEB2] pointer-events-none" />
         <input
           type="text"
@@ -98,12 +113,15 @@ export function Header({ user }: HeaderProps) {
         />
       </div>
 
+      <div className="flex-1" />
+
       {/* Primary action button */}
       {action && (
         <motion.button
           whileHover={{ filter: 'brightness(1.06)' }}
           whileTap={{ scale: 0.97 }}
           transition={{ duration: 0.1 }}
+          onClick={() => window.dispatchEvent(new CustomEvent('header-action'))}
           className="hidden md:flex items-center gap-1 h-[32px] px-4 rounded-[8px] text-[13px] font-semibold text-white shrink-0"
           style={{
             background: 'linear-gradient(135deg, #6E6BF0 0%, #4F46E5 55%, #3730A3 100%)',

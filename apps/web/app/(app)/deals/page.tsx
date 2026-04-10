@@ -10,7 +10,6 @@ import {
   ChevronDown,
   ChevronUp,
   Briefcase,
-  AlertTriangle,
   TrendingUp,
   X,
 } from 'lucide-react'
@@ -35,7 +34,6 @@ interface Deal {
   stage: DealStage
   amount: number
   probability: number
-  stalled: boolean
   expectedCloseAt: string | null
   updatedAt: string
 }
@@ -43,14 +41,14 @@ interface Deal {
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
 const MOCK_DEALS: Deal[] = [
-  { id: 'd1', name: '株式会社テクノリード - 2026/01/15', company: '株式会社テクノリード', contact: '田中 誠', owner: '田中太郎', rank: 'A', stage: 'NEGOTIATION',   amount: 4800000, probability: 80, stalled: false, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22' },
-  { id: 'd2', name: '株式会社イノベーション - 大型案件',  company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'VERBAL_COMMIT', amount: 6000000, probability: 90, stalled: false, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21' },
-  { id: 'd3', name: '合同会社フューチャー - 2026/02/01', company: '合同会社フューチャー', contact: '山本 佳子', owner: '鈴木花子', rank: 'A', stage: 'QUALIFIED',      amount: 2400000, probability: 40, stalled: false, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19' },
-  { id: 'd4', name: '株式会社グロース - HR導入',        company: '株式会社グロース',    contact: '中村 理恵', owner: '佐藤次郎', rank: 'B', stage: 'QUALIFIED',      amount: 900000,  probability: 30, stalled: true,  expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10' },
-  { id: 'd5', name: '株式会社イノベーション - 初回',    company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'FIRST_MEETING', amount: 3600000, probability: 50, stalled: false, expectedCloseAt: '2026-04-20', updatedAt: '2026-03-18' },
-  { id: 'd6', name: '有限会社サクセス - PoC',          company: '有限会社サクセス',    contact: '小林 健太', owner: '鈴木花子', rank: 'B', stage: 'SOLUTION_FIT',  amount: 1800000, probability: 60, stalled: true,  expectedCloseAt: '2026-04-10', updatedAt: '2026-03-05' },
-  { id: 'd7', name: '株式会社ネクスト - 不動産向け',   company: '株式会社ネクスト',    contact: '鈴木 美香', owner: '田中太郎', rank: 'C', stage: 'PROPOSAL',       amount: 720000,  probability: 35, stalled: false, expectedCloseAt: '2026-04-25', updatedAt: '2026-03-17' },
-  { id: 'd8', name: '株式会社テクノリード - 新規',     company: '株式会社テクノリード', contact: '田中 誠',   owner: '田中太郎', rank: 'A', stage: 'NEW_LEAD',      amount: 1200000, probability: 20, stalled: false, expectedCloseAt: '2026-05-15', updatedAt: '2026-03-23' },
+  { id: 'd1', name: '株式会社テクノリード - 2026/01/15', company: '株式会社テクノリード', contact: '田中 誠', owner: '田中太郎', rank: 'A', stage: 'NEGOTIATION',   amount: 4800000, probability: 80, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22' },
+  { id: 'd2', name: '株式会社イノベーション - 大型案件',  company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'VERBAL_COMMIT', amount: 6000000, probability: 90, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21' },
+  { id: 'd3', name: '合同会社フューチャー - 2026/02/01', company: '合同会社フューチャー', contact: '山本 佳子', owner: '鈴木花子', rank: 'A', stage: 'QUALIFIED',      amount: 2400000, probability: 40, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19' },
+  { id: 'd4', name: '株式会社グロース - HR導入',        company: '株式会社グロース',    contact: '中村 理恵', owner: '佐藤次郎', rank: 'B', stage: 'QUALIFIED',      amount: 900000,  probability: 30, expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10' },
+  { id: 'd5', name: '株式会社イノベーション - 初回',    company: '株式会社イノベーション', contact: '佐々木 拓也', owner: '田中太郎', rank: 'A', stage: 'FIRST_MEETING', amount: 3600000, probability: 50, expectedCloseAt: '2026-04-20', updatedAt: '2026-03-18' },
+  { id: 'd6', name: '有限会社サクセス - PoC',          company: '有限会社サクセス',    contact: '小林 健太', owner: '鈴木花子', rank: 'B', stage: 'SOLUTION_FIT',  amount: 1800000, probability: 60, expectedCloseAt: '2026-04-10', updatedAt: '2026-03-05' },
+  { id: 'd7', name: '株式会社ネクスト - 不動産向け',   company: '株式会社ネクスト',    contact: '鈴木 美香', owner: '田中太郎', rank: 'C', stage: 'PROPOSAL',       amount: 720000,  probability: 35, expectedCloseAt: '2026-04-25', updatedAt: '2026-03-17' },
+  { id: 'd8', name: '株式会社テクノリード - 新規',     company: '株式会社テクノリード', contact: '田中 誠',   owner: '田中太郎', rank: 'A', stage: 'NEW_LEAD',      amount: 1200000, probability: 20, expectedCloseAt: '2026-05-15', updatedAt: '2026-03-23' },
 ]
 
 // ─── Config ────────────────────────────────────────────────────────────────────
@@ -120,7 +118,6 @@ export default function DealsPage() {
   const [search, setSearch]             = useState('')
   const [filterStage, setFilterStage]   = useState<DealStage | ''>('')
   const [filterOwner, setFilterOwner]   = useState('')
-  const [filterStalled, setFilterStalled] = useState(false)
   const [sortKey, setSortKey]           = useState<SortKey>('amount')
   const [sortDir, setSortDir]           = useState<SortDir>('desc')
   const [showCreateModal, setShowCreateModal] = useState(false)
@@ -138,7 +135,7 @@ export default function DealsPage() {
       owner: '田中太郎', rank: 'C', stage: createForm.stage,
       amount: parseInt(createForm.amount) || 0,
       probability: parseInt(createForm.probability) || 20,
-      stalled: false, expectedCloseAt: createForm.expectedCloseAt || null,
+      expectedCloseAt: createForm.expectedCloseAt || null,
       updatedAt: `${today.getFullYear()}-${String(today.getMonth()+1).padStart(2,'0')}-${String(today.getDate()).padStart(2,'0')}`,
     }
     setDeals(prev => [newDeal, ...prev])
@@ -160,8 +157,6 @@ export default function DealsPage() {
     }
     if (filterStage)   list = list.filter(d => d.stage === filterStage)
     if (filterOwner)   list = list.filter(d => d.owner === filterOwner)
-    if (filterStalled) list = list.filter(d => d.stalled)
-
     list = [...list].sort((a, b) => {
       let cmp = 0
       if (sortKey === 'name')        cmp = a.name.localeCompare(b.name, 'ja')
@@ -172,7 +167,7 @@ export default function DealsPage() {
       return sortDir === 'desc' ? -cmp : cmp
     })
     return list
-  }, [deals, search, filterStage, filterOwner, filterStalled, sortKey, sortDir])
+  }, [deals, search, filterStage, filterOwner, sortKey, sortDir])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -180,8 +175,7 @@ export default function DealsPage() {
   }
 
   const totalAmount = filtered.reduce((s, d) => s + d.amount, 0)
-  const stalledCount = deals.filter(d => d.stalled).length
-  const hasFilters = !!filterStage || !!filterOwner || filterStalled
+  const hasFilters = !!filterStage || !!filterOwner
 
   return (
     <div className="space-y-4">
@@ -224,25 +218,6 @@ export default function DealsPage() {
             {ALL_OWNERS.map(o => <option key={o} value={o}>{o}</option>)}
           </select>
 
-          <button
-            onClick={() => setFilterStalled(v => !v)}
-            className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-[8px] border transition-all ${
-              filterStalled
-                ? 'bg-[#FEF2F2] border-[#FCA5A5] text-[#DC2626]'
-                : 'bg-white border-[rgba(0,0,0,0.09)] text-[#6E6E73] hover:border-[rgba(0,0,0,0.18)]'
-            }`}
-          >
-            <AlertTriangle size={13} />
-            停滞中のみ
-            {stalledCount > 0 && (
-              <span className={`w-4 h-4 rounded-full text-[10px] font-bold flex items-center justify-center ${
-                filterStalled ? 'bg-[#DC2626] text-white' : 'bg-[#F3F4F6] text-[#6E6E73]'
-              }`}>
-                {stalledCount}
-              </span>
-            )}
-          </button>
-
           <AnimatePresence>
             {hasFilters && (
               <motion.button
@@ -250,7 +225,7 @@ export default function DealsPage() {
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15 }}
-                onClick={() => { setFilterStage(''); setFilterOwner(''); setFilterStalled(false) }}
+                onClick={() => { setFilterStage(''); setFilterOwner('') }}
                 className="flex items-center gap-1 text-xs text-[#6E6E73] hover:text-[#374151] whitespace-nowrap overflow-hidden transition-colors"
               >
                 <X size={12} />クリア
@@ -279,15 +254,6 @@ export default function DealsPage() {
         </div>
         <span className="w-px h-3 bg-[rgba(0,0,0,0.07)]" />
         <span className="text-xs text-[#AEAEB2]">{filtered.length}件表示</span>
-        {stalledCount > 0 && (
-          <>
-            <span className="w-px h-3 bg-[rgba(0,0,0,0.07)]" />
-            <span className="flex items-center gap-1 text-xs text-[#FF3B30] font-medium">
-              <AlertTriangle size={12} />
-              停滞中 {stalledCount}件
-            </span>
-          </>
-        )}
       </div>
 
       {/* ── Table ── */}
@@ -343,10 +309,6 @@ export default function DealsPage() {
                   }}
                   onClick={() => router.push(`/deals/${deal.id}`)}
                   className="grid grid-cols-[2.5fr_1.2fr_140px_100px_100px_80px_110px] gap-0 items-center px-5 py-3.5 border-b border-[rgba(0,0,0,0.04)] last:border-0 transition-colors duration-100 group hover:bg-[rgba(0,0,0,0.02)] cursor-pointer"
-                  style={deal.stalled ? {
-                    background: 'linear-gradient(90deg, rgba(255,59,48,0.05) 0%, transparent 40%)',
-                    borderLeft: '3px solid #FF3B30',
-                  } : undefined}
                 >
                   {/* 取引名 */}
                   <div className="flex items-center gap-2.5 min-w-0">
@@ -355,17 +317,6 @@ export default function DealsPage() {
                     </div>
                     <div className="min-w-0">
                       <div className="flex items-center gap-1.5">
-                        {deal.stalled && (
-                          <div className="relative flex shrink-0" style={{ width: 7, height: 7 }}>
-                            <motion.div
-                              className="absolute inset-0 rounded-full"
-                              style={{ backgroundColor: '#FF3B30' }}
-                              animate={{ scale: [1, 2.4], opacity: [0.7, 0] }}
-                              transition={{ duration: 1.3, repeat: Infinity, ease: 'easeOut' }}
-                            />
-                            <div className="relative rounded-full" style={{ width: 7, height: 7, backgroundColor: '#FF3B30' }} />
-                          </div>
-                        )}
                         <p className="text-sm font-medium text-[#1D1D1F] truncate">{deal.company}</p>
                       </div>
                       <p className="text-[11px] text-[#AEAEB2] truncate">{deal.contact}</p>
