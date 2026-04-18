@@ -1,0 +1,12 @@
+{
+  "name": "@closepilot/company-master",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./index.ts",
+  "dependencies": {
+    "@closepilot/db": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.8.3"
+  }
+}

@@ -18,7 +18,7 @@ const badgeVariants = cva(
         'rank-a': 'bg-[#EFF6FF] text-[#2563EB] border-transparent',
         'rank-b': 'bg-[#FFFBEB] text-[#D97706] border-transparent',
         'rank-c': 'bg-[#FFF7ED] text-[#EA580C] border-transparent',
-        'rank-d': 'bg-[#F3F4F6] text-[#6B7280] border-transparent',
+        'rank-d': 'bg-[#F3F4F6] text-[#9CA3AF] border-transparent',
         'ai-auto': 'bg-[#F0FDF4] text-[#16A34A] border-[#BBF7D0]',
         'ai-low': 'bg-[#FFFBEB] text-[#D97706] border-[#FDE68A]',
       },

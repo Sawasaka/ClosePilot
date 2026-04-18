@@ -55,8 +55,8 @@ export function ActiveCallWidget() {
               className="w-6 h-6 flex items-center justify-center rounded-full hover:bg-[#F3F4F6] transition-colors shrink-0 ml-2"
             >
               {isMinimized
-                ? <ChevronUp size={13} className="text-[#6B7280]" />
-                : <ChevronDown size={13} className="text-[#6B7280]" />
+                ? <ChevronUp size={13} className="text-[#9CA3AF]" />
+                : <ChevronDown size={13} className="text-[#9CA3AF]" />
               }
             </button>
           </div>

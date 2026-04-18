@@ -8,7 +8,7 @@ export default function SettingsPage() {
       </div>
       <div className="text-center">
         <h2 className="text-lg font-semibold text-[#111827]">組織設定</h2>
-        <p className="text-sm text-[#6B7280] mt-1">Week 16 で実装予定 — 権限管理・Slack/Google連携設定</p>
+        <p className="text-sm text-[#CCDDF0] mt-1">Week 16 で実装予定 — 権限管理・Slack/Google連携設定</p>
       </div>
     </div>
   )

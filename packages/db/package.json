@@ -7,13 +7,17 @@
     "db:generate": "prisma generate",
     "db:push": "prisma db push",
     "db:migrate": "prisma migrate dev",
-    "db:studio": "prisma studio"
+    "db:studio": "prisma studio",
+    "import:abm": "tsx scripts/import-from-abm.ts",
+    "import:abm:dry": "tsx scripts/import-from-abm.ts --dry-run"
   },
   "dependencies": {
-    "@prisma/client": "^6.6.0"
+    "@prisma/client": "^6.6.0",
+    "@supabase/supabase-js": "^2.94.0"
   },
   "devDependencies": {
     "prisma": "^6.6.0",
+    "tsx": "^4.21.0",
     "typescript": "^5.8.3"
   }
 }

@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Flame, Star, Shield, Target, Heart, Crown } from 'lucide-react'
 
-const CARD = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'
+const CARD = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
 
 const STORY_CHAPTERS = [
   { phase: 'ORIGIN', title: '設立の原点', color: '#FF3B30', icon: Flame, body: '私たちは「営業の属人化」という課題に直面していました。優秀な営業マンが退職すると、ノウハウもナレッジも一緒に消えてしまう。この負のサイクルを断ち切るために、Intent Forceは生まれました。', milestone: '2024年 — 創業' },
@@ -18,8 +18,8 @@ export default function StoryPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">ストーリー</h1>
-        <p className="text-[13px] text-[#8E8E93] mt-0.5">私たちが目指す未来と、そこに至るまでの道のり</p>
+        <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">ストーリー</h1>
+        <p className="text-[13px] text-[#CCDDF0] mt-0.5">私たちが目指す未来と、そこに至るまでの道のり</p>
       </div>
 
       <div className="relative">
@@ -31,15 +31,15 @@ export default function StoryPage() {
                 <div className="w-10 h-10 rounded-full flex items-center justify-center" style={{ background: ch.color + '18' }}>
                   <Icon size={18} style={{ color: ch.color }} />
                 </div>
-                {i < STORY_CHAPTERS.length - 1 && <div className="w-px flex-1 mt-2" style={{ background: 'rgba(0,0,0,0.08)' }} />}
+                {i < STORY_CHAPTERS.length - 1 && <div className="w-px flex-1 mt-2" style={{ background: 'rgba(34,68,170,0.4)' }} />}
               </div>
-              <div className="flex-1 bg-white rounded-[12px] p-5" style={{ boxShadow: CARD }}>
+              <div className="flex-1 bg-[#0c1028] rounded-[8px] p-5" style={{ boxShadow: CARD }}>
                 <div className="flex items-center gap-2 mb-2">
                   <span className="text-[10px] font-bold uppercase tracking-[0.08em] px-2 py-0.5 rounded-full" style={{ background: ch.color + '15', color: ch.color }}>{ch.phase}</span>
-                  <span className="text-[11px] text-[#AEAEB2]">{ch.milestone}</span>
+                  <span className="text-[11px] text-[#99AACC]">{ch.milestone}</span>
                 </div>
-                <h3 className="text-[15px] font-semibold text-[#1D1D1F] mb-2">{ch.title}</h3>
-                <p className="text-[13px] text-[#6E6E73] leading-relaxed">{ch.body}</p>
+                <h3 className="text-[15px] font-semibold text-[#EEEEFF] mb-2">{ch.title}</h3>
+                <p className="text-[13px] text-[#CCDDF0] leading-relaxed">{ch.body}</p>
               </div>
             </motion.div>
           )

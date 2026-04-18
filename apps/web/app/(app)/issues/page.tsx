@@ -46,7 +46,7 @@ const CATEGORY_COLORS: Record<Category, string> = {
   'サポート': '#AF52DE',
 }
 
-const CARD_SHADOW = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'
+const CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
 
 // ─── Page ───────────────────────────────────────────────────────────────────
 
@@ -75,24 +75,24 @@ export default function IssuesPage() {
       {/* Header */}
       <div className="flex items-end justify-between">
         <div>
-          <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">課題ボード</h1>
-          <p className="text-[13px] text-[#8E8E93] mt-0.5">顧客から抽出された課題・ニーズを一元管理</p>
+          <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">課題ボード</h1>
+          <p className="text-[13px] text-[#CCDDF0] mt-0.5">顧客から抽出された課題・ニーズを一元管理</p>
         </div>
         <div className="flex items-center gap-3 text-[13px]">
-          <span className="text-[#8E8E93]">課題数 <strong className="text-[#1D1D1F]">{MOCK_ISSUES.length}</strong></span>
-          <span className="text-[#8E8E93]">関連企業 <strong className="text-[#0071E3]">{new Set(MOCK_ISSUES.flatMap(i => i.companies)).size}</strong> 社</span>
+          <span className="text-[#CCDDF0]">課題数 <strong className="text-[#EEEEFF]">{MOCK_ISSUES.length}</strong></span>
+          <span className="text-[#CCDDF0]">関連企業 <strong className="text-[#0071E3]">{new Set(MOCK_ISSUES.flatMap(i => i.companies)).size}</strong> 社</span>
         </div>
       </div>
 
       {/* Filters */}
       <div className="flex items-center gap-3 flex-wrap">
         <div className="relative">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#AEAEB2]" />
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[#99AACC]" />
           <input
             type="text" placeholder="課題・企業名を検索..." value={search}
             onChange={e => setSearch(e.target.value)}
-            className="h-[32px] pl-8 pr-3 w-[200px] text-[13px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none"
-            style={{ background: 'rgba(0,0,0,0.04)' }}
+            className="h-[32px] pl-8 pr-3 w-[200px] text-[13px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
+            style={{ background: 'rgba(16,16,40,0.6)' }}
           />
         </div>
 
@@ -101,7 +101,7 @@ export default function IssuesPage() {
           <button
             onClick={() => setFilterCategory('')}
             className="h-[28px] px-2.5 text-[12px] font-medium rounded-full transition-all"
-            style={{ background: !filterCategory ? '#1D1D1F' : 'rgba(0,0,0,0.04)', color: !filterCategory ? '#FFF' : '#6E6E73' }}
+            style={{ background: !filterCategory ? '#2244AA' : 'rgba(136,187,255,0.06)', color: !filterCategory ? '#FFF' : '#88BBFF' }}
           >
             全カテゴリ
           </button>
@@ -112,7 +112,7 @@ export default function IssuesPage() {
               className="h-[28px] px-2.5 text-[12px] font-medium rounded-full transition-all"
               style={{
                 background: filterCategory === cat ? CATEGORY_COLORS[cat] + '20' : 'rgba(0,0,0,0.04)',
-                color: filterCategory === cat ? CATEGORY_COLORS[cat] : '#6E6E73',
+                color: filterCategory === cat ? CATEGORY_COLORS[cat] : '#88BBFF',
               }}
             >
               {cat}
@@ -128,8 +128,8 @@ export default function IssuesPage() {
               onClick={() => setFilterSource(s)}
               className="h-[28px] px-2.5 text-[12px] font-medium rounded-full transition-all"
               style={{
-                background: filterSource === s ? '#1D1D1F' : 'rgba(0,0,0,0.04)',
-                color: filterSource === s ? '#FFF' : '#6E6E73',
+                background: filterSource === s ? '#2244AA' : 'rgba(136,187,255,0.06)',
+                color: filterSource === s ? '#FFF' : '#88BBFF',
               }}
             >
               {s || '全て'}
@@ -139,13 +139,13 @@ export default function IssuesPage() {
       </div>
 
       {/* Issues Table */}
-      <div className="bg-white rounded-[12px] overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
+      <div className="bg-[#0c1028] rounded-[8px] overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
         {/* Header */}
-        <div className="grid items-center px-5 py-2.5" style={{ gridTemplateColumns: '1fr 100px 140px 120px', borderBottom: '1px solid rgba(0,0,0,0.06)', background: 'rgba(0,0,0,0.018)' }}>
-          <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">課題</span>
-          <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">出現数</span>
-          <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">新規 / 既存</span>
-          <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">カテゴリ</span>
+        <div className="grid items-center px-5 py-2.5" style={{ gridTemplateColumns: '1fr 100px 140px 120px', borderBottom: '1px solid #2244AA', background: 'rgba(0,0,0,0.018)' }}>
+          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">課題</span>
+          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">出現数</span>
+          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">新規 / 既存</span>
+          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">カテゴリ</span>
         </div>
 
         {/* Rows */}
@@ -158,13 +158,13 @@ export default function IssuesPage() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: i * 0.03 }}
-              className="grid items-center px-5 py-3.5 hover:bg-[rgba(0,0,0,0.02)] transition-colors cursor-pointer"
-              style={{ gridTemplateColumns: '1fr 100px 140px 120px', borderBottom: '1px solid rgba(0,0,0,0.04)' }}
+              className="grid items-center px-5 py-3.5 hover:bg-[rgba(136,187,255,0.04)] transition-colors cursor-pointer"
+              style={{ gridTemplateColumns: '1fr 100px 140px 120px', borderBottom: '1px solid rgba(34,68,170,0.2)' }}
             >
               {/* 課題名 + 企業 */}
               <div className="min-w-0">
-                <p className="text-[13px] font-medium text-[#1D1D1F] truncate">{issue.title}</p>
-                <p className="text-[11px] text-[#AEAEB2] mt-0.5 truncate flex items-center gap-1">
+                <p className="text-[13px] font-medium text-[#EEEEFF] truncate">{issue.title}</p>
+                <p className="text-[11px] text-[#99AACC] mt-0.5 truncate flex items-center gap-1">
                   <Building2 size={10} />
                   {issue.companies.join('、')}
                 </p>
@@ -172,15 +172,15 @@ export default function IssuesPage() {
 
               {/* 出現数バー */}
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-[6px] rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)' }}>
+                <div className="flex-1 h-[6px] rounded-full overflow-hidden" style={{ background: 'rgba(34,68,170,0.15)' }}>
                   <div className="h-full rounded-full" style={{ width: `${barWidth}%`, background: catColor }} />
                 </div>
-                <span className="text-[13px] font-semibold text-[#1D1D1F] tabular-nums w-5 text-right">{issue.occurrences}</span>
+                <span className="text-[13px] font-semibold text-[#EEEEFF] tabular-nums w-5 text-right">{issue.occurrences}</span>
               </div>
 
               {/* 新規/既存 内訳 */}
               <div className="flex items-center gap-2">
-                <div className="flex-1 h-[6px] rounded-full overflow-hidden flex" style={{ background: 'rgba(0,0,0,0.06)' }}>
+                <div className="flex-1 h-[6px] rounded-full overflow-hidden flex" style={{ background: 'rgba(34,68,170,0.15)' }}>
                   {issue.newCount > 0 && (
                     <div className="h-full" style={{ width: `${(issue.newCount / issue.occurrences) * 100}%`, background: '#0071E3' }} />
                   )}
@@ -188,7 +188,7 @@ export default function IssuesPage() {
                     <div className="h-full" style={{ width: `${(issue.existingCount / issue.occurrences) * 100}%`, background: '#34C759' }} />
                   )}
                 </div>
-                <span className="text-[11px] text-[#8E8E93] tabular-nums shrink-0">{issue.newCount} / {issue.existingCount}</span>
+                <span className="text-[11px] text-[#CCDDF0] tabular-nums shrink-0">{issue.newCount} / {issue.existingCount}</span>
               </div>
 
               {/* カテゴリ */}
@@ -205,7 +205,7 @@ export default function IssuesPage() {
       </div>
 
       {/* Legend */}
-      <div className="flex items-center gap-4 text-[11px] text-[#AEAEB2]">
+      <div className="flex items-center gap-4 text-[11px] text-[#99AACC]">
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#0071E3]" />新規顧客</span>
         <span className="flex items-center gap-1.5"><span className="w-2.5 h-2.5 rounded-full bg-[#34C759]" />既存顧客</span>
       </div>

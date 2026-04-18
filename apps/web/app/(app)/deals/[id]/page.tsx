@@ -21,6 +21,10 @@ import {
   Clock,
   Star,
   Plus,
+  Pencil,
+  X,
+  Briefcase,
+  Trash2,
 } from 'lucide-react'
 import { useCallStore } from '@/lib/stores/callStore'
 import { RANK_CONFIG } from '@/types/crm'
@@ -96,6 +100,18 @@ interface ActivityItem {
   description?: string
 }
 
+// 取引タスク
+type DealTaskType = 'call' | 'email' | 'meeting' | 'proposal' | 'followup' | 'other'
+
+interface DealTask {
+  id: string
+  type: DealTaskType
+  title: string
+  dueAt: string | null
+  memo: string
+  done: boolean
+}
+
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
 const MOCK_DEALS: Record<string, DealDetail> = {
@@ -148,11 +164,11 @@ const DEAL_CONTACTS: Record<string, ISContact[]> = {
 const DEAL_STATUS_STYLE: Record<DealStatus, { bg: string; text: string; dot: string }> = {
   'アクティブ': { bg: 'rgba(52,199,89,0.1)',  text: '#1A7A35', dot: '#34C759' },
   '優先対応':   { bg: 'rgba(0,113,227,0.1)',  text: '#0060C7', dot: '#0071E3' },
-  '保留':       { bg: 'rgba(0,0,0,0.06)',     text: '#6E6E73', dot: '#AEAEB2' },
+  '保留':       { bg: 'rgba(34,68,170,0.15)',  text: '#88BBFF', dot: '#4466AA' },
 }
 
 const IS_STATUS_STYLE: Record<ISContactStatus, { bg: string; text: string; dot: string }> = {
-  '未着手':    { bg: 'rgba(0,0,0,0.05)',     text: '#6E6E73', dot: '#AEAEB2' },
+  '未着手':    { bg: 'rgba(34,68,170,0.1)',   text: '#88BBFF', dot: '#4466AA' },
   '不通':      { bg: 'rgba(255,59,48,0.1)',  text: '#CF3131', dot: '#FF3B30' },
   '不在':      { bg: 'rgba(255,159,10,0.1)', text: '#C07000', dot: '#FF9F0A' },
   '接続済み':  { bg: 'rgba(0,113,227,0.1)',  text: '#0060C7', dot: '#0071E3' },
@@ -197,6 +213,63 @@ const MOCK_RESEARCH_BRIEF: ResearchBrief = {
   ],
 }
 
+// ─── タスク初期モックデータ ────────────────────────────────────────────────
+
+const INITIAL_DEAL_TASKS: Record<string, DealTask[]> = {
+  'd1': [
+    { id: 't-d1-1', type: 'meeting',  title: 'デモ商談実施',         dueAt: '2026-04-15', memo: '製品デモと質疑応答',          done: false },
+    { id: 't-d1-2', type: 'proposal', title: '提案書送付',           dueAt: '2026-04-18', memo: '比較表と見積書を含める',        done: false },
+    { id: 't-d1-3', type: 'followup', title: '導入後フォロー設計',   dueAt: '2026-04-25', memo: '初期サポート計画を準備',        done: false },
+  ],
+  'd2': [
+    { id: 't-d2-1', type: 'call', title: '最終確認コール', dueAt: '2026-04-14', memo: '契約書ドラフト確認', done: false },
+  ],
+  'd3': [],
+  'd4': [],
+}
+
+interface DealTaskTypeStyle {
+  Icon: React.ElementType
+  label: string
+  gradient: string
+  glow: string
+}
+
+const DEAL_TASK_TYPE_STYLES: Record<DealTaskType, DealTaskTypeStyle> = {
+  call: {
+    Icon: Phone, label: 'コール',
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  email: {
+    Icon: Mail, label: 'メール',
+    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
+    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  meeting: {
+    Icon: Briefcase, label: '商談',
+    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
+    glow: '0 0 14px rgba(52,199,89,0.85), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  proposal: {
+    Icon: BookOpen, label: '提案書',
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  followup: {
+    Icon: TrendingUp, label: 'フォロー',
+    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
+    glow: '0 0 14px rgba(236,72,153,0.85), 0 0 5px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  other: {
+    Icon: CheckCircle2, label: 'その他',
+    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
+    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
+  },
+}
+
+const ALL_DEAL_TASK_TYPES: DealTaskType[] = ['call', 'email', 'meeting', 'proposal', 'followup', 'other']
+
 const MOCK_ACTIVITIES: ActivityItem[] = [
   { id: '1', type: 'call',  timestamp: '2026-03-20T14:32', title: 'コール — アポ獲得', result: 'アポ獲得', durationSec: 154, description: '3/28 14:00 デモ商談を設定' },
   { id: '2', type: 'deal_advance', timestamp: '2026-03-20T14:33', title: 'PROPOSAL → NEGOTIATION に進行' },
@@ -208,7 +281,7 @@ const MOCK_ACTIVITIES: ActivityItem[] = [
 // ─── Config ─────────────────────────────────────────────────────────────────────
 
 const STAGE_CONFIG: Record<DealStage, { label: string; color: string; bg: string }> = {
-  NEW_LEAD:      { label: '新規リード', color: 'text-[#6E6E73]', bg: 'bg-[#F5F5F7]' },
+  NEW_LEAD:      { label: '新規リード', color: 'text-[#CCDDF0]', bg: 'bg-[rgba(34,68,170,0.1)]' },
   QUALIFIED:     { label: '有資格',     color: 'text-[#0071E3]', bg: 'bg-[#EBF4FF]' },
   FIRST_MEETING: { label: '初回商談',   color: 'text-[#7C3AED]', bg: 'bg-[#F5F3FF]' },
   SOLUTION_FIT:  { label: '課題適合',   color: 'text-[#BE185D]', bg: 'bg-[#FDF2F8]' },
@@ -216,7 +289,7 @@ const STAGE_CONFIG: Record<DealStage, { label: string; color: string; bg: string
   NEGOTIATION:   { label: '交渉',       color: 'text-[#DC2626]', bg: 'bg-[#FEF2F2]' },
   VERBAL_COMMIT: { label: '口頭合意',   color: 'text-[#059669]', bg: 'bg-[#ECFDF5]' },
   CLOSED_WON:    { label: '受注',       color: 'text-[#059669]', bg: 'bg-[#D1FAE5]' },
-  CLOSED_LOST:   { label: '失注',       color: 'text-[#6E6E73]', bg: 'bg-[#F5F5F7]' },
+  CLOSED_LOST:   { label: '失注',       color: 'text-[#CCDDF0]', bg: 'bg-[rgba(34,68,170,0.1)]' },
 }
 
 const CONFIDENCE_STYLES: Record<ConfidenceLevel, { bg: string; text: string; label: string }> = {
@@ -228,7 +301,7 @@ const CONFIDENCE_STYLES: Record<ConfidenceLevel, { bg: string; text: string; lab
 const ACTIVITY_ICON: Record<ActivityType, { icon: React.ElementType; color: string; bg: string }> = {
   call:         { icon: PhoneCall,    color: '#0071E3', bg: '#EBF4FF' },
   email:        { icon: Mail,         color: '#7C3AED', bg: '#F5F3FF' },
-  note:         { icon: MessageSquare, color: '#6E6E73', bg: '#F5F5F7' },
+  note:         { icon: MessageSquare, color: '#CCDDF0', bg: '#F5F5F7' },
   deal_advance: { icon: TrendingUp,   color: '#059669', bg: '#ECFDF5' },
 }
 
@@ -279,9 +352,9 @@ function ConfidenceBadge({ level }: { level: ConfidenceLevel }) {
 
 function InfoRow({ label, children }: { label: string; children: React.ReactNode }) {
   return (
-    <div className="flex items-center justify-between py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
-      <span className="text-[12px] text-[#AEAEB2] font-medium w-28 shrink-0">{label}</span>
-      <div className="flex-1 text-right text-[13px] text-[#1D1D1F]">{children}</div>
+    <div className="flex items-center justify-between py-3" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
+      <span className="text-[12px] text-[#99AACC] font-medium w-28 shrink-0">{label}</span>
+      <div className="flex-1 text-right text-[13px] text-[#EEEEFF]">{children}</div>
     </div>
   )
 }
@@ -290,6 +363,174 @@ function formatDate(s: string | null): string {
   if (!s) return '—'
   const d = new Date(s)
   return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}`
+}
+
+// ─── Deal Task Modal ──────────────────────────────────────────────────────────
+
+function DealTaskModal({ task, onClose, onSave }: {
+  task: DealTask | null
+  onClose: () => void
+  onSave: (t: DealTask) => void
+}) {
+  const isEdit = !!task
+  const [form, setForm] = useState<DealTask>(task ?? {
+    id: `t-${Date.now()}`,
+    type: 'call',
+    title: '',
+    dueAt: null,
+    memo: '',
+    done: false,
+  })
+
+  function handleSubmit(e: React.FormEvent) {
+    e.preventDefault()
+    if (!form.title.trim()) return
+    onSave({ ...form, title: form.title.trim(), memo: form.memo.trim() })
+    onClose()
+  }
+
+  return (
+    <motion.div
+      className="fixed inset-0 z-50 flex items-center justify-center p-4"
+      initial={{ opacity: 0 }}
+      animate={{ opacity: 1 }}
+      exit={{ opacity: 0 }}
+    >
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        className="relative w-full max-w-[460px] rounded-[14px] overflow-hidden"
+        style={{
+          background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
+          border: '1px solid #2244AA',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 32px rgba(85,119,221,0.2), inset 0 1px 0 rgba(136,187,255,0.08)',
+        }}
+        initial={{ opacity: 0, scale: 0.96, y: 8 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.96, y: 8 }}
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        onClick={e => e.stopPropagation()}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(34,68,170,0.3)' }}>
+          <h2 className="text-[16px] font-bold text-[#EEEEFF]">{isEdit ? 'タスク編集' : 'タスク作成'}</h2>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(136,187,255,0.08)] transition-colors">
+            <X size={16} className="text-[#CCDDF0]" />
+          </button>
+        </div>
+
+        <form onSubmit={handleSubmit}>
+          <div className="px-5 py-4 space-y-4">
+            {/* タスク種別 */}
+            <div>
+              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">タスク種別</label>
+              <div className="flex flex-wrap gap-1.5">
+                {ALL_DEAL_TASK_TYPES.map(t => {
+                  const s = DEAL_TASK_TYPE_STYLES[t]
+                  const active = form.type === t
+                  return (
+                    <button
+                      key={t}
+                      type="button"
+                      onClick={() => setForm(f => ({ ...f, type: t }))}
+                      className="inline-flex items-center gap-1 px-3 h-[32px] rounded-[8px] text-[11px] font-bold transition-all"
+                      style={active ? {
+                        background: s.gradient,
+                        boxShadow: s.glow,
+                        color: '#FFFFFF',
+                        border: '1px solid rgba(255,255,255,0.4)',
+                        textShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                      } : {
+                        background: 'rgba(16,16,40,0.8)',
+                        border: '1px solid #2244AA',
+                        color: '#7799CC',
+                      }}
+                    >
+                      <s.Icon size={11} strokeWidth={2.5} />
+                      {s.label}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* タイトル */}
+            <div>
+              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+                タイトル <span className="text-[#FF8A82]">*</span>
+              </label>
+              <input
+                type="text"
+                value={form.title}
+                onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
+                placeholder="例: デモ商談実施"
+                required
+                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none"
+                style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+              />
+            </div>
+
+            {/* 期日 */}
+            <div>
+              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 flex items-center justify-between">
+                <span>期日</span>
+                {form.dueAt && (
+                  <button
+                    type="button"
+                    onClick={() => setForm(f => ({ ...f, dueAt: null }))}
+                    className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#99AACC] hover:text-[#FF8A82] transition-colors normal-case tracking-normal"
+                  >
+                    <X size={10} />
+                    クリア
+                  </button>
+                )}
+              </label>
+              <input
+                type="date"
+                value={form.dueAt ?? ''}
+                onChange={e => setForm(f => ({ ...f, dueAt: e.target.value || null }))}
+                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] outline-none cursor-pointer"
+                style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA', colorScheme: 'dark' }}
+              />
+            </div>
+
+            {/* メモ */}
+            <div>
+              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">メモ</label>
+              <textarea
+                value={form.memo}
+                onChange={e => setForm(f => ({ ...f, memo: e.target.value }))}
+                placeholder="タスクに関するメモを入力..."
+                rows={3}
+                className="w-full px-3 py-2 text-[13px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none rounded-[8px] resize-none"
+                style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+              />
+            </div>
+          </div>
+
+          <div className="flex justify-end gap-2 px-5 py-4" style={{ borderTop: '1px solid rgba(34,68,170,0.3)' }}>
+            <button
+              type="button"
+              onClick={onClose}
+              className="h-[36px] px-4 text-[13px] font-medium text-[#CCDDF0] rounded-[8px] hover:bg-[rgba(136,187,255,0.06)] transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              type="submit"
+              className="h-[36px] px-5 text-[13px] font-bold text-white rounded-[8px] transition-all hover:brightness-110"
+              style={{
+                background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
+                border: '1px solid #3355CC',
+                boxShadow: '0 2px 8px rgba(34,68,170,0.5), inset 0 1px 0 rgba(200,220,255,0.2)',
+              }}
+            >
+              {isEdit ? '保存' : '作成'}
+            </button>
+          </div>
+        </form>
+      </motion.div>
+    </motion.div>
+  )
 }
 
 function formatDuration(sec: number): string {
@@ -316,6 +557,24 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
   const deal = (MOCK_DEALS[id] ?? MOCK_DEALS['d1'])!
 
+  // タスクの state 管理
+  const [tasks, setTasks] = useState<DealTask[]>(INITIAL_DEAL_TASKS[id] ?? [])
+  const [taskModal, setTaskModal] = useState<DealTask | null | 'new'>(null)
+
+  function handleTaskSave(t: DealTask) {
+    setTasks(prev => {
+      const exists = prev.find(x => x.id === t.id)
+      if (exists) return prev.map(x => x.id === t.id ? t : x)
+      return [t, ...prev]
+    })
+  }
+  function handleTaskDelete(id: string) {
+    setTasks(prev => prev.filter(t => t.id !== id))
+  }
+  function handleTaskToggle(id: string) {
+    setTasks(prev => prev.map(t => t.id === id ? { ...t, done: !t.done } : t))
+  }
+
   const filteredActivities = activeTab === 'all'
     ? MOCK_ACTIVITIES
     : MOCK_ACTIVITIES.filter(a => a.type === activeTab)
@@ -329,7 +588,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
       <div>
         <Link
           href="/deals"
-          className="inline-flex items-center gap-1 text-[12px] text-[#AEAEB2] hover:text-[#6E6E73] transition-colors mb-1.5"
+          className="inline-flex items-center gap-1 text-[12px] text-[#99AACC] hover:text-[#CCDDF0] transition-colors mb-1.5"
         >
           <ChevronLeft size={13} />
           取引一覧
@@ -338,7 +597,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
         <div className="flex items-start justify-between gap-4">
           <div className="flex-1 min-w-0">
             <div className="flex items-center gap-2.5 flex-wrap mb-1">
-              <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em] truncate">
+              <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em] truncate">
                 {deal.name}
               </h1>
               <RankBadge rank={deal.rank} />
@@ -346,10 +605,10 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             <div className="flex items-center gap-2.5 flex-wrap">
               <StageBadge stage={deal.stage} />
               <StatusBadge status={deal.status} />
-              <span className="text-[15px] font-bold text-[#1D1D1F] tabular-nums">
+              <span className="text-[15px] font-bold text-[#EEEEFF] tabular-nums">
                 ¥{(deal.amount / 1000000).toFixed(1)}M
               </span>
-              <span className="text-[12px] text-[#AEAEB2]">確度 {deal.probability}%</span>
+              <span className="text-[12px] text-[#99AACC]">確度 {deal.probability}%</span>
             </div>
           </div>
 
@@ -387,10 +646,10 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[12px] p-5"
-            style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            className="bg-[#0c1028] rounded-[8px] p-5"
+            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
-            <h3 className="text-[12px] font-semibold text-[#AEAEB2] uppercase tracking-[0.06em] mb-1">基本情報</h3>
+            <h3 className="text-[12px] font-semibold text-[#99AACC] uppercase tracking-[0.06em] mb-1">基本情報</h3>
 
             <div>
               <InfoRow label="会社">
@@ -398,7 +657,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                   className="cursor-pointer hover:text-[#0071E3] transition-colors"
                   onClick={() => router.push(`/companies/${deal.companyId}`)}
                 >
-                  <Building2 size={11} className="inline mr-1 text-[#AEAEB2]" />
+                  <Building2 size={11} className="inline mr-1 text-[#99AACC]" />
                   {deal.company}
                 </span>
               </InfoRow>
@@ -407,7 +666,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                   className="cursor-pointer hover:text-[#0071E3] transition-colors"
                   onClick={() => router.push(`/contacts/${deal.contactId}`)}
                 >
-                  <User size={11} className="inline mr-1 text-[#AEAEB2]" />
+                  <User size={11} className="inline mr-1 text-[#99AACC]" />
                   {deal.contact}
                 </span>
               </InfoRow>
@@ -415,7 +674,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 <span className="flex items-center justify-end gap-1.5">
                   <div
                     className="w-5 h-5 rounded-full flex items-center justify-center text-[9px] font-bold text-white"
-                    style={{ background: 'linear-gradient(145deg, #0A84FF, #5E5CE6)' }}
+                    style={{ background: 'linear-gradient(145deg, #5AC8FA 0%, #0A84FF 50%, #5E5CE6 100%)', boxShadow: '0 0 14px rgba(94,92,230,0.7), 0 0 5px rgba(125,211,252,0.9), inset 0 1px 0 rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.3)' }}
                   >
                     {deal.owner[0]}
                   </div>
@@ -427,10 +686,10 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </InfoRow>
               <InfoRow label="確度">
                 <div className="flex items-center justify-end gap-2">
-                  <div className="w-20 h-1.5 rounded-full bg-[#F5F5F7] overflow-hidden">
+                  <div className="w-20 h-1.5 rounded-full bg-[rgba(34,68,170,0.1)] overflow-hidden">
                     <motion.div
                       className="h-full rounded-full"
-                      style={{ backgroundColor: probPct >= 70 ? '#34C759' : probPct >= 40 ? '#FF9F0A' : '#FF3B30' }}
+                      style={{ backgroundColor: probPct >= 70 ? '#44FF88' : probPct >= 40 ? '#FF9F0A' : '#FF4444' }}
                       initial={{ width: 0 }}
                       animate={{ width: `${probPct}%` }}
                       transition={{ duration: 0.6, delay: 0.2, ease: [0.16, 1, 0.3, 1] }}
@@ -441,7 +700,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </InfoRow>
               <InfoRow label="想定クローズ">
                 <span className="flex items-center justify-end gap-1">
-                  <Calendar size={11} className="text-[#AEAEB2]" />
+                  <Calendar size={11} className="text-[#99AACC]" />
                   {formatDate(deal.expectedCloseAt)}
                 </span>
               </InfoRow>
@@ -458,12 +717,12 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.05, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[12px] overflow-hidden"
-            style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            className="bg-[#0c1028] rounded-[8px] overflow-hidden"
+            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
-            <div className="flex items-center gap-2.5 px-5 py-3.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="flex items-center gap-2.5 px-5 py-3.5" style={{ borderBottom: '1px solid #2244AA' }}>
               <Zap size={13} className="text-[#0071E3] shrink-0" />
-              <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">AIフィールド</h3>
+              <h3 className="text-[13px] font-semibold text-[#EEEEFF] tracking-[-0.01em]">AIフィールド</h3>
               <span
                 className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold"
                 style={{ background: 'rgba(0,113,227,0.1)', color: '#0071E3' }}
@@ -488,13 +747,13 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                     visible: { opacity: 1, y: 0, transition: { duration: 0.18, ease: [0.16, 1, 0.3, 1] } },
                   }}
                   className="flex items-start gap-3 px-5 py-3"
-                  style={{ borderBottom: i < MOCK_AI_FIELDS.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}
+                  style={{ borderBottom: i < MOCK_AI_FIELDS.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}
                 >
-                  <span className="text-[12px] text-[#AEAEB2] w-[100px] shrink-0 pt-0.5 leading-tight">
+                  <span className="text-[12px] text-[#99AACC] w-[100px] shrink-0 pt-0.5 leading-tight">
                     {field.label}
                   </span>
-                  <span className="flex-1 text-[13px] text-[#1D1D1F] leading-relaxed">
-                    {field.value ?? <span className="text-[#AEAEB2]">— AI未収集</span>}
+                  <span className="flex-1 text-[13px] text-[#EEEEFF] leading-relaxed">
+                    {field.value ?? <span className="text-[#99AACC]">— AI未収集</span>}
                   </span>
                   <div className="shrink-0 pt-0.5">
                     <ConfidenceBadge level={field.confidence} />
@@ -509,11 +768,11 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.3, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[12px] overflow-hidden"
-            style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            className="bg-[#0c1028] rounded-[8px] overflow-hidden"
+            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
             {/* Tabs */}
-            <div className="flex items-center gap-0 px-5 py-0" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="flex items-center gap-0 px-5 py-0" style={{ borderBottom: '1px solid #2244AA' }}>
               {([
                 { key: 'all', label: '全件' },
                 { key: 'call', label: 'コール' },
@@ -524,7 +783,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
                   className={`relative px-3 py-3 text-[13px] font-medium transition-colors duration-100 ${
-                    activeTab === tab.key ? 'text-[#0071E3]' : 'text-[#6E6E73] hover:text-[#1D1D1F]'
+                    activeTab === tab.key ? 'text-[#0071E3]' : 'text-[#CCDDF0] hover:text-[#EEEEFF]'
                   }`}
                 >
                   {tab.label}
@@ -543,7 +802,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             {/* Timeline */}
             <div className="p-5">
               {filteredActivities.length === 0 ? (
-                <p className="text-center text-[13px] text-[#AEAEB2] py-6">活動記録がありません</p>
+                <p className="text-center text-[13px] text-[#99AACC] py-6">活動記録がありません</p>
               ) : (
                 <motion.div
                   className="relative"
@@ -554,7 +813,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                   {/* Vertical line */}
                   <div
                     className="absolute left-[14px] top-4 bottom-4 w-px"
-                    style={{ background: 'rgba(0,0,0,0.06)' }}
+                    style={{ background: 'rgba(34,68,170,0.15)' }}
                   />
 
                   <div className="space-y-4">
@@ -581,28 +840,28 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                           {/* Content */}
                           <div className="flex-1 min-w-0 pt-0.5">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <span className="text-[13px] font-medium text-[#1D1D1F] tracking-[-0.01em]">
+                              <span className="text-[13px] font-medium text-[#EEEEFF] tracking-[-0.01em]">
                                 {activity.title}
                               </span>
                               {activity.result && (
                                 <span
                                   className="text-[10px] font-semibold px-1.5 py-0.5 rounded-[4px]"
-                                  style={{ background: 'rgba(0,0,0,0.06)', color: '#6E6E73' }}
+                                  style={{ background: 'rgba(34,68,170,0.15)', color: '#CCDDF0' }}
                                 >
                                   {activity.result}
                                 </span>
                               )}
                               {activity.durationSec !== undefined && activity.durationSec > 0 && (
-                                <span className="flex items-center gap-0.5 text-[11px] text-[#AEAEB2]">
+                                <span className="flex items-center gap-0.5 text-[11px] text-[#99AACC]">
                                   <Clock size={10} />
                                   {formatDuration(activity.durationSec)}
                                 </span>
                               )}
                             </div>
                             {activity.description && (
-                              <p className="text-[12px] text-[#6E6E73] mt-0.5">{activity.description}</p>
+                              <p className="text-[12px] text-[#CCDDF0] mt-0.5">{activity.description}</p>
                             )}
-                            <p className="text-[11px] text-[#AEAEB2] mt-1">{formatTimestamp(activity.timestamp)}</p>
+                            <p className="text-[11px] text-[#99AACC] mt-1">{formatTimestamp(activity.timestamp)}</p>
                           </div>
                         </motion.div>
                       )
@@ -619,13 +878,13 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               initial={{ opacity: 0, y: 12 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.3, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-[12px] overflow-hidden"
-              style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+              className="bg-[#0c1028] rounded-[8px] overflow-hidden"
+              style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
             >
               {/* Header */}
-              <div className="flex items-center gap-2 px-5 py-3.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+              <div className="flex items-center gap-2 px-5 py-3.5" style={{ borderBottom: '1px solid #2244AA' }}>
                 <Phone size={13} className="text-[#0071E3] shrink-0" />
-                <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">コンタクト（IS）</h3>
+                <h3 className="text-[13px] font-semibold text-[#EEEEFF] tracking-[-0.01em]">コンタクト（IS）</h3>
                 <span
                   className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
                   style={{ background: 'rgba(0,113,227,0.1)', color: '#0071E3' }}
@@ -649,14 +908,14 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                         hidden: { opacity: 0, y: 5 },
                         visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
                       }}
-                      className="flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-[rgba(0,0,0,0.02)] transition-colors"
-                      style={{ borderBottom: i < (DEAL_CONTACTS[id] ?? []).length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}
+                      className="flex items-center gap-3 px-5 py-3 cursor-pointer hover:bg-[rgba(136,187,255,0.04)] transition-colors"
+                      style={{ borderBottom: i < (DEAL_CONTACTS[id] ?? []).length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}
                       onClick={() => router.push(`/contacts/${contact.id}`)}
                     >
                       {/* Avatar */}
                       <div
                         className="w-8 h-8 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0"
-                        style={{ background: 'linear-gradient(145deg, #0A84FF, #5E5CE6)' }}
+                        style={{ background: 'linear-gradient(145deg, #5AC8FA 0%, #0A84FF 50%, #5E5CE6 100%)', boxShadow: '0 0 14px rgba(94,92,230,0.7), 0 0 5px rgba(125,211,252,0.9), inset 0 1px 0 rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.3)' }}
                       >
                         {contact.name[0]}
                       </div>
@@ -664,18 +923,18 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       {/* Name & title */}
                       <div className="flex-1 min-w-0">
                         <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[13px] font-medium text-[#1D1D1F] tracking-[-0.01em]">{contact.name}</span>
+                          <span className="text-[13px] font-medium text-[#EEEEFF] tracking-[-0.01em]">{contact.name}</span>
                           {contact.isDecisionMaker && (
                             <span
                               className="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded-[4px] text-[10px] font-semibold"
-                              style={{ background: 'rgba(255,159,10,0.12)', color: '#C07000' }}
+                              style={{ background: 'rgba(255,159,10,0.12)', color: '#FFC266' }}
                             >
                               <Star size={8} strokeWidth={2.5} />
                               決裁者
                             </span>
                           )}
                         </div>
-                        <p className="text-[11px] text-[#AEAEB2] mt-0.5">{contact.title}</p>
+                        <p className="text-[11px] text-[#99AACC] mt-0.5">{contact.title}</p>
                       </div>
 
                       {/* Status badge */}
@@ -688,7 +947,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       </span>
 
                       {/* Call attempts */}
-                      <span className="flex items-center gap-1 text-[11px] text-[#AEAEB2] shrink-0">
+                      <span className="flex items-center gap-1 text-[11px] text-[#99AACC] shrink-0">
                         <Phone size={10} />
                         {contact.callAttempts}回
                       </span>
@@ -698,14 +957,158 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
               </motion.div>
 
               {/* Add contact link */}
-              <div className="px-5 py-3" style={{ borderTop: '1px solid rgba(0,0,0,0.04)' }}>
-                <button className="flex items-center gap-1.5 text-[12px] text-[#0071E3] hover:text-[#0060C7] transition-colors font-medium">
+              <div className="px-5 py-3" style={{ borderTop: '1px solid rgba(34,68,170,0.2)' }}>
+                <button className="flex items-center gap-1.5 text-[12px] text-[#0071E3] hover:text-[#7AB4FF] transition-colors font-medium">
                   <Plus size={12} strokeWidth={2.5} />
                   コンタクトを追加
                 </button>
               </div>
             </motion.div>
           )}
+
+          {/* タスクカード */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="bg-[#0c1028] rounded-[8px] overflow-hidden"
+            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+          >
+            {/* Header */}
+            <div className="flex items-center gap-2 px-5 py-3.5" style={{ borderBottom: '1px solid #2244AA' }}>
+              <CheckCircle2 size={13} className="text-[#88BBFF] shrink-0" />
+              <h3 className="text-[13px] font-semibold text-[#EEEEFF] tracking-[-0.01em]">タスク</h3>
+              <span
+                className="ml-1 inline-flex items-center justify-center w-5 h-5 rounded-full text-[10px] font-bold"
+                style={{ background: 'rgba(136,187,255,0.15)', color: '#88BBFF' }}
+              >
+                {tasks.length}
+              </span>
+              <button
+                onClick={() => setTaskModal('new')}
+                className="ml-auto inline-flex items-center gap-1 px-3 h-[28px] rounded-[8px] text-[11px] font-bold transition-all hover:brightness-110"
+                style={{
+                  background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
+                  color: '#FFFFFF',
+                  border: '1px solid #3355CC',
+                  boxShadow: '0 2px 6px rgba(34,68,170,0.4), inset 0 1px 0 rgba(200,220,255,0.2)',
+                }}
+              >
+                <Plus size={11} strokeWidth={2.5} />
+                タスク作成
+              </button>
+            </div>
+
+            {/* Task rows */}
+            {tasks.length === 0 ? (
+              <div className="px-5 py-8 text-center">
+                <p className="text-[12px] text-[#99AACC]">タスクが登録されていません</p>
+                <button
+                  onClick={() => setTaskModal('new')}
+                  className="mt-2 inline-flex items-center gap-1 text-[11px] font-bold text-[#88BBFF] hover:text-[#7AB4FF] transition-colors"
+                >
+                  <Plus size={11} strokeWidth={2.5} />
+                  最初のタスクを作成
+                </button>
+              </div>
+            ) : (
+              <div>
+                {tasks.map((task, i) => {
+                  const cfg = DEAL_TASK_TYPE_STYLES[task.type]
+                  const Icon = cfg.Icon
+                  const dueDate = task.dueAt ? new Date(task.dueAt) : null
+                  const isOverdue = dueDate && !task.done && dueDate < new Date('2026-04-12')
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-3 px-5 py-3 transition-colors hover:bg-[rgba(136,187,255,0.04)] group"
+                      style={{ borderBottom: i < tasks.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}
+                    >
+                      {/* チェックボックス */}
+                      <button
+                        onClick={() => handleTaskToggle(task.id)}
+                        className="w-5 h-5 rounded-[5px] flex items-center justify-center shrink-0 transition-all"
+                        style={{
+                          background: task.done ? 'linear-gradient(135deg, #6EE7B7, #34C759)' : 'rgba(16,16,40,0.8)',
+                          border: task.done ? '1px solid rgba(255,255,255,0.4)' : '1px solid #3355AA',
+                          boxShadow: task.done ? '0 0 8px rgba(52,199,89,0.5)' : 'none',
+                        }}
+                      >
+                        {task.done && <CheckCircle2 size={12} className="text-white" strokeWidth={3} />}
+                      </button>
+
+                      {/* タイプアイコン */}
+                      <div
+                        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+                        style={{
+                          background: cfg.gradient,
+                          boxShadow: cfg.glow,
+                          border: '1.5px solid rgba(255,255,255,0.4)',
+                          opacity: task.done ? 0.45 : 1,
+                        }}
+                      >
+                        <Icon
+                          size={14}
+                          style={{ color: '#FFFFFF', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+                          strokeWidth={2.5}
+                        />
+                      </div>
+
+                      {/* タイトル + メモ */}
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <p
+                            className="text-[13px] font-medium truncate"
+                            style={{
+                              color: task.done ? '#7799CC' : '#EEEEFF',
+                              textDecoration: task.done ? 'line-through' : 'none',
+                            }}
+                          >
+                            {task.title}
+                          </p>
+                          {task.dueAt && (
+                            <span
+                              className="inline-flex items-center gap-1 px-2 py-[2px] rounded-[4px] text-[10px] font-bold tabular-nums whitespace-nowrap shrink-0"
+                              style={{
+                                background: isOverdue ? 'rgba(255,59,48,0.18)' : 'rgba(136,187,255,0.10)',
+                                color: isOverdue ? '#FF8A82' : '#88BBFF',
+                                border: isOverdue ? '1px solid rgba(255,59,48,0.4)' : '1px solid rgba(136,187,255,0.25)',
+                                boxShadow: isOverdue ? '0 0 8px rgba(255,59,48,0.3)' : 'none',
+                              }}
+                            >
+                              <Calendar size={9} strokeWidth={2.5} />
+                              {formatDate(task.dueAt)}
+                            </span>
+                          )}
+                        </div>
+                        {task.memo && (
+                          <p className="text-[11px] text-[#99AACC] truncate mt-0.5">{task.memo}</p>
+                        )}
+                      </div>
+
+                      {/* 操作ボタン */}
+                      <div className="flex items-center gap-1 shrink-0 opacity-0 group-hover:opacity-100 transition-opacity">
+                        <button
+                          onClick={() => setTaskModal(task)}
+                          className="w-7 h-7 flex items-center justify-center rounded-[6px] hover:bg-[rgba(136,187,255,0.10)] transition-colors"
+                          title="編集"
+                        >
+                          <Pencil size={12} className="text-[#88BBFF]" />
+                        </button>
+                        <button
+                          onClick={() => handleTaskDelete(task.id)}
+                          className="w-7 h-7 flex items-center justify-center rounded-[6px] hover:bg-[rgba(255,59,48,0.12)] transition-colors"
+                          title="削除"
+                        >
+                          <Trash2 size={12} className="text-[#FF8A82]" />
+                        </button>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </motion.div>
         </div>
 
         {/* ── Right Sidebar ── */}
@@ -716,27 +1119,27 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[12px] overflow-hidden"
-            style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            className="bg-[#0c1028] rounded-[8px] overflow-hidden"
+            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
-            <div className="flex items-center gap-2 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="flex items-center gap-2 px-4 py-3.5" style={{ borderBottom: '1px solid #2244AA' }}>
               <BookOpen size={13} className="text-[#0071E3] shrink-0" />
-              <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">リサーチ Brief</h3>
+              <h3 className="text-[13px] font-semibold text-[#EEEEFF] tracking-[-0.01em]">リサーチ Brief</h3>
             </div>
 
             <div className="p-4 space-y-4">
               {/* Summary */}
               <div>
-                <p className="text-[12px] font-semibold text-[#AEAEB2] uppercase tracking-[0.04em] mb-1.5">企業サマリー</p>
-                <p className="text-[12.5px] text-[#1D1D1F] leading-relaxed">{MOCK_RESEARCH_BRIEF.summary}</p>
+                <p className="text-[12px] font-semibold text-[#99AACC] uppercase tracking-[0.04em] mb-1.5">企業サマリー</p>
+                <p className="text-[12.5px] text-[#EEEEFF] leading-relaxed">{MOCK_RESEARCH_BRIEF.summary}</p>
               </div>
 
               {/* Approach */}
               <div>
-                <p className="text-[12px] font-semibold text-[#AEAEB2] uppercase tracking-[0.04em] mb-1.5">推奨アプローチ</p>
+                <p className="text-[12px] font-semibold text-[#99AACC] uppercase tracking-[0.04em] mb-1.5">推奨アプローチ</p>
                 <div className="space-y-1.5">
                   {MOCK_RESEARCH_BRIEF.approach.map((item, i) => (
-                    <div key={i} className="flex gap-2 text-[12.5px] text-[#1D1D1F]">
+                    <div key={i} className="flex gap-2 text-[12.5px] text-[#EEEEFF]">
                       <span className="text-[#0071E3] shrink-0 font-semibold">•</span>
                       <span className="leading-relaxed">{item}</span>
                     </div>
@@ -746,7 +1149,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
               {/* Questions */}
               <div>
-                <p className="text-[12px] font-semibold text-[#AEAEB2] uppercase tracking-[0.04em] mb-1.5">ヒアリング質問</p>
+                <p className="text-[12px] font-semibold text-[#99AACC] uppercase tracking-[0.04em] mb-1.5">ヒアリング質問</p>
                 <div className="space-y-2">
                   {MOCK_RESEARCH_BRIEF.questions.map((q, i) => (
                     <div key={i} className="flex gap-2">
@@ -756,7 +1159,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       >
                         {i + 1}
                       </span>
-                      <p className="text-[12px] text-[#1D1D1F] leading-relaxed flex-1">{q}</p>
+                      <p className="text-[12px] text-[#EEEEFF] leading-relaxed flex-1">{q}</p>
                     </div>
                   ))}
                 </div>
@@ -769,12 +1172,12 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[12px] overflow-hidden"
-            style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            className="bg-[#0c1028] rounded-[8px] overflow-hidden"
+            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
-            <div className="flex items-center gap-2 px-4 py-3.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+            <div className="flex items-center gap-2 px-4 py-3.5" style={{ borderBottom: '1px solid #2244AA' }}>
               <Target size={13} className="text-[#0071E3] shrink-0" />
-              <h3 className="text-[13px] font-semibold text-[#1D1D1F] tracking-[-0.01em]">ステージ履歴</h3>
+              <h3 className="text-[13px] font-semibold text-[#EEEEFF] tracking-[-0.01em]">ステージ履歴</h3>
             </div>
 
             <motion.div
@@ -802,11 +1205,11 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                       ? <CheckCircle2 size={13} style={{ color: '#0071E3' }} className="shrink-0" />
                       : <div className="w-[13px] h-[13px] rounded-full border border-[rgba(0,0,0,0.12)] shrink-0" />
                     }
-                    <span className={`text-[12px] flex-1 ${item.isCurrent ? 'font-semibold text-[#0071E3]' : 'text-[#6E6E73]'}`}>
+                    <span className={`text-[12px] flex-1 ${item.isCurrent ? 'font-semibold text-[#0071E3]' : 'text-[#CCDDF0]'}`}>
                       {cfg.label}
                     </span>
                     <div className="text-right">
-                      <p className="text-[11px] text-[#AEAEB2]">{item.daysAgo}日前</p>
+                      <p className="text-[11px] text-[#99AACC]">{item.daysAgo}日前</p>
                     </div>
                   </motion.div>
                 )
@@ -815,6 +1218,17 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
           </motion.div>
         </div>
       </div>
+
+      {/* Task Modal */}
+      <AnimatePresence>
+        {taskModal !== null && (
+          <DealTaskModal
+            task={taskModal === 'new' ? null : taskModal}
+            onClose={() => setTaskModal(null)}
+            onSave={handleTaskSave}
+          />
+        )}
+      </AnimatePresence>
     </div>
   )
 }

@@ -62,7 +62,7 @@ function AppointmentPanel() {
       {/* 日時 */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="text-xs text-[#6B7280] mb-1 block">日付</label>
+          <label className="text-xs text-[#9CA3AF] mb-1 block">日付</label>
           <input
             type="date"
             value={appointmentData.date}
@@ -71,7 +71,7 @@ function AppointmentPanel() {
           />
         </div>
         <div className="w-28">
-          <label className="text-xs text-[#6B7280] mb-1 block">時刻</label>
+          <label className="text-xs text-[#9CA3AF] mb-1 block">時刻</label>
           <input
             type="time"
             value={appointmentData.time}
@@ -83,7 +83,7 @@ function AppointmentPanel() {
 
       {/* 場所 */}
       <div>
-        <label className="text-xs text-[#6B7280] mb-1.5 block">場所</label>
+        <label className="text-xs text-[#9CA3AF] mb-1.5 block">場所</label>
         <div className="flex gap-2">
           {locationOptions.map(({ value, label, icon: Icon }) => (
             <button
@@ -92,7 +92,7 @@ function AppointmentPanel() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-sm border transition-all duration-100 ${
                 appointmentData.location === value
                   ? 'bg-[#EEF2FF] border-[#C7D2FE] text-[#4F46E5] font-medium'
-                  : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB]'
+                  : 'bg-white border-[#E5E7EB] text-[#9CA3AF] hover:border-[#D1D5DB]'
               }`}
             >
               <Icon size={13} />
@@ -148,7 +148,7 @@ function NextActionPanel() {
 
       {/* アクション種別 */}
       <div>
-        <label className="text-xs text-[#6B7280] mb-1.5 block">アクション種別 <span className="text-[#EF4444]">*</span></label>
+        <label className="text-xs text-[#9CA3AF] mb-1.5 block">アクション種別 <span className="text-[#EF4444]">*</span></label>
         <div className="flex gap-2 flex-wrap">
           {actionTypes.map(({ value, label, icon: Icon }) => (
             <button
@@ -157,7 +157,7 @@ function NextActionPanel() {
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-[7px] text-sm border transition-all duration-100 ${
                 nextActionData.actionType === value
                   ? 'bg-[#EEF2FF] border-[#C7D2FE] text-[#4F46E5] font-medium'
-                  : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB]'
+                  : 'bg-white border-[#E5E7EB] text-[#9CA3AF] hover:border-[#D1D5DB]'
               }`}
             >
               <Icon size={13} />
@@ -169,7 +169,7 @@ function NextActionPanel() {
 
       {/* メモ */}
       <div>
-        <label className="text-xs text-[#6B7280] mb-1 block">メモ（任意）</label>
+        <label className="text-xs text-[#9CA3AF] mb-1 block">メモ（任意）</label>
         <textarea
           value={nextActionData.memo}
           onChange={e => setNextActionData({ memo: e.target.value })}
@@ -182,7 +182,7 @@ function NextActionPanel() {
       {/* 実行予定日時 */}
       <div className="flex gap-3">
         <div className="flex-1">
-          <label className="text-xs text-[#6B7280] mb-1 block">実行予定日</label>
+          <label className="text-xs text-[#9CA3AF] mb-1 block">実行予定日</label>
           <input
             type="date"
             value={nextActionData.dueDate}
@@ -191,7 +191,7 @@ function NextActionPanel() {
           />
         </div>
         <div className="w-28">
-          <label className="text-xs text-[#6B7280] mb-1 block">時刻</label>
+          <label className="text-xs text-[#9CA3AF] mb-1 block">時刻</label>
           <input
             type="time"
             value={nextActionData.dueTime}
@@ -203,7 +203,7 @@ function NextActionPanel() {
 
       {/* Slackリマインド */}
       <div className="space-y-1.5">
-        <label className="text-xs text-[#6B7280] flex items-center gap-1">
+        <label className="text-xs text-[#9CA3AF] flex items-center gap-1">
           <Bell size={11} />
           リマインド通知（Slack）
         </label>
@@ -307,7 +307,7 @@ function DNCConfirmBanner() {
       <PhoneOff size={16} className="text-[#DC2626] mt-0.5 shrink-0" />
       <div>
         <p className="text-sm font-medium text-[#DC2626]">Do Not Contact フラグを自動セットします</p>
-        <p className="text-xs text-[#6B7280] mt-0.5">
+        <p className="text-xs text-[#9CA3AF] mt-0.5">
           保存後、この担当者へのコールが今後ブロックされます。
         </p>
       </div>
@@ -395,7 +395,7 @@ export function CallResultModal() {
               <p className="text-base font-semibold text-[#111827]">
                 {company} / {contactName}
               </p>
-              <p className="text-sm text-[#6B7280] mt-0.5">
+              <p className="text-sm text-[#9CA3AF] mt-0.5">
                 通話時間: {formatDuration(durationSeconds)}
               </p>
             </div>

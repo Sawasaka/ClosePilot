@@ -14,23 +14,105 @@ export type ApproachStatus =
 
 export type CallResultCode = ApproachStatus
 
+// Legacy Tailwind class style (for light-theme components)
 export const STATUS_STYLES: Record<ApproachStatus, { bg: string; text: string; dot: string }> = {
-  '未着手':      { bg: 'bg-[rgba(0,0,0,0.06)]',     text: 'text-[#6E6E73]', dot: 'bg-[#AEAEB2]' },
-  '不通':        { bg: 'bg-[rgba(255,59,48,0.13)]',  text: 'text-[#D92B1A]', dot: 'bg-[#FF3B30]' },
-  '不在':        { bg: 'bg-[rgba(255,159,10,0.13)]', text: 'text-[#C07000]', dot: 'bg-[#FF9F0A]' },
-  '接続済み':    { bg: 'bg-[rgba(0,85,255,0.1)]',    text: 'text-[#0044DD]', dot: 'bg-[#0055FF]' },
-  'コール不可':  { bg: 'bg-[rgba(255,59,48,0.13)]',  text: 'text-[#D92B1A]', dot: 'bg-[#FF3B30]' },
-  'アポ獲得':    { bg: 'bg-[rgba(0,200,83,0.12)]',   text: 'text-[#007A30]', dot: 'bg-[#00C853]' },
-  'Next Action': { bg: 'bg-[rgba(94,92,230,0.13)]',  text: 'text-[#3D3ABF]', dot: 'bg-[#5E5CE6]' },
+  '未着手':      { bg: 'bg-[rgba(174,174,178,0.18)]', text: 'text-[#D8DCE6]', dot: 'bg-[#AEAEB2]' },
+  '不通':        { bg: 'bg-[rgba(255,59,48,0.22)]',   text: 'text-[#FF8A82]', dot: 'bg-[#FF3B30]' },
+  '不在':        { bg: 'bg-[rgba(255,159,10,0.22)]',  text: 'text-[#FFC266]', dot: 'bg-[#FF9F0A]' },
+  '接続済み':    { bg: 'bg-[rgba(0,113,227,0.22)]',   text: 'text-[#7AB4FF]', dot: 'bg-[#0071E3]' },
+  'コール不可':  { bg: 'bg-[rgba(255,59,48,0.22)]',   text: 'text-[#FF8A82]', dot: 'bg-[#FF3B30]' },
+  'アポ獲得':    { bg: 'bg-[rgba(52,199,89,0.22)]',   text: 'text-[#7EE6A1]', dot: 'bg-[#34C759]' },
+  'Next Action': { bg: 'bg-[rgba(94,92,230,0.22)]',   text: 'text-[#A6A4FF]', dot: 'bg-[#5E5CE6]' },
+}
+
+// Game-style FF風 vibrant gradient + glow for dark theme badges
+export interface StatusGameStyle {
+  gradient: string
+  glow: string
+  color: string
+  dotColor: string
+  borderColor: string
+  textShadow: string
+}
+
+export const STATUS_GAME_STYLES: Record<ApproachStatus, StatusGameStyle> = {
+  '未着手': {
+    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
+    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#2C2C2E',
+    dotColor: '#48484A',
+    borderColor: 'rgba(255,255,255,0.35)',
+    textShadow: 'none',
+  },
+  '不通': {
+    gradient: 'linear-gradient(135deg, #FFB347 0%, #FF6B35 35%, #FF3B30 70%, #CC1A00 100%)',
+    glow: '0 0 14px rgba(255,59,48,0.85), 0 0 5px rgba(255,107,53,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF',
+    dotColor: '#FFE4D9',
+    borderColor: 'rgba(255,255,255,0.3)',
+    textShadow: '0 1px 2px rgba(120,0,0,0.6)',
+  },
+  '不在': {
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+    color: '#5B2E00',
+    dotColor: '#FFFFFF',
+    borderColor: 'rgba(255,255,255,0.4)',
+    textShadow: 'none',
+  },
+  '接続済み': {
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF',
+    dotColor: '#E0F4FF',
+    borderColor: 'rgba(255,255,255,0.3)',
+    textShadow: '0 1px 2px rgba(0,40,90,0.6)',
+  },
+  'コール不可': {
+    gradient: 'linear-gradient(135deg, #6B6B70 0%, #48484A 35%, #2C2C2E 70%, #1C1C1E 100%)',
+    glow: '0 0 12px rgba(255,59,48,0.45), inset 0 1px 0 rgba(255,255,255,0.2)',
+    color: '#FF8A82',
+    dotColor: '#FF3B30',
+    borderColor: 'rgba(255,59,48,0.5)',
+    textShadow: '0 0 6px rgba(255,59,48,0.7)',
+  },
+  'アポ獲得': {
+    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
+    glow: '0 0 16px rgba(52,199,89,0.9), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#053D24',
+    dotColor: '#FFFFFF',
+    borderColor: 'rgba(255,255,255,0.4)',
+    textShadow: 'none',
+  },
+  'Next Action': {
+    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
+    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF',
+    dotColor: '#E9E5FF',
+    borderColor: 'rgba(255,255,255,0.3)',
+    textShadow: '0 1px 2px rgba(50,20,100,0.6)',
+  },
 }
 
 export type RankConfig = { gradient: string; glow: string; color: string }
 
 // Hot(A) = 🔥 Fire red  /  Middle(B) = ⭐ Gold  /  Low(C) = 💧 Ocean blue
 export const RANK_CONFIG: Record<Rank, RankConfig> = {
-  A: { gradient: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 55%, #CC1A00 100%)', glow: '0 2px 8px rgba(255,59,48,0.5)',    color: '#fff' },
-  B: { gradient: 'linear-gradient(135deg, #FFE040 0%, #FFD60A 55%, #FF9F0A 100%)', glow: '0 2px 7px rgba(255,214,10,0.5)',   color: '#7B4000' },
-  C: { gradient: 'linear-gradient(135deg, #5AC8FA 0%, #32ADE6 55%, #0071E3 100%)', glow: '0 2px 6px rgba(50,173,230,0.45)',  color: '#fff' },
+  A: {
+    gradient: 'linear-gradient(135deg, #FFB347 0%, #FF6B35 35%, #FF3B30 70%, #CC1A00 100%)',
+    glow: '0 0 14px rgba(255,75,40,0.85), 0 0 5px rgba(255,180,80,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#fff',
+  },
+  B: {
+    gradient: 'linear-gradient(135deg, #FFF080 0%, #FFE040 30%, #FFD60A 60%, #FF9F0A 100%)',
+    glow: '0 0 14px rgba(255,214,10,0.85), 0 0 5px rgba(255,240,128,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+    color: '#7B2D00',
+  },
+  C: {
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#fff',
+  },
 }
 
 // ─── コールリスト型定義 ──────────────────────────────────────────────────────
@@ -59,6 +141,7 @@ export interface CallListItem {
   rank: Rank
   status: ApproachStatus
   callAttempts: number
+  emailsSent: number
   lastCallAt: string | null
   nextActionAt: string | null
   priority: number

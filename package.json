@@ -1,5 +1,5 @@
 {
-  "name": "closepilot",
+  "name": "bgm",
   "version": "0.0.1",
   "private": true,
   "packageManager": "pnpm@10.32.1",
@@ -9,13 +9,21 @@
     "lint": "turbo run lint",
     "type-check": "turbo run type-check",
     "format": "prettier --write \"**/*.{ts,tsx,md}\"",
-    "clean": "turbo run clean"
+    "clean": "turbo run clean",
+    "crawl:intents": "tsx scripts/crawl-intents.ts",
+    "crawl:intents:it": "tsx scripts/crawl-intents.ts --department=IT",
+    "crawl:intents:sales": "tsx scripts/crawl-intents.ts --department=SALES",
+    "enrich:companies": "tsx scripts/enrich-companies.ts",
+    "enrich:orgchart": "tsx scripts/enrich-orgchart.ts"
   },
   "devDependencies": {
     "turbo": "^2.5.4",
     "typescript": "^5.8.3",
     "prettier": "^3.5.3",
-    "@types/node": "^22.15.2"
+    "@types/node": "^22.15.2",
+    "tsx": "^4.21.0",
+    "playwright": "^1.58.2",
+    "@prisma/client": "^6.6.0"
   },
   "pnpm": {
     "onlyBuiltDependencies": [

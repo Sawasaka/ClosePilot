@@ -3,7 +3,7 @@
 import { motion } from 'framer-motion'
 import { Phone, Mail, Target, BookOpen, Trophy, Flame, Sparkles } from 'lucide-react'
 
-const CARD = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'
+const CARD = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
 
 const PROFILE = { name: '田中太郎', level: 12, rank: 'シルバー', xp: 2400, xpNext: 3000, totalPoints: 8500, streak: 5 }
 const RANKS = ['ブロンズ', 'シルバー', 'ゴールド', 'プラチナ', 'ダイヤモンド']
@@ -26,50 +26,50 @@ export default function QuestsPage() {
   return (
     <div className="space-y-5">
       <div>
-        <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">クエスト</h1>
-        <p className="text-[13px] text-[#8E8E93] mt-0.5">日々のアクションでXPを獲得し、レベルアップしよう</p>
+        <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">クエスト</h1>
+        <p className="text-[13px] text-[#CCDDF0] mt-0.5">日々のアクションでXPを獲得し、レベルアップしよう</p>
       </div>
 
       {/* Profile */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-[12px] p-5" style={{ boxShadow: CARD }}>
+      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="bg-[#0c1028] rounded-[8px] p-5" style={{ boxShadow: CARD }}>
         <div className="flex items-center gap-4">
-          <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-[18px] font-bold" style={{ background: 'linear-gradient(135deg, #FF6B35, #FF3B30)' }}>{PROFILE.name[0]}</div>
+          <div className="w-14 h-14 rounded-full flex items-center justify-center text-white text-[18px] font-bold" style={{ background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)' }}>{PROFILE.name[0]}</div>
           <div className="flex-1">
             <div className="flex items-center gap-2">
-              <span className="text-[16px] font-semibold text-[#1D1D1F]">{PROFILE.name}</span>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FFD60A22] text-[#C07000]">Lv.{PROFILE.level}</span>
-              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[rgba(0,0,0,0.05)] text-[#6E6E73]">{PROFILE.rank}</span>
+              <span className="text-[16px] font-semibold text-[#EEEEFF]">{PROFILE.name}</span>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[#FFD60A22] text-[#FFC266]">Lv.{PROFILE.level}</span>
+              <span className="text-[11px] font-bold px-2 py-0.5 rounded-full bg-[rgba(0,0,0,0.05)] text-[#CCDDF0]">{PROFILE.rank}</span>
             </div>
             <div className="flex items-center gap-2 mt-1.5">
-              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)' }}>
+              <div className="flex-1 h-2 rounded-full overflow-hidden" style={{ background: 'rgba(34,68,170,0.15)' }}>
                 <div className="h-full rounded-full bg-[#FFD60A]" style={{ width: `${(PROFILE.xp / PROFILE.xpNext) * 100}%` }} />
               </div>
-              <span className="text-[11px] text-[#8E8E93] tabular-nums">{PROFILE.xp} / {PROFILE.xpNext} XP</span>
+              <span className="text-[11px] text-[#CCDDF0] tabular-nums">{PROFILE.xp} / {PROFILE.xpNext} XP</span>
             </div>
           </div>
           <div className="text-right shrink-0">
             <p className="text-[20px] font-bold text-[#FF3B30] tabular-nums">{PROFILE.totalPoints.toLocaleString()}</p>
-            <p className="text-[11px] text-[#AEAEB2]">累計ポイント</p>
+            <p className="text-[11px] text-[#99AACC]">累計ポイント</p>
           </div>
         </div>
         <div className="flex items-center gap-1 mt-3 pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
           <Flame size={14} className="text-[#FF9F0A]" />
-          <span className="text-[12px] font-medium text-[#C07000]">{PROFILE.streak}日連続ログイン中</span>
-          <span className="ml-2 text-[11px] text-[#AEAEB2]">{RANKS.map((r, i) => <span key={r} className={r === PROFILE.rank ? 'font-bold text-[#1D1D1F]' : ''}>{r}{i < RANKS.length - 1 ? ' → ' : ''}</span>)}</span>
+          <span className="text-[12px] font-medium text-[#FFC266]">{PROFILE.streak}日連続ログイン中</span>
+          <span className="ml-2 text-[11px] text-[#99AACC]">{RANKS.map((r, i) => <span key={r} className={r === PROFILE.rank ? 'font-bold text-[#EEEEFF]' : ''}>{r}{i < RANKS.length - 1 ? ' → ' : ''}</span>)}</span>
         </div>
       </motion.div>
 
       {/* Time Events */}
       <div>
-        <h3 className="text-[12px] font-semibold text-[#AEAEB2] uppercase tracking-[0.06em] mb-2 px-1">タイムイベント</h3>
+        <h3 className="text-[12px] font-semibold text-[#99AACC] uppercase tracking-[0.06em] mb-2 px-1">タイムイベント</h3>
         <div className="grid grid-cols-3 gap-3">
           {TIME_EVENTS.map((ev, i) => (
             <motion.div key={ev.time} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
               className="rounded-[10px] p-3 relative overflow-hidden"
-              style={{ background: ev.active ? ev.color + '12' : '#FFF', border: ev.active ? `1px solid ${ev.color}30` : '1px solid rgba(0,0,0,0.06)' }}>
+              style={{ background: ev.active ? ev.color + '12' : '#FFF', border: ev.active ? `1px solid ${ev.color}30` : '1px solid #2244AA' }}>
               {ev.active && <Sparkles size={12} style={{ color: ev.color }} className="absolute top-2 right-2" />}
-              <p className="text-[11px] font-bold tabular-nums" style={{ color: ev.active ? ev.color : '#AEAEB2' }}>{ev.time}</p>
-              <p className="text-[13px] font-semibold text-[#1D1D1F] mt-1">{ev.label}</p>
+              <p className="text-[11px] font-bold tabular-nums" style={{ color: ev.active ? ev.color : '#4466AA' }}>{ev.time}</p>
+              <p className="text-[13px] font-semibold text-[#EEEEFF] mt-1">{ev.label}</p>
               <p className="text-[11px] mt-0.5" style={{ color: ev.color }}>{ev.bonus}</p>
             </motion.div>
           ))}
@@ -78,32 +78,32 @@ export default function QuestsPage() {
 
       {/* Quests */}
       <div>
-        <h3 className="text-[12px] font-semibold text-[#AEAEB2] uppercase tracking-[0.06em] mb-2 px-1">アクティブクエスト</h3>
+        <h3 className="text-[12px] font-semibold text-[#99AACC] uppercase tracking-[0.06em] mb-2 px-1">アクティブクエスト</h3>
         <div className="space-y-2">
           {QUESTS.map((q, i) => {
             const Icon = q.icon
             const pct = (q.progress / q.goal) * 100
             return (
               <motion.div key={q.id} initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.04 }}
-                className="bg-white rounded-[10px] flex items-center gap-4 px-4 py-3" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.04)' }}>
+                className="bg-[#0c1028] rounded-[10px] flex items-center gap-4 px-4 py-3" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
                 <div className="w-9 h-9 rounded-[8px] flex items-center justify-center shrink-0" style={{ background: q.color + '14' }}>
                   <Icon size={16} style={{ color: q.color }} />
                 </div>
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
-                    <span className="text-[13px] font-medium text-[#1D1D1F] truncate">{q.title}</span>
-                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[rgba(0,0,0,0.05)] text-[#6E6E73]">{q.type}</span>
+                    <span className="text-[13px] font-medium text-[#EEEEFF] truncate">{q.title}</span>
+                    <span className="text-[10px] font-semibold px-1.5 py-0.5 rounded-full bg-[rgba(0,0,0,0.05)] text-[#CCDDF0]">{q.type}</span>
                   </div>
                   <div className="flex items-center gap-2 mt-1">
-                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)' }}>
+                    <div className="flex-1 h-1.5 rounded-full overflow-hidden" style={{ background: 'rgba(34,68,170,0.15)' }}>
                       <div className="h-full rounded-full" style={{ width: `${pct}%`, background: q.color }} />
                     </div>
-                    <span className="text-[11px] text-[#8E8E93] tabular-nums shrink-0">{q.progress}/{q.goal}</span>
+                    <span className="text-[11px] text-[#CCDDF0] tabular-nums shrink-0">{q.progress}/{q.goal}</span>
                   </div>
                 </div>
                 <div className="text-right shrink-0">
                   <span className="text-[13px] font-bold" style={{ color: q.color }}>+{q.reward}</span>
-                  <p className="text-[10px] text-[#AEAEB2]">pt</p>
+                  <p className="text-[10px] text-[#99AACC]">pt</p>
                 </div>
               </motion.div>
             )

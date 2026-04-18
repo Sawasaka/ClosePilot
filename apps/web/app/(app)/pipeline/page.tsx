@@ -11,8 +11,10 @@ import {
 type IntentSignal = 'Hot' | 'Middle' | 'Low'
 type StageKey =
   | 'IS'
+  | 'MEETING_PLANNED'
   | 'MEETING_DONE'
   | 'PROJECT_PLANNED'
+  | 'MULTI_MEETING'
   | 'POC'
   | 'DECISION_MAKER_OK'
   | 'CLOSED_WON'
@@ -62,25 +64,42 @@ interface StageConfig {
 }
 
 const STAGES: StageConfig[] = [
-  { key: 'IS',                label: 'IS',              desc: '未商談の企業へアプローチ',                     color: '#6E6E73', headerBg: 'rgba(0,0,0,0.04)',       dotColor: '#AEAEB2' },
-  { key: 'MEETING_DONE',      label: '商談済み',        desc: '初回商談が完了した案件',                       color: '#0044DD', headerBg: 'rgba(0,85,255,0.10)',    dotColor: '#3B82F6' },
-  { key: 'PROJECT_PLANNED',   label: 'PJ化予定あり',    desc: '具体的なプロジェクト化が見込める案件',         color: '#4B48CC', headerBg: 'rgba(94,92,230,0.10)',   dotColor: '#8B8BE8' },
-  { key: 'POC',               label: 'POC実施中',       desc: '検証・トライアルを実施中の案件',               color: '#9B30D9', headerBg: 'rgba(191,90,242,0.10)',  dotColor: '#BF5AF2' },
-  { key: 'DECISION_MAKER_OK', label: '決裁者合意済み',  desc: '決裁者の承認を得て契約手続き待ちの案件',       color: '#C07000', headerBg: 'rgba(255,159,10,0.10)',  dotColor: '#FFB82E' },
-  { key: 'CLOSED_WON',        label: '受注',            desc: '契約締結が完了した案件',                       color: '#007A30', headerBg: 'rgba(0,200,83,0.14)',    dotColor: '#00C853' },
-  { key: 'NURTURING',         label: 'ナーチャリング',  desc: '商談後に再アプローチで商談獲得を目指す',       color: '#5E5CE6', headerBg: 'rgba(94,92,230,0.08)',   dotColor: '#5E5CE6' },
-  { key: 'LOST_DEAL',         label: '失注',            desc: 'POC・決裁者合意後に受注に至らなかった案件',    color: '#D92B1A', headerBg: 'rgba(255,59,48,0.10)',   dotColor: '#FF6B62' },
-  { key: 'CHURN',             label: 'チャーン',        desc: '契約後に解約となった案件',                     color: '#CF3131', headerBg: 'rgba(255,59,48,0.06)',   dotColor: '#FF3B30' },
-  { key: 'LOST',              label: 'ロスト',          desc: '追客を完全に終了した案件',                     color: '#8E8E93', headerBg: 'rgba(0,0,0,0.03)',       dotColor: '#AEAEB2' },
+  { key: 'IS',                label: 'IS',              desc: '未商談の企業へアプローチ',                                       color: '#5AC8FA', headerBg: 'rgba(50,173,230,0.22)',  dotColor: '#5AC8FA' },
+  { key: 'NURTURING',         label: 'ナーチャリング',  desc: '再アプローチで商談獲得を目指す', color: '#EC4899', headerBg: 'rgba(236,72,153,0.22)',  dotColor: '#F9A8D4' },
+  { key: 'MEETING_PLANNED',   label: '商談予定',        desc: '初回商談がスケジュール済みの案件',                               color: '#0EA5E9', headerBg: 'rgba(14,165,233,0.22)',  dotColor: '#38BDF8' },
+  { key: 'MEETING_DONE',      label: '商談済み',        desc: '初回商談が完了した案件',                                         color: '#3B82F6', headerBg: 'rgba(59,130,246,0.22)',  dotColor: '#60A5FA' },
+  { key: 'PROJECT_PLANNED',   label: 'PJ化予定あり',    desc: '具体的なプロジェクト化が見込める案件',                           color: '#8B5CF6', headerBg: 'rgba(139,92,246,0.22)',  dotColor: '#A78BFA' },
+  { key: 'MULTI_MEETING',     label: '複数商談済み',    desc: '2回以上の商談を実施済みの案件',                                  color: '#A855F7', headerBg: 'rgba(168,85,247,0.22)',  dotColor: '#C084FC' },
+  { key: 'POC',               label: 'POC実施中',       desc: '検証・トライアルを実施中の案件',                                 color: '#D946EF', headerBg: 'rgba(217,70,239,0.22)',  dotColor: '#E879F9' },
+  { key: 'LOST_DEAL',         label: '失注',            desc: '商談後に受注に至らなかった案件',                                 color: '#FF3B30', headerBg: 'rgba(255,59,48,0.18)',   dotColor: '#FF6B62' },
+  { key: 'CLOSED_WON',        label: '受注',            desc: '契約締結が完了した案件',                                         color: '#34C759', headerBg: 'rgba(52,199,89,0.22)',   dotColor: '#6EE7B7' },
+  { key: 'CHURN',             label: 'チャーン',        desc: '契約後に解約となった案件',                                       color: '#FF8A82', headerBg: 'rgba(255,138,130,0.16)', dotColor: '#FF3B30' },
+  { key: 'LOST',              label: 'ロスト',          desc: '追客を完全に終了した案件',                                       color: '#94A3B8', headerBg: 'rgba(148,163,184,0.14)', dotColor: '#94A3B8' },
 ]
 
 // ─── Style Maps ────────────────────────────────────────────────────────────────
 
-type IntentConfig = { gradient: string; glow: string; color: string; label: string }
+type IntentConfig = { gradient: string; glow: string; color: string; label: string; borderColor: string; textShadow: string }
+// 確度: 高(Hot) / 中(Middle) / 低(Low)
 const INTENT_CONFIG: Record<IntentSignal, IntentConfig> = {
-  Hot:    { gradient: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 55%, #CC1A00 100%)', glow: '0 2px 8px rgba(255,59,48,0.5)',   color: '#fff', label: 'Hot' },
-  Middle: { gradient: 'linear-gradient(135deg, #6DD400 0%, #34C759 55%, #248A3D 100%)', glow: '0 2px 7px rgba(52,199,89,0.5)',   color: '#fff', label: 'Middle' },
-  Low:    { gradient: 'linear-gradient(135deg, #5AC8FA 0%, #32ADE6 55%, #0071E3 100%)', glow: '0 2px 6px rgba(50,173,230,0.45)', color: '#fff', label: 'Low' },
+  Hot: {
+    label: '高',
+    gradient: 'linear-gradient(135deg, #FFB347 0%, #FF6B35 35%, #FF3B30 70%, #CC1A00 100%)',
+    glow: '0 0 14px rgba(255,59,48,0.85), 0 0 5px rgba(255,107,53,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(120,0,0,0.6)',
+  },
+  Middle: {
+    label: '中',
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+    color: '#5B2E00', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
+  },
+  Low: {
+    label: '低',
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(0,40,90,0.6)',
+  },
 }
 
 const OWNER_COLORS: Record<string, string> = {
@@ -210,11 +229,25 @@ export default function PipelinePage() {
       {/* ── Header ── */}
       <div
         className="flex items-center justify-between mb-5 pb-5"
-        style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}
+        style={{ borderBottom: '1px solid #2244AA' }}
       >
-        <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">
-          パイプライン
-        </h1>
+        <div className="flex items-center gap-3">
+          <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">
+            パイプライン
+          </h1>
+          <span
+            className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[12px] font-bold tabular-nums"
+            style={{
+              background: 'linear-gradient(135deg, rgba(136,187,255,0.22) 0%, rgba(85,119,221,0.16) 100%)',
+              color: '#FFFFFF',
+              border: '1px solid rgba(136,187,255,0.45)',
+              boxShadow: '0 0 10px rgba(136,187,255,0.25)',
+              textShadow: '0 0 6px rgba(136,187,255,0.5)',
+            }}
+          >
+            {deals.length}件
+          </span>
+        </div>
         <button
           className="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-[8px] hover:brightness-105 active:scale-[0.97] transition-all"
           style={{ background: 'linear-gradient(180deg, #147CE5 0%, #0071E3 100%)', boxShadow: '0 1px 3px rgba(0,113,227,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' }}
@@ -227,7 +260,7 @@ export default function PipelinePage() {
       {/* ── Filter Bar ── */}
       <div
         className="flex items-center gap-2 flex-wrap mb-4 p-3 rounded-[10px]"
-        style={{ background: 'white', border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}
+        style={{ background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)', border: '1px solid #2244AA', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
       >
         <div className="flex items-center gap-1">
           {OWNERS.map(o => (
@@ -236,8 +269,7 @@ export default function PipelinePage() {
               onClick={() => setOwnerFilter(o)}
               className="px-2.5 py-1.5 rounded-[6px] text-[12px] font-medium transition-all duration-150"
               style={{
-                background: ownerFilter === o ? 'rgba(0,113,227,0.1)' : 'transparent',
-                color: ownerFilter === o ? '#0071E3' : '#6E6E73',
+                background: ownerFilter === o ? 'rgba(136,187,255,0.12)' : 'transparent', color: ownerFilter === o ? '#88BBFF' : '#7788AA',
               }}
             >
               {o}
@@ -262,28 +294,64 @@ export default function PipelinePage() {
               >
                 {/* Column Header */}
                 <div
-                  className="rounded-[10px] px-3 py-2.5 mb-3 border transition-all duration-150"
+                  className="rounded-[10px] px-3 py-3 mb-3 border-2 transition-all duration-150 relative overflow-hidden"
                   style={{
-                    backgroundColor: isOver ? stage.color + '20' : stage.headerBg,
-                    borderColor: isOver ? stage.color + '60' : stage.color + '30',
+                    background: isOver
+                      ? `linear-gradient(180deg, ${stage.color}55 0%, ${stage.color}25 100%)`
+                      : `linear-gradient(180deg, ${stage.color}40 0%, ${stage.color}18 100%)`,
+                    borderColor: isOver ? stage.color : stage.color,
+                    boxShadow: isOver
+                      ? `0 0 28px ${stage.color}88, 0 0 8px ${stage.color}cc, inset 0 1px 0 ${stage.color}60`
+                      : `0 0 18px ${stage.color}55, 0 0 4px ${stage.color}80, inset 0 1px 0 ${stage.color}50`,
                     transform: isOver ? 'scale(1.02)' : 'scale(1)',
                   }}
                 >
-                  <div className="flex items-center justify-between">
+                  {/* 上部のグローライン */}
+                  <div style={{
+                    position: 'absolute', top: 0, left: 0, right: 0, height: '3px',
+                    background: `linear-gradient(90deg, transparent 0%, ${stage.color} 50%, transparent 100%)`,
+                    boxShadow: `0 0 12px ${stage.color}, 0 0 4px ${stage.color}`,
+                  }} />
+                  {/* 背景の放射グロー */}
+                  <div style={{
+                    position: 'absolute', top: '-30%', left: '-10%', width: '120%', height: '160%',
+                    background: `radial-gradient(ellipse at top, ${stage.color}30 0%, transparent 60%)`,
+                    pointerEvents: 'none',
+                  }} />
+
+                  <div className="flex items-center justify-between relative">
                     <div className="flex items-center gap-2">
-                      <div className="w-2 h-2 rounded-full" style={{ backgroundColor: stage.dotColor }} />
-                      <span className="text-[12px] font-semibold" style={{ color: stage.color }}>
+                      <div
+                        className="w-3 h-3 rounded-full"
+                        style={{
+                          background: `radial-gradient(circle, #FFFFFF 0%, ${stage.color} 60%, ${stage.color} 100%)`,
+                          boxShadow: `0 0 10px ${stage.color}, 0 0 20px ${stage.color}cc, 0 0 4px #FFFFFF`,
+                          border: `1px solid ${stage.color}`,
+                        }}
+                      />
+                      <span
+                        className="text-[13px] font-black tracking-[0.02em]"
+                        style={{
+                          color: '#FFFFFF',
+                          textShadow: `0 0 12px ${stage.color}, 0 0 4px ${stage.color}, 0 1px 2px rgba(0,0,0,0.5)`,
+                        }}
+                      >
                         {stage.label}
                       </span>
                     </div>
                     <span
-                      className="w-5 h-5 rounded-full flex items-center justify-center text-[10px] font-bold text-white"
-                      style={{ backgroundColor: stage.color }}
+                      className="min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-black text-white"
+                      style={{
+                        background: `linear-gradient(180deg, ${stage.color}, ${stage.color}cc)`,
+                        boxShadow: `0 0 12px ${stage.color}cc, 0 0 4px ${stage.color}, inset 0 1px 0 rgba(255,255,255,0.5)`,
+                        border: `1px solid rgba(255,255,255,0.5)`,
+                        textShadow: '0 1px 2px rgba(0,0,0,0.4)',
+                      }}
                     >
                       {stageDeals.length}
                     </span>
                   </div>
-                  <p className="text-[10px] mt-1.5 leading-tight" style={{ color: stage.color + 'AA' }}>
+                  <p className="text-[10px] mt-1.5 leading-tight font-medium relative" style={{ color: '#EEEEFF' }}>
                     {stage.desc}
                   </p>
                 </div>
@@ -319,36 +387,50 @@ export default function PipelinePage() {
                           onDragOver={e => onCardDragOver(e, stage.key, cardIdx)}
                           className="rounded-[10px] p-3.5 cursor-grab active:cursor-grabbing select-none transition-all duration-150 hover:-translate-y-0.5"
                           style={{
-                            background: 'white',
-                            border: '1px solid rgba(0,0,0,0.07)',
-                            boxShadow: '0 2px 8px rgba(0,0,0,0.07), 0 1px 3px rgba(0,0,0,0.04)',
+                            background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
+                            border: '1px solid #2244AA',
+                            boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)',
                             opacity: dimmed ? 0.35 : 1,
                             pointerEvents: dimmed ? 'none' : 'auto',
                           }}
                         >
-                          {/* Handle + Intent */}
+                          {/* Handle + Intent (確度) */}
                           <div className="flex items-start justify-between mb-2">
-                            <GripVertical size={13} className="text-[#D1D5DB] mt-0.5 -ml-0.5 shrink-0" />
+                            <GripVertical size={13} className="text-[#88BBFF] mt-0.5 -ml-0.5 shrink-0" />
                             <span
-                              className="inline-flex items-center justify-center rounded-[4px] text-[9px] font-bold px-1.5"
-                              style={{ height: 20, background: intent.gradient, boxShadow: intent.glow, color: intent.color, letterSpacing: '0.03em' }}
+                              className="inline-flex items-center justify-center rounded-full text-[10px] font-black"
+                              style={{
+                                width: 22,
+                                height: 22,
+                                background: intent.gradient,
+                                boxShadow: intent.glow,
+                                color: intent.color,
+                                border: `1px solid ${intent.borderColor}`,
+                                textShadow: intent.textShadow,
+                                letterSpacing: '0.04em',
+                              }}
+                              title={`確度: ${intent.label}`}
                             >
                               {intent.label}
                             </span>
                           </div>
-                          <p className="text-[13px] font-semibold text-[#1D1D1F] leading-snug mb-3 truncate">
+                          <p className="text-[13px] font-semibold text-[#EEEEFF] leading-snug mb-3 truncate">
                             {deal.name}
                           </p>
                           <div className="flex items-center gap-1.5">
                             <div
                               className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                              style={{ backgroundColor: ownerColor + '22' }}
+                              style={{
+                                background: ownerColor,
+                                boxShadow: `0 0 8px ${ownerColor}aa, inset 0 1px 0 rgba(255,255,255,0.4)`,
+                                border: '1px solid rgba(255,255,255,0.35)',
+                              }}
                             >
-                              <span className="text-[9px] font-bold" style={{ color: ownerColor }}>
+                              <span className="text-[9px] font-bold text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
                                 {deal.owner[0]}
                               </span>
                             </div>
-                            <span className="text-[11px] text-[#6E6E73]">{deal.owner}</span>
+                            <span className="text-[12px] font-medium text-[#EEEEFF]">{deal.owner}</span>
                           </div>
                         </div>
                         {/* Drop indicator line - after last card */}

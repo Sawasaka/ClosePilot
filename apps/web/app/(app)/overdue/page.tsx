@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
-import { Phone, Mail, Briefcase, ChevronRight, User, Building2, Pencil, X, Check, RotateCcw, AlertCircle } from 'lucide-react'
+import { Phone, Mail, Briefcase, ChevronRight, User, Building2, Pencil, X, Check, RotateCcw, AlertCircle, Calendar, CalendarClock, CheckSquare } from 'lucide-react'
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
@@ -34,15 +34,113 @@ const RANK_BADGE_STYLES: Record<string, RankBadgeStyle> = {
   B: { gradient: 'linear-gradient(135deg, #FFE040 0%, #FFD60A 55%, #FF9F0A 100%)', glow: '0 2px 7px rgba(255,214,10,0.5)',  color: '#7B4000' },
   C: { gradient: 'linear-gradient(135deg, #5AC8FA 0%, #32ADE6 55%, #0071E3 100%)', glow: '0 2px 6px rgba(50,173,230,0.45)', color: '#fff' },
 }
-const DEFAULT_RANK_BADGE: RankBadgeStyle = { gradient: 'rgba(0,0,0,0.07)', glow: 'none', color: '#6E6E73' }
-const TYPE_OPTIONS = [
-  { key: 'call', label: 'コール' },
-  { key: 'email', label: 'メール' },
-  { key: 'other', label: 'その他' },
+const DEFAULT_RANK_BADGE: RankBadgeStyle = { gradient: 'rgba(34,68,170,0.2)', glow: 'none', color: '#CCDDF0' }
+
+// コンタクトのNext Actionと完全連動した5種類
+const TYPE_OPTIONS: { key: string; label: string }[] = [
+  { key: 'email',    label: 'メール' },
+  { key: 'call',     label: 'コール' },
+  { key: 'meeting',  label: '商談' },
+  { key: 'wait',     label: '連絡待ち' },
+  { key: 'followup', label: 'フォロー' },
 ]
-const CARD_SHADOW = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'
+
+interface TaskTypeGameStyle {
+  gradient: string
+  glow: string
+  color: string
+  borderColor: string
+  textShadow: string
+}
+
+const TASK_TYPE_GAME_STYLES: Record<string, TaskTypeGameStyle> = {
+  email: {
+    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
+    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(50,20,100,0.6)',
+  },
+  call: {
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(0,40,90,0.6)',
+  },
+  meeting: {
+    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
+    glow: '0 0 14px rgba(52,199,89,0.85), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#053D24', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
+  },
+  wait: {
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+    color: '#5B2E00', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
+  },
+  followup: {
+    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
+    glow: '0 0 14px rgba(236,72,153,0.85), 0 0 5px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(110,15,60,0.6)',
+  },
+  other: {
+    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
+    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#2C2C2E', borderColor: 'rgba(255,255,255,0.35)', textShadow: 'none',
+  },
+}
+const CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
+
+function formatDueDate(d: string): string {
+  if (!d) return ''
+  const [, m, day] = d.split('-')
+  return `${parseInt(m ?? '0', 10)}/${parseInt(day ?? '0', 10)}`
+}
 
 // ─── Task Row ────────────────────────────────────────────────────────────────
+
+// ─── タスク種別ごとの派手なアイコンスタイル ──────────────────────────────────
+
+interface TaskTypeStyle {
+  Icon: React.ElementType
+  gradient: string
+  glow: string
+}
+
+const TASK_TYPE_STYLES: Record<string, TaskTypeStyle> = {
+  call: {
+    Icon: Phone,
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 16px rgba(50,173,230,0.85), 0 0 6px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  email: {
+    Icon: Mail,
+    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
+    glow: '0 0 16px rgba(139,92,246,0.85), 0 0 6px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  meeting: {
+    Icon: Briefcase,
+    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
+    glow: '0 0 16px rgba(52,199,89,0.85), 0 0 6px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  wait: {
+    Icon: Briefcase,
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 16px rgba(255,159,10,0.85), 0 0 6px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  followup: {
+    Icon: Briefcase,
+    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
+    glow: '0 0 16px rgba(236,72,153,0.85), 0 0 6px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+  },
+  other: {
+    Icon: Briefcase,
+    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
+    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
+  },
+}
+
+const COMPLETED_TASK_STYLE: TaskTypeStyle = {
+  Icon: Check,
+  gradient: 'linear-gradient(135deg, #4A5568 0%, #2D3748 100%)',
+  glow: '0 0 8px rgba(52,199,89,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
+}
 
 function TaskRow({ task, isLast, onComplete, onRestore, onEdit }: {
   task: Task; isLast: boolean
@@ -50,19 +148,30 @@ function TaskRow({ task, isLast, onComplete, onRestore, onEdit }: {
 }) {
   const router = useRouter()
   const rank = RANK_BADGE_STYLES[task.rank] ?? DEFAULT_RANK_BADGE
-  const TypeIcon = task.type === 'call' ? Phone : task.type === 'email' ? Mail : Briefcase
-  const typeColor = task.type === 'call' ? '#0071E3' : task.type === 'email' ? '#5E5CE6' : '#8E8E93'
+  const taskStyle = task.completed ? COMPLETED_TASK_STYLE : (TASK_TYPE_STYLES[task.type] ?? TASK_TYPE_STYLES.other!)
+  const TypeIcon = taskStyle.Icon
   const daysOverdue = Math.max(0, Math.floor((new Date('2026-03-28').getTime() - new Date(task.dueAt).getTime()) / 86400000))
 
   return (
     <div
       onClick={() => !task.completed && router.push(task.linkTo)}
-      className={`flex items-center gap-3 px-5 py-3 transition-colors ${task.completed ? '' : 'hover:bg-[rgba(0,0,0,0.02)] cursor-pointer'}`}
-      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(0,0,0,0.04)' }}
+      className={`flex items-center gap-3 px-5 py-3 transition-colors ${task.completed ? '' : 'hover:bg-[rgba(136,187,255,0.04)] cursor-pointer'}`}
+      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(34,68,170,0.2)' }}
     >
-      <div className="w-7 h-7 rounded-[7px] flex items-center justify-center shrink-0"
-        style={{ background: task.completed ? 'rgba(52,199,89,0.10)' : `${typeColor}14` }}>
-        <TypeIcon size={13} style={{ color: task.completed ? '#34C759' : typeColor }} />
+      <div
+        className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+        style={{
+          background: taskStyle.gradient,
+          boxShadow: taskStyle.glow,
+          border: '1.5px solid rgba(255,255,255,0.4)',
+          opacity: task.completed ? 0.55 : 1,
+        }}
+      >
+        <TypeIcon
+          size={15}
+          style={{ color: '#FFFFFF', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
+          strokeWidth={2.5}
+        />
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
@@ -72,33 +181,43 @@ function TaskRow({ task, isLast, onComplete, onRestore, onEdit }: {
             </span>
           )}
           <span className="text-[13px] font-medium truncate"
-            style={{ color: task.completed ? '#AEAEB2' : '#1D1D1F', textDecoration: task.completed ? 'line-through' : 'none' }}>
+            style={{ color: task.completed ? '#4466AA' : '#EEEEFF', textDecoration: task.completed ? 'line-through' : 'none' }}>
             {task.person || task.company}
           </span>
           {!task.completed && (
-            <>
-              <span className="inline-flex items-center justify-center rounded-[4px] text-[10px] font-bold shrink-0"
-                style={{ width: 18, height: 18, background: rank.gradient, boxShadow: rank.glow, color: rank.color }}>
-                {task.rank}
-              </span>
-              <span className="text-[10px] font-semibold text-[#FF3B30] bg-[rgba(255,59,48,0.08)] px-1.5 py-0.5 rounded-[4px] shrink-0">
-                {daysOverdue}日超過
-              </span>
-            </>
+            <span className="inline-flex items-center justify-center rounded-[4px] text-[10px] font-bold shrink-0"
+              style={{ width: 18, height: 18, background: rank.gradient, boxShadow: rank.glow, color: rank.color }}>
+              {task.rank}
+            </span>
           )}
         </div>
-        <p className="text-[12px] mt-0.5" style={{ color: task.completed ? '#C7C7CC' : '#8E8E93' }}>{task.company}</p>
+        <p className="text-[12px] mt-0.5" style={{ color: task.completed ? '#4466AA' : '#7788AA' }}>{task.company}</p>
       </div>
+
+      {/* 期日 + 超過日数（右寄り） */}
+      {!task.completed && task.dueAt && (
+        <div className="flex items-center gap-2 shrink-0">
+          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF3B30] bg-[rgba(255,59,48,0.14)] px-2.5 py-1 rounded-[6px] tabular-nums"
+            style={{ border: '1px solid rgba(255,59,48,0.35)', boxShadow: '0 0 8px rgba(255,59,48,0.2)' }}>
+            <Calendar size={10} strokeWidth={2.5} />
+            {formatDueDate(task.dueAt)}
+          </span>
+          <span className="text-[10px] font-bold text-[#FF3B30] bg-[rgba(255,59,48,0.10)] px-1.5 py-0.5 rounded-[4px] shrink-0 whitespace-nowrap"
+            style={{ border: '1px solid rgba(255,59,48,0.25)' }}>
+            {daysOverdue}日超過
+          </span>
+        </div>
+      )}
 
       {task.completed ? (
         <button onClick={e => { e.stopPropagation(); onRestore(task.id) }}
-          className="shrink-0 h-[26px] px-2.5 flex items-center gap-1 text-[11px] font-medium text-[#6E6E73] rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] transition-colors">
+          className="shrink-0 h-[26px] px-2.5 flex items-center gap-1 text-[11px] font-medium text-[#CCDDF0] rounded-[6px] hover:bg-[rgba(136,187,255,0.06)] transition-colors">
           <RotateCcw size={11} />戻す
         </button>
       ) : (
         <div className="flex items-center gap-2 shrink-0">
           <button onClick={e => { e.stopPropagation(); onEdit(task) }}
-            className="h-[26px] px-2.5 flex items-center gap-1 text-[11px] font-medium text-[#6E6E73] rounded-[6px] hover:bg-[rgba(0,0,0,0.06)] transition-colors">
+            className="h-[26px] px-2.5 flex items-center gap-1 text-[11px] font-medium text-[#CCDDF0] rounded-[6px] hover:bg-[rgba(136,187,255,0.06)] transition-colors">
             <Pencil size={11} />編集
           </button>
           <button onClick={e => { e.stopPropagation(); onComplete(task.id) }}
@@ -113,57 +232,207 @@ function TaskRow({ task, isLast, onComplete, onRestore, onEdit }: {
 }
 
 // ─── Edit Task Modal ─────────────────────────────────────────────────────────
+// コンタクトのNext Actionと完全に連動した編集UI
 
 function EditTaskModal({ task, onClose, onSave }: { task: Task; onClose: () => void; onSave: (t: Task) => void }) {
   const [type, setType] = useState(task.type)
   const [memo, setMemo] = useState(task.memo)
   const [dueAt, setDueAt] = useState(task.dueAt)
-  const [remindAt, setRemindAt] = useState(task.remindAt)
+
+  const isContactLinked = task.category === 'contact'
 
   return (
-    <motion.div className="fixed inset-0 z-50 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-      <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-      <motion.div className="relative w-[440px] rounded-[16px] p-6" style={{ background: '#FFF', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}
+    <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+      <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+      <motion.div
+        className="relative w-full max-w-[460px] rounded-[14px] overflow-hidden"
+        style={{
+          background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
+          border: '1px solid #2244AA',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 32px rgba(85,119,221,0.2), inset 0 1px 0 rgba(136,187,255,0.08)',
+        }}
         initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 8 }}
-        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
-        <div className="flex items-center justify-between mb-5">
-          <h2 className="text-[17px] font-semibold text-[#1D1D1F]">タスク編集</h2>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(0,0,0,0.05)]"><X size={16} style={{ color: '#8E8E93' }} /></button>
-        </div>
-        <div className="flex items-center gap-3 px-4 py-3 rounded-[10px] mb-4" style={{ background: 'rgba(0,0,0,0.03)' }}>
-          <div className="flex-1 min-w-0">
-            <p className="text-[13px] font-medium text-[#1D1D1F]">{task.person || task.company}</p>
-            <p className="text-[12px] text-[#8E8E93]">{task.company}</p>
+        transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+        onClick={e => e.stopPropagation()}>
+        {/* Header */}
+        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(34,68,170,0.3)' }}>
+          <div className="flex items-center gap-2">
+            <CalendarClock size={14} style={{ color: '#88BBFF' }} />
+            <h2 className="text-[16px] font-bold text-[#EEEEFF]">
+              {isContactLinked ? 'ネクストアクション編集' : 'タスク編集'}
+            </h2>
+            {isContactLinked && (
+              <span
+                className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[9px] font-bold whitespace-nowrap"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(136,187,255,0.18) 0%, rgba(85,119,221,0.12) 100%)',
+                  color: '#88BBFF',
+                  border: '1px solid rgba(136,187,255,0.35)',
+                  boxShadow: '0 0 8px rgba(136,187,255,0.2)',
+                }}
+                title="このタスクはコンタクトのネクストアクションと連動しています"
+              >
+                <CheckSquare size={9} />
+                コンタクト連動
+              </span>
+            )}
           </div>
+          <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(136,187,255,0.08)] transition-colors">
+            <X size={16} className="text-[#CCDDF0]" />
+          </button>
         </div>
-        <div className="space-y-4">
-          <div>
-            <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">タスク種別</label>
-            <div className="flex gap-2 mt-1.5">
-              {TYPE_OPTIONS.map(opt => (
-                <button key={opt.key} onClick={() => setType(opt.key)} className="h-[32px] px-3 text-[13px] font-medium rounded-[8px] transition-all"
-                  style={{ background: type === opt.key ? '#0071E3' : 'rgba(0,0,0,0.04)', color: type === opt.key ? '#FFF' : '#6E6E73' }}>{opt.label}</button>
-              ))}
+
+        <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
+          {/* 紐付け先 */}
+          <div
+            className="rounded-[8px] px-3 py-2.5 flex items-center gap-2"
+            style={{
+              background: 'rgba(16,16,40,0.6)',
+              border: '1px solid rgba(34,68,170,0.4)',
+            }}
+          >
+            <User size={12} className="text-[#88BBFF] shrink-0" />
+            <div className="flex-1 min-w-0">
+              <p className="text-[10px] font-bold text-[#88BBFF] uppercase tracking-[0.04em]">紐付け先</p>
+              <p className="text-[12px] font-medium text-[#EEEEFF] truncate">
+                {task.person ? `${task.person} · ` : ''}{task.company}
+              </p>
             </div>
           </div>
+
+          {/* 種別 */}
           <div>
-            <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">期限</label>
-            <input type="date" value={dueAt} onChange={e => setDueAt(e.target.value)} className="mt-1.5 w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#1D1D1F] outline-none" style={{ background: 'rgba(0,0,0,0.04)' }} />
+            <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 flex items-center gap-1">
+              種別
+              <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
+            </label>
+            <div className="flex flex-wrap gap-1.5">
+              {TYPE_OPTIONS.map(opt => {
+                const s = TASK_TYPE_GAME_STYLES[opt.key]!
+                const active = type === opt.key
+                return (
+                  <button
+                    key={opt.key}
+                    type="button"
+                    onClick={() => setType(opt.key)}
+                    className="px-3 h-[32px] rounded-full text-[11px] font-bold transition-all"
+                    style={active ? {
+                      background: s.gradient,
+                      boxShadow: s.glow,
+                      color: s.color,
+                      border: `1px solid ${s.borderColor}`,
+                      textShadow: s.textShadow,
+                    } : {
+                      background: 'rgba(16,16,40,0.8)',
+                      border: '1px solid #2244AA',
+                      color: '#7799CC',
+                    }}
+                  >
+                    {opt.label}
+                  </button>
+                )
+              })}
+            </div>
           </div>
+
+          {/* 実施予定日 */}
           <div>
-            <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">リマインド日時</label>
-            <input type="datetime-local" value={remindAt} onChange={e => setRemindAt(e.target.value)} className="mt-1.5 w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#1D1D1F] outline-none" style={{ background: 'rgba(0,0,0,0.04)' }} />
+            <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 flex items-center justify-between">
+              <span className="flex items-center gap-1">
+                実施予定日
+                <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
+              </span>
+              {dueAt && (
+                <button
+                  type="button"
+                  onClick={() => setDueAt('')}
+                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#99AACC] hover:text-[#FF8A82] transition-colors normal-case tracking-normal"
+                  title="日付をクリア"
+                >
+                  <X size={10} />
+                  クリア
+                </button>
+              )}
+            </label>
+            <div
+              className="relative rounded-[8px] transition-all"
+              style={{
+                background: 'rgba(16,16,40,0.8)',
+                border: '1px dashed rgba(136,187,255,0.4)',
+              }}
+            >
+              <input
+                type="date"
+                value={dueAt}
+                onChange={e => setDueAt(e.target.value)}
+                className="w-full h-[36px] px-3 pr-9 text-[13px] font-medium text-[#EEEEFF] outline-none bg-transparent cursor-pointer"
+                style={{ colorScheme: 'dark' }}
+                onFocus={e => {
+                  e.currentTarget.parentElement!.style.border = '1px solid #5577DD'
+                  e.currentTarget.parentElement!.style.boxShadow = '0 0 0 3px rgba(85,119,221,0.2)'
+                }}
+                onBlur={e => {
+                  e.currentTarget.parentElement!.style.border = '1px dashed rgba(136,187,255,0.4)'
+                  e.currentTarget.parentElement!.style.boxShadow = 'none'
+                }}
+              />
+              <Pencil
+                size={11}
+                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color: '#7799CC' }}
+              />
+            </div>
           </div>
+
+          {/* メモ */}
           <div>
-            <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">メモ</label>
-            <textarea value={memo} onChange={e => setMemo(e.target.value)} placeholder="タスクに関するメモを入力..."
-              className="mt-1.5 w-full h-[72px] px-3 py-2 text-[14px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none resize-none" style={{ background: 'rgba(0,0,0,0.04)' }} />
+            <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 flex items-center gap-1">
+              メモ
+              <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
+            </label>
+            <textarea
+              value={memo}
+              onChange={e => setMemo(e.target.value)}
+              placeholder="次回アクションに関するメモを入力..."
+              rows={3}
+              className="w-full px-3 py-2 text-[12px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none rounded-[8px] resize-none transition-all"
+              style={{
+                background: 'rgba(16,16,40,0.8)',
+                border: '1px dashed rgba(136,187,255,0.4)',
+              }}
+              onFocus={e => {
+                e.currentTarget.style.border = '1px solid #5577DD'
+                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(85,119,221,0.2)'
+              }}
+              onBlur={e => {
+                e.currentTarget.style.border = '1px dashed rgba(136,187,255,0.4)'
+                e.currentTarget.style.boxShadow = 'none'
+              }}
+            />
           </div>
         </div>
-        <div className="flex justify-end gap-2 mt-5">
-          <button onClick={onClose} className="h-[34px] px-4 text-[13px] font-medium text-[#6E6E73] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)]">キャンセル</button>
-          <button onClick={() => { onSave({ ...task, type, memo, dueAt, remindAt }); onClose() }} className="h-[34px] px-4 text-[13px] font-semibold text-white rounded-[8px]"
-            style={{ background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)', boxShadow: '0 2px 8px rgba(255,59,48,0.35)' }}>保存</button>
+
+        {/* Footer */}
+        <div className="flex justify-end gap-2 px-5 py-4" style={{ borderTop: '1px solid rgba(34,68,170,0.3)' }}>
+          <button
+            type="button"
+            onClick={onClose}
+            className="h-[36px] px-4 text-[13px] font-medium text-[#CCDDF0] rounded-[8px] hover:bg-[rgba(136,187,255,0.06)] transition-colors"
+          >
+            キャンセル
+          </button>
+          <button
+            type="button"
+            onClick={() => { onSave({ ...task, type, memo, dueAt }); onClose() }}
+            className="h-[36px] px-5 text-[13px] font-bold text-white rounded-[8px] transition-all hover:brightness-110"
+            style={{
+              background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
+              border: '1px solid #3355CC',
+              boxShadow: '0 2px 8px rgba(34,68,170,0.5), inset 0 1px 0 rgba(200,220,255,0.2)',
+            }}
+          >
+            保存
+          </button>
         </div>
       </motion.div>
     </motion.div>
@@ -180,9 +449,9 @@ function CategoryGroup({ label, icon: Icon, tasks, onComplete, onRestore, onEdit
   return (
     <div>
       <div className="flex items-center gap-1.5 px-5 pt-3 pb-1.5">
-        <Icon size={11} style={{ color: '#AEAEB2' }} />
-        <span className="text-[10px] font-semibold text-[#AEAEB2] uppercase tracking-[0.06em]">{label}</span>
-        <span className="text-[10px] text-[#AEAEB2]">{tasks.length}</span>
+        <Icon size={11} style={{ color: '#99AACC' }} />
+        <span className="text-[10px] font-semibold text-[#99AACC] uppercase tracking-[0.06em]">{label}</span>
+        <span className="text-[10px] text-[#99AACC]">{tasks.length}</span>
       </div>
       {tasks.map((task, i) => (
         <TaskRow key={task.id} task={task} isLast={i === tasks.length - 1} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
@@ -205,18 +474,18 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-white rounded-[14px] overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
+      className="bg-[#0c1028] rounded-[8px] overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
       <button onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[rgba(0,0,0,0.015)] transition-colors"
-        style={{ borderBottom: open ? '1px solid rgba(0,0,0,0.06)' : 'none' }}>
-        <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0" style={{ background: rep.color }}>
+        className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[rgba(136,187,255,0.04)] transition-colors"
+        style={{ borderBottom: open ? '1px solid #2244AA' : 'none' }}>
+        <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0" style={{ background: rep.color, boxShadow: `0 0 12px ${rep.color}aa, 0 0 4px ${rep.color}, inset 0 1px 0 rgba(255,255,255,0.4)`, border: "1px solid rgba(255,255,255,0.3)" }}>
           {rep.name[0]}
         </div>
-        <span className="text-[14px] font-semibold text-[#1D1D1F]">{rep.name}</span>
+        <span className="text-[14px] font-semibold text-[#EEEEFF]">{rep.name}</span>
         <span className="text-[12px] tabular-nums font-medium" style={{ color: rep.color }}>{tasks.length + completedTasks.length}件</span>
         {completedTasks.length > 0 && <span className="text-[11px] text-[#34C759]">({completedTasks.length}完了)</span>}
         <motion.div className="ml-auto" animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.15 }}>
-          <ChevronRight size={14} style={{ color: '#AEAEB2' }} />
+          <ChevronRight size={14} style={{ color: '#99AACC' }} />
         </motion.div>
       </button>
 
@@ -225,19 +494,19 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
           <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
             transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
             <CategoryGroup label="コンタクト" icon={User} tasks={contactTasks} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
-            {contactTasks.length > 0 && dealTasks.length > 0 && <div className="mx-5 h-px" style={{ background: 'rgba(0,0,0,0.05)' }} />}
+            {contactTasks.length > 0 && dealTasks.length > 0 && <div className="mx-5 h-px" style={{ background: 'rgba(136,187,255,0.06)' }} />}
             <CategoryGroup label="取引" icon={Building2} tasks={dealTasks} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
 
             {completedTasks.length > 0 && (
               <>
-                <div className="mx-5 h-px mt-1" style={{ background: 'rgba(0,0,0,0.05)' }} />
+                <div className="mx-5 h-px mt-1" style={{ background: 'rgba(136,187,255,0.06)' }} />
                 <button onClick={e => { e.stopPropagation(); setCompletedOpen(!completedOpen) }}
-                  className="w-full flex items-center gap-2 px-5 py-3 hover:bg-[rgba(0,0,0,0.015)] transition-colors">
+                  className="w-full flex items-center gap-2 px-5 py-3 hover:bg-[rgba(136,187,255,0.04)] transition-colors">
                   <Check size={12} style={{ color: '#34C759' }} />
-                  <span className="text-[12px] font-medium text-[#8E8E93]">完了一覧</span>
+                  <span className="text-[12px] font-medium text-[#CCDDF0]">完了一覧</span>
                   <span className="text-[11px] tabular-nums text-[#34C759]">{completedTasks.length}</span>
                   <motion.div className="ml-auto" animate={{ rotate: completedOpen ? 90 : 0 }} transition={{ duration: 0.12 }}>
-                    <ChevronRight size={11} style={{ color: '#C7C7CC' }} />
+                    <ChevronRight size={11} style={{ color: '#99AACC' }} />
                   </motion.div>
                 </button>
                 <AnimatePresence>
@@ -277,12 +546,11 @@ export default function OverduePage() {
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
         <div className="flex items-center gap-2.5">
           <AlertCircle size={20} style={{ color: '#FF3B30' }} />
-          <h2 className="text-[21px] font-semibold text-[#CF3131] tracking-[-0.03em]">タスク漏れ</h2>
+          <h2 className="text-[21px] font-semibold text-[#FF8A82] tracking-[-0.03em]">タスク漏れ</h2>
           {activeTasks.length > 0 && (
             <span className="text-[12px] font-semibold text-white bg-[#FF3B30] px-2 py-0.5 rounded-full">{activeTasks.length}件</span>
           )}
         </div>
-        <p className="text-[13px] text-[#8E8E93] mt-0.5">期限超過のタスク — 早急に対応が必要です</p>
       </motion.div>
 
       {REPS.map((rep, i) => {
@@ -294,10 +562,10 @@ export default function OverduePage() {
       })}
 
       {activeTasks.length === 0 && completedTasks.length === 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-white rounded-[14px]" style={{ boxShadow: CARD_SHADOW }}>
+        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-[#0c1028] rounded-[8px]" style={{ boxShadow: CARD_SHADOW }}>
           <Check size={28} style={{ color: '#34C759' }} className="mx-auto mb-2" />
-          <p className="text-[15px] font-semibold text-[#1D1D1F]">タスク漏れなし</p>
-          <p className="text-[13px] text-[#8E8E93] mt-0.5">期限超過のタスクはありません</p>
+          <p className="text-[15px] font-semibold text-[#EEEEFF]">タスク漏れなし</p>
+          <p className="text-[13px] text-[#CCDDF0] mt-0.5">期限超過のタスクはありません</p>
         </motion.div>
       )}
 

@@ -111,7 +111,7 @@ const DOC_TYPE_LABELS: Record<string, string> = {
 }
 
 const FUNNEL_COLORS = {
-  leads:  { color: '#AEAEB2', label: 'リード' },
+  leads:  { color: '#99AACC', label: 'リード' },
   deals:  { color: '#0071E3', label: '商談化' },
   pocs:   { color: '#5E5CE6', label: 'PoC'   },
   won:    { color: '#34C759', label: '受注'   },
@@ -131,15 +131,15 @@ function ChannelFunnelChart({ costMap, setCostMap }: {
   setCostMap: React.Dispatch<React.SetStateAction<Record<string, string>>>
 }) {
   return (
-    <div className="bg-white rounded-[14px] overflow-hidden" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06)' }}>
-        <div className="px-6 py-3.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <h3 className="text-[14px] font-semibold text-[#1D1D1F]">経路別 費用 & ROI</h3>
+    <div className="bg-[#0c1028] rounded-[8px] overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
+        <div className="px-6 py-3.5" style={{ borderBottom: '1px solid #2244AA' }}>
+          <h3 className="text-[14px] font-semibold text-[#EEEEFF]">経路別 費用 & ROI</h3>
         </div>
 
         {/* Header */}
-        <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] items-center px-6 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+        <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] items-center px-6 py-2.5" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
           {['経路', 'リード', '商談', '受注', '費用', 'ROI'].map(h => (
-            <span key={h} className="text-[11px] font-medium text-[#AEAEB2] uppercase tracking-[0.05em]">{h}</span>
+            <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
           ))}
         </div>
 
@@ -149,8 +149,8 @@ function ChannelFunnelChart({ costMap, setCostMap }: {
           const revenue = src.won * src.avgDealAmount
           const roi = cost > 0 ? (revenue / cost).toFixed(1) + 'x' : '—'
           const roiColor = cost > 0
-            ? (revenue / cost >= 3 ? '#1A7A35' : revenue / cost >= 1 ? '#C07000' : '#CF3131')
-            : '#AEAEB2'
+            ? (revenue / cost >= 3 ? '#44FF88' : revenue / cost >= 1 ? '#FFDD44' : '#FF4444')
+            : '#4466AA'
 
           return (
             <motion.div
@@ -159,20 +159,20 @@ function ChannelFunnelChart({ costMap, setCostMap }: {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
               className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] items-center px-6 py-3"
-              style={{ borderBottom: i < LEAD_SOURCES.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}
+              style={{ borderBottom: i < LEAD_SOURCES.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}
             >
-              <span className="text-[13px] font-medium text-[#1D1D1F]">{src.label}</span>
-              <span className="text-[13px] tabular-nums text-[#6E6E73]">{src.leads}件</span>
-              <span className="text-[13px] tabular-nums text-[#6E6E73]">{src.deals}件</span>
-              <span className="text-[13px] tabular-nums font-semibold text-[#1D1D1F]">{src.won}件</span>
+              <span className="text-[13px] font-medium text-[#EEEEFF]">{src.label}</span>
+              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{src.leads}件</span>
+              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{src.deals}件</span>
+              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF]">{src.won}件</span>
               <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[#AEAEB2]">¥</span>
+                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[#99AACC]">¥</span>
                 <input
                   type="number"
                   placeholder="0"
                   value={costMap[src.id] ?? ''}
                   onChange={e => setCostMap(m => ({ ...m, [src.id]: e.target.value }))}
-                  className="w-full pl-5 pr-2 py-1.5 text-[13px] bg-[#F5F5F7] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-white transition-all tabular-nums"
+                  className="w-full pl-5 pr-2 py-1.5 text-[13px] bg-[rgba(34,68,170,0.1)] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-[#0c1028] transition-all tabular-nums"
                 />
               </div>
               <span className="text-[14px] font-bold tabular-nums" style={{ color: roiColor }}>{roi}</span>
@@ -208,20 +208,20 @@ function TeamPerformanceTab() {
           { label: '総受注額', value: formatAmount(totalRevenue), color: '#FF9F0A' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-[10px] px-4 py-3" style={{ background: `${kpi.color}0A` }}>
-            <p className="text-[10px] text-[#8E8E93] uppercase tracking-[0.04em]">{kpi.label}</p>
+            <p className="text-[10px] text-[#CCDDF0] uppercase tracking-[0.04em]">{kpi.label}</p>
             <p className="text-[20px] font-bold tracking-[-0.03em] mt-0.5" style={{ color: kpi.color }}>{kpi.value}</p>
           </div>
         ))}
       </div>
 
       {/* 担当者比較テーブル */}
-      <div className="rounded-[14px] overflow-hidden bg-white mb-5" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06)' }}>
-        <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <h4 className="text-[14px] font-semibold text-[#1D1D1F]">担当者別パフォーマンス</h4>
+      <div className="rounded-[8px] overflow-hidden bg-[#0c1028] mb-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
+        <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
+          <h4 className="text-[14px] font-semibold text-[#EEEEFF]">担当者別パフォーマンス</h4>
         </div>
-        <div className="grid grid-cols-[1fr_80px_80px_80px_100px_80px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+        <div className="grid grid-cols-[1fr_80px_80px_80px_100px_80px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
           {['担当者', '商談', '受注', '受注率', '平均金額', 'サイクル'].map(h => (
-            <span key={h} className="text-[11px] font-medium text-[#AEAEB2] uppercase tracking-[0.05em]">{h}</span>
+            <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
           ))}
         </div>
         {REPS.map((rep, i) => {
@@ -233,19 +233,19 @@ function TeamPerformanceTab() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
               className="grid grid-cols-[1fr_80px_80px_80px_100px_80px] items-center px-5 py-3"
-              style={{ borderBottom: i < REPS.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}
+              style={{ borderBottom: i < REPS.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0" style={{ background: rep.color }}>
+                <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0" style={{ background: rep.color, boxShadow: `0 0 12px ${rep.color}aa, 0 0 4px ${rep.color}, inset 0 1px 0 rgba(255,255,255,0.4)`, border: "1px solid rgba(255,255,255,0.3)" }}>
                   {rep.name[0]}
                 </div>
-                <span className="text-[13px] font-medium text-[#1D1D1F]">{rep.name}</span>
+                <span className="text-[13px] font-medium text-[#EEEEFF]">{rep.name}</span>
               </div>
-              <span className="text-[13px] tabular-nums text-[#6E6E73]">{rep.deals}件</span>
-              <span className="text-[13px] tabular-nums font-semibold text-[#1D1D1F]">{rep.won}件</span>
+              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{rep.deals}件</span>
+              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF]">{rep.won}件</span>
               <span className="text-[13px] tabular-nums font-semibold" style={{ color: winRate >= 50 ? '#1A7A35' : winRate >= 30 ? '#C07000' : '#CF3131' }}>{winRate}%</span>
-              <span className="text-[13px] tabular-nums text-[#6E6E73]">{formatAmount(rep.avgAmount)}</span>
-              <span className="text-[13px] tabular-nums text-[#6E6E73]">{rep.avgCycleDays}日</span>
+              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{formatAmount(rep.avgAmount)}</span>
+              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{rep.avgCycleDays}日</span>
             </motion.div>
           )
         })}
@@ -253,14 +253,14 @@ function TeamPerformanceTab() {
 
       {/* Next Action 推奨 */}
       <div className="space-y-2">
-        <h4 className="text-[13px] font-semibold text-[#1D1D1F]">Next Action 推奨</h4>
+        <h4 className="text-[13px] font-semibold text-[#EEEEFF]">Next Action 推奨</h4>
         <div className="flex items-center gap-3 px-4 py-3 rounded-[10px]" style={{ background: 'rgba(255,59,48,0.06)', border: '1px solid rgba(255,59,48,0.15)' }}>
-          <div className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: '#FF3B30' }} />
-          <p className="text-[13px] text-[#CF3131]"><span className="font-semibold">佐藤:</span> 受注率33% — 商談の質向上が必要。Aランク案件に集中推奨</p>
+          <div className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: '#FF4444' }} />
+          <p className="text-[13px] text-[#FF8A82]"><span className="font-semibold">佐藤:</span> 受注率33% — 商談の質向上が必要。Aランク案件に集中推奨</p>
         </div>
         <div className="flex items-center gap-3 px-4 py-3 rounded-[10px]" style={{ background: 'rgba(255,159,10,0.06)', border: '1px solid rgba(255,159,10,0.15)' }}>
           <div className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: '#FF9F0A' }} />
-          <p className="text-[13px] text-[#C07000]"><span className="font-semibold">佐藤:</span> 平均サイクル56日 — 他メンバー（38-42日）対比で長い。ボトルネック確認推奨</p>
+          <p className="text-[13px] text-[#FFC266]"><span className="font-semibold">佐藤:</span> 平均サイクル56日 — 他メンバー（38-42日）対比で長い。ボトルネック確認推奨</p>
         </div>
       </div>
     </motion.div>
@@ -286,29 +286,29 @@ function GATab() {
           { label: 'CV率', value: `${avgCV}%`, color: '#FF9F0A' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-[10px] px-4 py-3" style={{ background: `${kpi.color}0A` }}>
-            <p className="text-[10px] text-[#8E8E93] uppercase tracking-[0.04em]">{kpi.label}</p>
+            <p className="text-[10px] text-[#CCDDF0] uppercase tracking-[0.04em]">{kpi.label}</p>
             <p className="text-[20px] font-bold tracking-[-0.03em] mt-0.5" style={{ color: kpi.color }}>{kpi.value}</p>
           </div>
         ))}
       </div>
 
       {/* Daily traffic table */}
-      <div className="rounded-[14px] overflow-hidden bg-white mb-5" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06)' }}>
-        <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-          <h4 className="text-[14px] font-semibold text-[#1D1D1F]">日別トラフィック</h4>
+      <div className="rounded-[8px] overflow-hidden bg-[#0c1028] mb-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
+        <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
+          <h4 className="text-[14px] font-semibold text-[#EEEEFF]">日別トラフィック</h4>
         </div>
-        <div className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+        <div className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
           {['日付', 'セッション', 'ユーザー', 'PV', 'CV率'].map(h => (
-            <span key={h} className="text-[11px] font-medium text-[#AEAEB2] uppercase tracking-[0.05em]">{h}</span>
+            <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
           ))}
         </div>
         {GA4_DAILY.map((d, i) => (
-          <div key={d.date} className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2.5" style={{ borderBottom: i < GA4_DAILY.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
-            <span className="text-[13px] font-medium text-[#1D1D1F]">{d.date}</span>
-            <span className="text-[13px] tabular-nums text-[#6E6E73]">{d.sessions}</span>
-            <span className="text-[13px] tabular-nums text-[#6E6E73]">{d.users}</span>
-            <span className="text-[13px] tabular-nums text-[#6E6E73]">{d.pageViews.toLocaleString()}</span>
-            <span className="text-[13px] tabular-nums font-semibold" style={{ color: d.cvRate >= 3 ? '#1A7A35' : d.cvRate >= 2.5 ? '#C07000' : '#6E6E73' }}>{d.cvRate}%</span>
+          <div key={d.date} className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2.5" style={{ borderBottom: i < GA4_DAILY.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}>
+            <span className="text-[13px] font-medium text-[#EEEEFF]">{d.date}</span>
+            <span className="text-[13px] tabular-nums text-[#CCDDF0]">{d.sessions}</span>
+            <span className="text-[13px] tabular-nums text-[#CCDDF0]">{d.users}</span>
+            <span className="text-[13px] tabular-nums text-[#CCDDF0]">{d.pageViews.toLocaleString()}</span>
+            <span className="text-[13px] tabular-nums font-semibold" style={{ color: d.cvRate >= 3 ? '#44FF88' : d.cvRate >= 2.5 ? '#FFDD44' : '#7788AA' }}>{d.cvRate}%</span>
           </div>
         ))}
       </div>
@@ -316,44 +316,44 @@ function GATab() {
       {/* Tables stacked vertically */}
       <div className="space-y-5">
         {/* Page PV table */}
-        <div className="rounded-[14px] overflow-hidden bg-white" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06)' }}>
-          <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-            <h4 className="text-[14px] font-semibold text-[#1D1D1F]">ページ別パフォーマンス</h4>
+        <div className="rounded-[8px] overflow-hidden bg-[#0c1028]" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
+          <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
+            <h4 className="text-[14px] font-semibold text-[#EEEEFF]">ページ別パフォーマンス</h4>
           </div>
-          <div className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
+          <div className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
             {['ページ', 'PV', 'UU', '直帰率', 'CV'].map(h => (
-              <span key={h} className="text-[11px] font-medium text-[#AEAEB2] uppercase tracking-[0.05em]">{h}</span>
+              <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
             ))}
           </div>
           {GA4_PAGES.map((p, i) => (
-            <div key={p.path} className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2.5" style={{ borderBottom: i < GA4_PAGES.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
+            <div key={p.path} className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2.5" style={{ borderBottom: i < GA4_PAGES.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}>
               <div>
-                <p className="text-[13px] font-medium text-[#1D1D1F]">{p.title}</p>
-                <p className="text-[11px] text-[#AEAEB2]">{p.path}</p>
+                <p className="text-[13px] font-medium text-[#EEEEFF]">{p.title}</p>
+                <p className="text-[11px] text-[#99AACC]">{p.path}</p>
               </div>
-              <span className="text-[13px] tabular-nums font-semibold text-[#1D1D1F]">{p.pageViews.toLocaleString()}</span>
-              <span className="text-[13px] tabular-nums text-[#6E6E73]">{p.uniqueUsers.toLocaleString()}</span>
-              <span className="text-[13px] tabular-nums" style={{ color: p.bounceRate <= 25 ? '#1A7A35' : p.bounceRate <= 40 ? '#6E6E73' : '#CF3131' }}>{p.bounceRate}%</span>
+              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF]">{p.pageViews.toLocaleString()}</span>
+              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{p.uniqueUsers.toLocaleString()}</span>
+              <span className="text-[13px] tabular-nums" style={{ color: p.bounceRate <= 25 ? '#44FF88' : p.bounceRate <= 40 ? '#7788AA' : '#FF4444' }}>{p.bounceRate}%</span>
               <span className="text-[13px] tabular-nums font-semibold text-[#0071E3]">{p.conversions}</span>
             </div>
           ))}
         </div>
 
         {/* Sources table */}
-        <div className="rounded-[14px] overflow-hidden bg-white" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.06)' }}>
-          <div className="px-5 py-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-            <h4 className="text-[14px] font-semibold text-[#1D1D1F]">流入元別セッション</h4>
+        <div className="rounded-[8px] overflow-hidden bg-[#0c1028]" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
+          <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
+            <h4 className="text-[14px] font-semibold text-[#EEEEFF]">流入元別セッション</h4>
           </div>
           {GA4_SOURCES.map((s, i) => (
-            <div key={`${s.source}-${s.medium}`} className="grid grid-cols-[1fr_80px_60px] items-center px-5 py-3" style={{ borderBottom: i < GA4_SOURCES.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
+            <div key={`${s.source}-${s.medium}`} className="grid grid-cols-[1fr_80px_60px] items-center px-5 py-3" style={{ borderBottom: i < GA4_SOURCES.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}>
               <div>
-                <p className="text-[13px] font-medium text-[#1D1D1F]">{s.source}</p>
-                <p className="text-[11px] text-[#AEAEB2]">{s.medium}</p>
+                <p className="text-[13px] font-medium text-[#EEEEFF]">{s.source}</p>
+                <p className="text-[11px] text-[#99AACC]">{s.medium}</p>
               </div>
-              <span className="text-[13px] tabular-nums font-semibold text-[#1D1D1F] text-right">{s.sessions}</span>
+              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF] text-right">{s.sessions}</span>
               <div className="text-right">
                 <span className="text-[13px] tabular-nums font-semibold px-2 py-0.5 rounded-[4px]" style={{
-                  color: s.cvRate >= 4 ? '#1A7A35' : s.cvRate >= 2.5 ? '#C07000' : '#6E6E73',
+                  color: s.cvRate >= 4 ? '#44FF88' : s.cvRate >= 2.5 ? '#FFDD44' : '#7788AA',
                   background: s.cvRate >= 4 ? 'rgba(52,199,89,0.1)' : s.cvRate >= 2.5 ? 'rgba(255,159,10,0.1)' : 'rgba(0,0,0,0.04)',
                 }}>{s.cvRate}%</span>
               </div>
@@ -389,7 +389,7 @@ function TrackingTab() {
           { label: 'ユニーク閲覧者', value: MOCK_DOCS.reduce((s, d) => s + d.uniqueViewers, 0), color: '#34C759' },
         ].map(kpi => (
           <div key={kpi.label} className="rounded-[10px] px-4 py-3" style={{ background: `${kpi.color}0A` }}>
-            <p className="text-[10px] text-[#8E8E93] uppercase tracking-[0.04em]">{kpi.label}</p>
+            <p className="text-[10px] text-[#CCDDF0] uppercase tracking-[0.04em]">{kpi.label}</p>
             <p className="text-[20px] font-bold tracking-[-0.03em] mt-0.5" style={{ color: kpi.color }}>{kpi.value}</p>
           </div>
         ))}
@@ -407,8 +407,8 @@ function TrackingTab() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: di * 0.05, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-[12px] overflow-hidden"
-              style={{ border: '1px solid rgba(0,0,0,0.06)' }}
+              className="rounded-[8px] overflow-hidden"
+              style={{ border: '1px solid #2244AA' }}
             >
               {/* Card header */}
               <div className="px-4 py-3.5 flex items-center gap-3">
@@ -416,11 +416,11 @@ function TrackingTab() {
                   <FileText size={16} style={{ color: '#5E5CE6' }} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#1D1D1F] truncate">{doc.name}</p>
+                  <p className="text-[13px] font-semibold text-[#EEEEFF] truncate">{doc.name}</p>
                   <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-[#AEAEB2]">{DOC_TYPE_LABELS[doc.type]}</span>
-                    <span className="text-[11px] text-[#AEAEB2]">{doc.totalPages}ページ</span>
-                    <span className="text-[11px] text-[#AEAEB2]">{doc.createdAt}</span>
+                    <span className="text-[11px] text-[#99AACC]">{DOC_TYPE_LABELS[doc.type]}</span>
+                    <span className="text-[11px] text-[#99AACC]">{doc.totalPages}ページ</span>
+                    <span className="text-[11px] text-[#99AACC]">{doc.createdAt}</span>
                   </div>
                 </div>
                 <div className="flex items-center gap-3 shrink-0">
@@ -434,7 +434,7 @@ function TrackingTab() {
                   </div>
                   <button
                     onClick={() => handleCopy(doc.trackingUrl)}
-                    className="h-[26px] px-2 flex items-center gap-1 text-[11px] font-medium text-[#6E6E73] rounded-[6px] hover:bg-[rgba(0,0,0,0.04)] transition-colors"
+                    className="h-[26px] px-2 flex items-center gap-1 text-[11px] font-medium text-[#CCDDF0] rounded-[6px] hover:bg-[rgba(0,0,0,0.04)] transition-colors"
                   >
                     <Copy size={11} />
                     URL
@@ -442,7 +442,7 @@ function TrackingTab() {
                   <button
                     onClick={() => setExpandedDoc(isExpanded ? null : doc.id)}
                     className="h-[26px] px-2 flex items-center gap-1 text-[11px] font-medium rounded-[6px] transition-colors"
-                    style={{ background: isExpanded ? 'rgba(0,85,255,0.08)' : 'rgba(0,0,0,0.04)', color: isExpanded ? '#0055FF' : '#6E6E73' }}
+                    style={{ background: isExpanded ? 'rgba(136,187,255,0.12)' : 'rgba(136,187,255,0.06)', color: isExpanded ? '#88BBFF' : '#7788AA' }}
                   >
                     {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
                     詳細
@@ -460,27 +460,27 @@ function TrackingTab() {
                     transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
                     className="overflow-hidden"
                   >
-                    <div style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+                    <div style={{ borderTop: '1px solid #2244AA' }}>
                       {/* View table header */}
-                      <div className="grid grid-cols-[1fr_100px_80px_1fr] items-center px-4 py-2" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
-                        <span className="text-[10px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">企業</span>
-                        <span className="text-[10px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">閲覧時間</span>
-                        <span className="text-[10px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">ページ</span>
-                        <span className="text-[10px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">スクロール深度</span>
+                      <div className="grid grid-cols-[1fr_100px_80px_1fr] items-center px-4 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
+                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">企業</span>
+                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">閲覧時間</span>
+                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">ページ</span>
+                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">スクロール深度</span>
                       </div>
                       {views.map((v, vi) => (
                         <div key={v.id} className="grid grid-cols-[1fr_100px_80px_1fr] items-center px-4 py-2.5" style={{ borderBottom: vi < views.length - 1 ? '1px solid rgba(0,0,0,0.03)' : 'none' }}>
                           <div>
-                            <p className="text-[12px] font-medium" style={{ color: v.resolvedCompany ? '#1D1D1F' : '#AEAEB2' }}>
+                            <p className="text-[12px] font-medium" style={{ color: v.resolvedCompany ? '#EEEEFF' : '#4466AA' }}>
                               {v.resolvedCompany || '不明な訪問者'}
                             </p>
-                            <p className="text-[10px] text-[#AEAEB2]">{v.viewedAt}</p>
+                            <p className="text-[10px] text-[#99AACC]">{v.viewedAt}</p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Clock size={10} style={{ color: '#8E8E93' }} />
-                            <span className="text-[11px] text-[#6E6E73]">{formatDuration(v.totalDurationSec)}</span>
+                            <Clock size={10} style={{ color: '#CCDDF0' }} />
+                            <span className="text-[11px] text-[#CCDDF0]">{formatDuration(v.totalDurationSec)}</span>
                           </div>
-                          <span className="text-[11px] text-[#6E6E73]">{v.pagesViewed}/{doc.totalPages}</span>
+                          <span className="text-[11px] text-[#CCDDF0]">{v.pagesViewed}/{doc.totalPages}</span>
                           <span className="text-[13px] tabular-nums font-semibold px-2 py-0.5 rounded-[4px]" style={{
                             color: v.maxScrollDepth >= 80 ? '#1A7A35' : v.maxScrollDepth >= 50 ? '#C07000' : '#CF3131',
                             background: v.maxScrollDepth >= 80 ? 'rgba(52,199,89,0.1)' : v.maxScrollDepth >= 50 ? 'rgba(255,159,10,0.1)' : 'rgba(255,59,48,0.1)',
@@ -531,8 +531,8 @@ export default function AnalyticsPage() {
 
       {/* ── Page Header ── */}
       <div>
-        <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">アナリティクス</h1>
-        <p className="text-[13px] text-[#6E6E73] mt-0.5">経路別・担当者別の商談パフォーマンス分析</p>
+        <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">アナリティクス</h1>
+        <p className="text-[13px] text-[#CCDDF0] mt-0.5">経路別・担当者別の商談パフォーマンス分析</p>
       </div>
 
       {/* ── Summary KPI Bar ── */}
@@ -568,8 +568,8 @@ export default function AnalyticsPage() {
             initial={{ opacity: 0, y: 8 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[12px] p-4 flex items-start gap-3"
-            style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+            className="bg-[#0c1028] rounded-[8px] p-4 flex items-start gap-3"
+            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
           >
             <div
               className="w-9 h-9 rounded-[9px] flex items-center justify-center shrink-0 mt-0.5"
@@ -578,9 +578,9 @@ export default function AnalyticsPage() {
               <kpi.icon size={16} style={{ color: kpi.color }} />
             </div>
             <div>
-              <p className="text-[11px] text-[#AEAEB2] uppercase tracking-[0.04em] font-medium mb-0.5">{kpi.label}</p>
-              <p className="text-[18px] font-semibold text-[#1D1D1F] tracking-[-0.02em] leading-none">{kpi.value}</p>
-              <p className="text-[11px] text-[#6E6E73] mt-0.5">{kpi.sub}</p>
+              <p className="text-[11px] text-[#99AACC] uppercase tracking-[0.04em] font-medium mb-0.5">{kpi.label}</p>
+              <p className="text-[18px] font-semibold text-[#EEEEFF] tracking-[-0.02em] leading-none">{kpi.value}</p>
+              <p className="text-[11px] text-[#CCDDF0] mt-0.5">{kpi.sub}</p>
             </div>
           </motion.div>
         ))}
@@ -588,16 +588,16 @@ export default function AnalyticsPage() {
 
       {/* ── Tab Bar ── */}
       <div
-        className="bg-white rounded-[12px] overflow-hidden"
-        style={{ border: '1px solid rgba(0,0,0,0.08)', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
+        className="bg-[#0c1028] rounded-[8px] overflow-hidden"
+        style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
       >
-        <div className="flex" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
+        <div className="flex" style={{ borderBottom: '1px solid #2244AA' }}>
           {TABS.map(tab => (
             <button
               key={tab.key}
               onClick={() => setActiveTab(tab.key)}
               className={`relative flex items-center gap-2 px-5 py-3.5 text-[13px] font-medium transition-colors duration-100 ${
-                activeTab === tab.key ? 'text-[#0071E3]' : 'text-[#6E6E73] hover:text-[#1D1D1F]'
+                activeTab === tab.key ? 'text-[#0071E3]' : 'text-[#CCDDF0] hover:text-[#EEEEFF]'
               }`}
             >
               <tab.icon size={13} />
@@ -645,14 +645,14 @@ export default function AnalyticsPage() {
                 className="flex flex-col items-center justify-center py-16 gap-4"
               >
                 <div
-                  className="w-14 h-14 rounded-[14px] flex items-center justify-center"
+                  className="w-14 h-14 rounded-[8px] flex items-center justify-center"
                   style={{ background: 'rgba(0,113,227,0.08)' }}
                 >
                   <BarChart2 size={24} style={{ color: '#0071E3' }} />
                 </div>
                 <div className="text-center">
-                  <p className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.02em]">イベント成果分析</p>
-                  <p className="text-[13px] text-[#AEAEB2] mt-1">セミナー・展示会・ウェビナーの成果分析 — 近日公開</p>
+                  <p className="text-[15px] font-semibold text-[#EEEEFF] tracking-[-0.02em]">イベント成果分析</p>
+                  <p className="text-[13px] text-[#99AACC] mt-1">セミナー・展示会・ウェビナーの成果分析 — 近日公開</p>
                 </div>
                 <div
                   className="px-4 py-2 rounded-full text-[12px] font-medium"

@@ -31,6 +31,44 @@ const MOCK_LISTS: CallList[] = [
   },
 ]
 
+// ─── Color Themes (FF風グラデーション+グロー) ───────────────────────────────
+
+interface ColorTheme {
+  gradient: string
+  glow: string
+  barShadow: string
+  rgb: string
+}
+
+const COLOR_THEMES: Record<string, ColorTheme> = {
+  '#0071E3': {
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 16px rgba(50,173,230,0.95), 0 0 6px rgba(125,211,252,1), inset 0 1px 0 rgba(255,255,255,0.5)',
+    barShadow: '0 0 12px rgba(50,173,230,0.7), 0 0 4px rgba(125,211,252,0.9)',
+    rgb: '50,173,230',
+  },
+  '#FF9F0A': {
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 16px rgba(255,159,10,0.95), 0 0 6px rgba(255,204,102,1), inset 0 1px 0 rgba(255,255,255,0.5)',
+    barShadow: '0 0 12px rgba(255,159,10,0.7), 0 0 4px rgba(255,204,102,0.9)',
+    rgb: '255,159,10',
+  },
+  '#34C759': {
+    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
+    glow: '0 0 16px rgba(52,199,89,0.95), 0 0 6px rgba(167,243,208,1), inset 0 1px 0 rgba(255,255,255,0.5)',
+    barShadow: '0 0 12px rgba(52,199,89,0.7), 0 0 4px rgba(167,243,208,0.9)',
+    rgb: '52,199,89',
+  },
+  '#FF3B30': {
+    gradient: 'linear-gradient(135deg, #FFB347 0%, #FF6B35 35%, #FF3B30 70%, #CC1A00 100%)',
+    glow: '0 0 16px rgba(255,59,48,0.95), 0 0 6px rgba(255,107,53,1), inset 0 1px 0 rgba(255,255,255,0.5)',
+    barShadow: '0 0 12px rgba(255,59,48,0.7), 0 0 4px rgba(255,107,53,0.9)',
+    rgb: '255,59,48',
+  },
+}
+
+const DEFAULT_THEME: ColorTheme = COLOR_THEMES['#0071E3']!
+
 // ─── Card animation ──────────────────────────────────────────────────────────
 
 const cardVariant = {
@@ -45,9 +83,7 @@ const cardVariant = {
 
 function ListCard({ list, index }: { list: CallList; index: number }) {
   const router = useRouter()
-  const progress = list.contactCount > 0 ? (list.completedCount / list.contactCount) * 100 : 0
-  const [isMounted, setIsMounted] = useState(false)
-  useState(() => { setTimeout(() => setIsMounted(true), 100) })
+  const theme = COLOR_THEMES[list.color] ?? DEFAULT_THEME
 
   return (
     <motion.div
@@ -55,60 +91,95 @@ function ListCard({ list, index }: { list: CallList; index: number }) {
       variants={cardVariant}
       initial="hidden"
       animate="visible"
-      className="rounded-[14px] p-5 cursor-pointer"
+      className="rounded-[8px] p-5 cursor-pointer relative overflow-hidden"
       style={{
-        background: '#FFFFFF',
-        boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)',
+        background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
+        boxShadow: `0 2px 12px rgba(0,0,0,0.4), 0 0 18px rgba(${theme.rgb},0.18), inset 0 1px 0 rgba(255,255,255,0.06)`,
+        border: `1px solid rgba(${theme.rgb},0.4)`,
       }}
-      whileHover={{ y: -2, boxShadow: '0 0 0 1px rgba(0,0,0,0.06), 0 4px 12px rgba(0,0,0,0.1), 0 12px 36px rgba(0,0,0,0.08)' }}
+      whileHover={{ y: -3, boxShadow: `0 6px 24px rgba(0,0,0,0.55), 0 0 28px rgba(${theme.rgb},0.35), inset 0 1px 0 rgba(255,255,255,0.1)` }}
       transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
       onClick={() => router.push(`/lists/${list.id}`)}
     >
+      {/* グロー光線 (上端) */}
+      <div
+        className="absolute top-0 left-0 right-0"
+        style={{
+          height: '3px',
+          background: theme.gradient,
+          boxShadow: theme.glow,
+        }}
+      />
+      {/* 背景フェード */}
+      <div
+        className="absolute pointer-events-none"
+        style={{
+          top: 0, right: 0, width: '160px', height: '160px',
+          background: `radial-gradient(circle at top right, rgba(${theme.rgb},0.18) 0%, transparent 70%)`,
+        }}
+      />
+
       {/* Header */}
-      <div className="flex items-start gap-3 mb-3">
+      <div className="flex items-start gap-3 mb-4 relative">
         <div
-          className="w-[10px] h-[10px] rounded-full mt-1.5 shrink-0"
-          style={{ background: list.color }}
+          className="w-[14px] h-[14px] rounded-full mt-1 shrink-0"
+          style={{
+            background: theme.gradient,
+            boxShadow: theme.glow,
+            border: '1px solid rgba(255,255,255,0.4)',
+          }}
         />
         <div className="flex-1 min-w-0">
-          <h3 className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.02em] truncate">
+          <h3 className="text-[15px] font-semibold text-[#EEEEFF] tracking-[-0.02em] truncate">
             {list.name}
           </h3>
           {list.description && (
-            <p className="text-[12px] text-[#8E8E93] mt-0.5 truncate">{list.description}</p>
+            <p className="text-[12px] text-[#CCDDF0] mt-0.5 truncate">{list.description}</p>
           )}
         </div>
-      </div>
 
-      {/* Progress bar */}
-      <div className="mb-3">
-        <div className="h-[6px] rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.06)' }}>
-          <div
-            className="h-full rounded-full"
-            style={{
-              width: isMounted ? `${progress}%` : '0%',
-              background: list.color,
-              transition: 'width 0.6s cubic-bezier(0.16, 1, 0.3, 1)',
-            }}
-          />
-        </div>
+        {/* 担当者バッジ(右上) */}
+        <span
+          className="inline-flex items-center gap-1 px-2 py-[3px] rounded-full text-[10px] font-bold whitespace-nowrap shrink-0"
+          style={{
+            background: 'linear-gradient(135deg, rgba(136,187,255,0.22) 0%, rgba(85,119,221,0.16) 100%)',
+            color: '#CCDDF0',
+            border: '1px solid rgba(136,187,255,0.45)',
+            boxShadow: '0 0 8px rgba(136,187,255,0.2), inset 0 1px 0 rgba(255,255,255,0.1)',
+          }}
+        >
+          <Users size={9} strokeWidth={2.5} />
+          {list.ownerName}
+        </span>
       </div>
 
       {/* Stats */}
-      <div className="flex items-center gap-4">
+      <div className="flex items-center gap-4 relative">
+        {/* リスト件数 */}
         <div className="flex items-center gap-1.5">
-          <Users size={12} style={{ color: '#8E8E93' }} />
-          <span className="text-[12px] text-[#6E6E73]">
-            {list.completedCount}/{list.contactCount}
+          <Users size={12} style={{ color: '#88BBFF', filter: 'drop-shadow(0 0 4px rgba(136,187,255,0.6))' }} />
+          <span className="text-[11px] text-[#99AACC] font-medium">件数</span>
+          <span
+            className="text-[13px] font-bold tabular-nums"
+            style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(136,187,255,0.5)' }}
+          >
+            {list.contactCount}
           </span>
         </div>
+
+        <span className="w-px h-3.5" style={{ background: 'rgba(136,187,255,0.25)' }} />
+
+        {/* アポイント獲得数 */}
         <div className="flex items-center gap-1.5">
-          <CalendarCheck size={12} style={{ color: '#34C759' }} />
-          <span className="text-[12px] text-[#1A7A35] font-medium">
+          <CalendarCheck size={12} style={{ color: '#34C759', filter: 'drop-shadow(0 0 4px rgba(52,199,89,0.8))' }} />
+          <span className="text-[11px] text-[#99AACC] font-medium">アポ</span>
+          <span
+            className="text-[13px] font-bold tabular-nums"
+            style={{ color: '#7EE6A1', textShadow: '0 0 6px rgba(52,199,89,0.7)' }}
+          >
             {list.appointmentCount}
           </span>
         </div>
-        <span className="text-[11px] text-[#AEAEB2] ml-auto">{list.ownerName}</span>
       </div>
     </motion.div>
   )
@@ -138,8 +209,8 @@ function CreateListModal({ open, onClose }: { open: boolean; onClose: () => void
           <motion.div
             className="relative w-[440px] rounded-[16px] p-6"
             style={{
-              background: '#FFFFFF',
-              boxShadow: '0 24px 80px rgba(0,0,0,0.18), 0 0 0 1px rgba(0,0,0,0.06)',
+              background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
+              boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)',
             }}
             initial={{ opacity: 0, scale: 0.96, y: 8 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -147,49 +218,49 @@ function CreateListModal({ open, onClose }: { open: boolean; onClose: () => void
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
           >
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[17px] font-semibold text-[#1D1D1F]">新規リスト作成</h2>
-              <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(0,0,0,0.05)] transition-colors">
-                <X size={16} style={{ color: '#8E8E93' }} />
+              <h2 className="text-[17px] font-semibold text-[#EEEEFF]">新規リスト作成</h2>
+              <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(136,187,255,0.06)] transition-colors">
+                <X size={16} style={{ color: '#CCDDF0' }} />
               </button>
             </div>
 
             <div className="space-y-4">
               <div>
-                <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">リスト名 *</label>
+                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em]">リスト名 *</label>
                 <input
                   value={name}
                   onChange={e => setName(e.target.value)}
                   placeholder="例: 今週のコール対象"
-                  className="mt-1.5 w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none"
-                  style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid transparent' }}
+                  className="mt-1.5 w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
+                  style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
                   onFocus={e => { e.currentTarget.style.background = 'rgba(255,255,255,1)'; e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.1)' }}
-                  onBlur={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }}
+                  onBlur={e => { e.currentTarget.style.background = 'rgba(16,16,40,0.6)'; e.currentTarget.style.border = '1px solid #2244AA'; e.currentTarget.style.boxShadow = 'none' }}
                 />
               </div>
               <div>
-                <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">説明</label>
+                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em]">説明</label>
                 <input
                   value={description}
                   onChange={e => setDescription(e.target.value)}
                   placeholder="リストの目的や対象を入力"
-                  className="mt-1.5 w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none"
-                  style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid transparent' }}
+                  className="mt-1.5 w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
+                  style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
                   onFocus={e => { e.currentTarget.style.background = 'rgba(255,255,255,1)'; e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.1)' }}
-                  onBlur={e => { e.currentTarget.style.background = 'rgba(0,0,0,0.04)'; e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }}
+                  onBlur={e => { e.currentTarget.style.background = 'rgba(16,16,40,0.6)'; e.currentTarget.style.border = '1px solid #2244AA'; e.currentTarget.style.boxShadow = 'none' }}
                 />
               </div>
               <div>
-                <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">担当者</label>
+                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em]">担当者</label>
                 <div className="relative mt-1.5">
                   <select
                     value={owner}
                     onChange={e => setOwner(e.target.value)}
-                    className="w-full h-[36px] px-3 pr-8 text-[14px] rounded-[8px] text-[#1D1D1F] appearance-none cursor-pointer outline-none"
-                    style={{ background: 'rgba(0,0,0,0.04)' }}
+                    className="w-full h-[36px] px-3 pr-8 text-[14px] rounded-[8px] text-[#EEEEFF] appearance-none cursor-pointer outline-none"
+                    style={{ background: 'rgba(16,16,40,0.6)' }}
                   >
                     {OWNERS.map(o => <option key={o} value={o}>{o}</option>)}
                   </select>
-                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#9CA3AF] pointer-events-none" />
+                  <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#CCDDF0] pointer-events-none" />
                 </div>
               </div>
             </div>
@@ -197,7 +268,7 @@ function CreateListModal({ open, onClose }: { open: boolean; onClose: () => void
             <div className="flex justify-end gap-2 mt-6">
               <button
                 onClick={onClose}
-                className="h-[34px] px-4 text-[13px] font-medium text-[#6E6E73] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)] transition-colors"
+                className="h-[34px] px-4 text-[13px] font-medium text-[#CCDDF0] rounded-[8px] hover:bg-[rgba(136,187,255,0.06)] transition-colors"
               >
                 キャンセル
               </button>
@@ -205,7 +276,7 @@ function CreateListModal({ open, onClose }: { open: boolean; onClose: () => void
                 disabled={!name.trim()}
                 className="h-[34px] px-4 text-[13px] font-semibold text-white rounded-[8px] transition-all"
                 style={{
-                  background: name.trim() ? 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)' : 'rgba(0,0,0,0.12)',
+                  background: name.trim() ? 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)' : 'rgba(34,68,170,0.3)',
                   boxShadow: name.trim() ? '0 2px 8px rgba(255,59,48,0.35)' : 'none',
                   cursor: name.trim() ? 'pointer' : 'not-allowed',
                 }}
@@ -224,6 +295,7 @@ function CreateListModal({ open, onClose }: { open: boolean; onClose: () => void
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 export default function ListsPage() {
+  const router = useRouter()
   const [search, setSearch] = useState('')
   const [showCreate, setShowCreate] = useState(false)
 
@@ -244,10 +316,10 @@ export default function ListsPage() {
         animate={{ opacity: 1, y: 0 }}
         transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
       >
-        <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">
+        <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">
           ISリスト
         </h1>
-        <p className="text-[13px] text-[#8E8E93] mt-0.5">
+        <p className="text-[13px] text-[#CCDDF0] mt-0.5">
           コール対象リストを管理
         </p>
       </motion.div>
@@ -260,21 +332,22 @@ export default function ListsPage() {
         transition={{ duration: 0.3, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
       >
         <div className="relative flex-1 max-w-[280px]">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#AEAEB2' }} />
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#99AACC' }} />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="リスト名で検索..."
-            className="h-[32px] w-full pl-8 pr-3 text-[13px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none transition-all"
-            style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid transparent' }}
+            className="h-[32px] w-full pl-8 pr-3 text-[13px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none transition-all"
+            style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
           />
         </div>
         <button
-          onClick={() => setShowCreate(true)}
+          onClick={() => router.push('/companies?mode=list-create')}
           className="h-[32px] px-3 flex items-center gap-1.5 text-[13px] font-medium text-white rounded-[8px]"
           style={{
-            background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)',
-            boxShadow: '0 2px 8px rgba(255,59,48,0.35)',
+            background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
+            boxShadow: '0 2px 8px rgba(34,68,170,0.4)',
+            border: '1px solid #3355CC',
           }}
         >
           <Plus size={13} />
@@ -291,7 +364,7 @@ export default function ListsPage() {
 
       {filtered.length === 0 && (
         <div className="text-center py-16">
-          <p className="text-[14px] text-[#AEAEB2]">リストが見つかりません</p>
+          <p className="text-[14px] text-[#99AACC]">リストが見つかりません</p>
         </div>
       )}
 

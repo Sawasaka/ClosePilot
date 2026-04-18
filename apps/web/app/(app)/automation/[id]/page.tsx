@@ -33,7 +33,7 @@ const MOCK_ENROLLMENTS: Record<string, SequenceEnrollment[]> = {
 
 const STEP_ICONS: Record<string, React.ElementType> = { wait: Clock, email: Mail, condition: GitBranch, task: CheckSquare }
 const STEP_COLORS: Record<string, { bg: string; color: string }> = {
-  wait: { bg: 'rgba(0,0,0,0.04)', color: '#8E8E93' },
+  wait: { bg: 'rgba(0,0,0,0.04)', color: '#CCDDF0' },
   email: { bg: 'rgba(94,92,230,0.1)', color: '#5E5CE6' },
   condition: { bg: 'rgba(255,159,10,0.1)', color: '#FF9F0A' },
   task: { bg: 'rgba(52,199,89,0.1)', color: '#34C759' },
@@ -51,7 +51,7 @@ type Tab = 'builder' | 'monitor' | 'performance'
 // ─── Page ────────────────────────────────────────────────────────────────────
 
 const STEP_TYPE_OPTIONS: { key: StepType; label: string; icon: React.ElementType; color: string; bg: string }[] = [
-  { key: 'wait',      label: '待機',     icon: Clock,       color: '#8E8E93', bg: 'rgba(0,0,0,0.04)' },
+  { key: 'wait',      label: '待機',     icon: Clock,       color: '#CCDDF0', bg: 'rgba(0,0,0,0.04)' },
   { key: 'email',     label: 'メール',   icon: Mail,        color: '#5E5CE6', bg: 'rgba(94,92,230,0.1)' },
   { key: 'condition', label: '条件分岐', icon: GitBranch,   color: '#FF9F0A', bg: 'rgba(255,159,10,0.1)' },
   { key: 'task',      label: 'タスク',   icon: CheckSquare, color: '#34C759', bg: 'rgba(52,199,89,0.1)' },
@@ -113,7 +113,7 @@ export default function AutomationDetailPage() {
     <div className="space-y-5">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
-        <button onClick={() => router.push('/automation')} className="flex items-center gap-1 text-[13px] text-[#8E8E93] hover:text-[#1D1D1F] transition-colors mb-2">
+        <button onClick={() => router.push('/automation')} className="flex items-center gap-1 text-[13px] text-[#CCDDF0] hover:text-[#1D1D1F] transition-colors mb-2">
           <ChevronLeft size={14} />オートメーション
         </button>
         <div className="flex items-center justify-between">
@@ -121,8 +121,8 @@ export default function AutomationDetailPage() {
             <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">{seq.name}</h1>
             <div className="flex items-center gap-3 mt-1">
               <span className="text-[12px] font-medium px-2 py-0.5 rounded-[4px] bg-[rgba(0,85,255,0.08)] text-[#0055FF]">{seq.triggerLabel}</span>
-              <span className="text-[12px] text-[#8E8E93]">{seq.steps.length}ステップ</span>
-              <span className="text-[12px] text-[#8E8E93]">登録{seq.enrolledCount}名</span>
+              <span className="text-[12px] text-[#CCDDF0]">{seq.steps.length}ステップ</span>
+              <span className="text-[12px] text-[#CCDDF0]">登録{seq.enrolledCount}名</span>
             </div>
           </div>
           <button className="h-[34px] px-4 flex items-center gap-2 text-[13px] font-medium rounded-[8px]"
@@ -137,7 +137,7 @@ export default function AutomationDetailPage() {
         <div className="flex" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
           {TABS.map(t => (
             <button key={t.key} onClick={() => setTab(t.key)}
-              className={`relative px-5 py-3.5 text-[13px] font-medium transition-colors ${tab === t.key ? 'text-[#0071E3]' : 'text-[#6E6E73] hover:text-[#1D1D1F]'}`}>
+              className={`relative px-5 py-3.5 text-[13px] font-medium transition-colors ${tab === t.key ? 'text-[#0071E3]' : 'text-[#CCDDF0] hover:text-[#1D1D1F]'}`}>
               {t.label}
               {tab === t.key && <motion.div layoutId="auto-tab" className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full" style={{ background: '#0071E3' }} />}
             </button>
@@ -192,13 +192,13 @@ export default function AutomationDetailPage() {
                                     style={{ background: 'rgba(0,0,0,0.04)' }} placeholder="詳細・件名など" />
                                   <div className="flex gap-2">
                                     <button onClick={saveEdit} className="h-[28px] px-3 text-[12px] font-medium text-white rounded-[6px] bg-[#0071E3]">保存</button>
-                                    <button onClick={() => setEditingStep(null)} className="h-[28px] px-3 text-[12px] font-medium text-[#6E6E73] rounded-[6px] hover:bg-[rgba(0,0,0,0.04)]">キャンセル</button>
+                                    <button onClick={() => setEditingStep(null)} className="h-[28px] px-3 text-[12px] font-medium text-[#CCDDF0] rounded-[6px] hover:bg-[rgba(0,0,0,0.04)]">キャンセル</button>
                                   </div>
                                 </div>
                               ) : (
                                 <>
                                   <p className="text-[14px] font-medium text-[#1D1D1F] mt-1">{step.label}</p>
-                                  {step.detail && <p className="text-[12px] text-[#8E8E93] mt-0.5">{step.detail}</p>}
+                                  {step.detail && <p className="text-[12px] text-[#CCDDF0] mt-0.5">{step.detail}</p>}
                                 </>
                               )}
                             </div>
@@ -207,7 +207,7 @@ export default function AutomationDetailPage() {
                             {!isEditing && (
                               <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
                                 <button onClick={() => startEdit(si)} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center hover:bg-[rgba(0,0,0,0.06)] transition-colors">
-                                  <Edit3 size={12} style={{ color: '#6E6E73' }} />
+                                  <Edit3 size={12} style={{ color: '#CCDDF0' }} />
                                 </button>
                                 <button onClick={() => deleteStep(si)} className="w-[26px] h-[26px] rounded-[6px] flex items-center justify-center hover:bg-[rgba(255,59,48,0.08)] transition-colors">
                                   <Trash2 size={12} style={{ color: '#FF3B30' }} />
@@ -227,7 +227,7 @@ export default function AutomationDetailPage() {
 
                   {steps.length === 0 && (
                     <div className="text-center py-12 rounded-[12px]" style={{ border: '2px dashed rgba(0,0,0,0.08)' }}>
-                      <p className="text-[14px] text-[#8E8E93] mb-3">ステップがまだありません</p>
+                      <p className="text-[14px] text-[#CCDDF0] mb-3">ステップがまだありません</p>
                       <p className="text-[12px] text-[#AEAEB2]">上の「+」ボタンからステップを追加してください</p>
                     </div>
                   )}
@@ -252,8 +252,8 @@ export default function AutomationDetailPage() {
                         className="grid grid-cols-[1fr_1fr_100px_80px_90px_90px] items-center px-4 py-3"
                         style={{ borderBottom: i < enrollments.length - 1 ? '1px solid rgba(0,0,0,0.04)' : 'none' }}>
                         <span className="text-[13px] font-medium text-[#1D1D1F]">{enr.contactName}</span>
-                        <span className="text-[13px] text-[#6E6E73]">{enr.companyName}</span>
-                        <span className="text-[12px] text-[#6E6E73]">Step {enr.currentStepIndex + 1}/{seq.steps.length}</span>
+                        <span className="text-[13px] text-[#CCDDF0]">{enr.companyName}</span>
+                        <span className="text-[12px] text-[#CCDDF0]">Step {enr.currentStepIndex + 1}/{seq.steps.length}</span>
                         <span className="text-[11px] font-medium px-2 py-0.5 rounded-[4px]" style={{ background: es.bg, color: es.text }}>
                           {enr.status === 'active' ? '進行中' : enr.status === 'completed' ? '完了' : enr.status === 'paused' ? '停止' : '離脱'}
                         </span>
@@ -279,7 +279,7 @@ export default function AutomationDetailPage() {
                     { label: '返信率', value: `${seq.replyRate}%`, color: '#34C759', icon: Reply },
                   ].map(kpi => (
                     <div key={kpi.label} className="rounded-[10px] px-4 py-3" style={{ background: `${kpi.color}0A` }}>
-                      <div className="flex items-center gap-1.5 mb-1"><kpi.icon size={12} style={{ color: kpi.color }} /><span className="text-[10px] text-[#8E8E93]">{kpi.label}</span></div>
+                      <div className="flex items-center gap-1.5 mb-1"><kpi.icon size={12} style={{ color: kpi.color }} /><span className="text-[10px] text-[#CCDDF0]">{kpi.label}</span></div>
                       <p className="text-[22px] font-bold tracking-[-0.03em]" style={{ color: kpi.color }}>{kpi.value}</p>
                     </div>
                   ))}
@@ -360,7 +360,7 @@ function AddStepButton({ index, showAddStep, setShowAddStep, addStep }: {
                 <div className="w-[28px] h-[28px] rounded-[7px] flex items-center justify-center" style={{ background: opt.bg }}>
                   <opt.icon size={14} style={{ color: opt.color }} />
                 </div>
-                <span className="text-[10px] font-medium text-[#6E6E73]">{opt.label}</span>
+                <span className="text-[10px] font-medium text-[#CCDDF0]">{opt.label}</span>
               </button>
             ))}
           </motion.div>

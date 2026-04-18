@@ -7,8 +7,8 @@ export default function KnowledgePage() {
         <BookOpen size={24} className="text-[#4F46E5]" />
       </div>
       <div className="text-center">
-        <h2 className="text-lg font-semibold text-[#111827]">ナレッジ RAGボット</h2>
-        <p className="text-sm text-[#6B7280] mt-1">Week 12 で実装予定 — Google Drive 連携・セマンティック検索</p>
+        <h2 className="text-lg font-semibold text-[#EEEEFF]">ナレッジ RAGボット</h2>
+        <p className="text-sm text-[#CCDDF0] mt-1">Week 12 で実装予定 — Google Drive 連携・セマンティック検索</p>
       </div>
     </div>
   )

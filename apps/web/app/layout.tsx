@@ -12,7 +12,7 @@ const dmSans = DM_Sans({
 })
 
 export const metadata: Metadata = {
-  title: 'ClosePilot — 受注実行基盤',
+  title: 'Intent Force — for First-Party CRM',
   description: '優秀な営業マネージャーの判断ロジックをシステムに内包する受注実行基盤',
 }
 

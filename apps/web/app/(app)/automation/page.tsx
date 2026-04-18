@@ -104,13 +104,38 @@ const APPROACH_OPTIONS = ['未着手', '不通', '不在', '接続済み', 'コ�
 const PHASE_OPTIONS = ['リード', '商談中', '顧客', '休眠', '失注']
 const PIPELINE_OPTIONS = ['IS', '商談済み', 'PJ化予定あり', 'POC実施中', '決裁者合意済み', '受注', 'ナーチャリング', '失注', 'チャーン', 'ロスト']
 
-const STATUS_STYLES: Record<SequenceStatus, { bg: string; text: string; dot: string; label: string }> = {
-  active: { bg: 'rgba(52,199,89,0.1)', text: '#1A7A35', dot: '#34C759', label: 'アクティブ' },
-  paused: { bg: 'rgba(255,159,10,0.1)', text: '#C07000', dot: '#FF9F0A', label: '一時停止' },
-  draft:  { bg: 'rgba(0,0,0,0.05)', text: '#6E6E73', dot: '#AEAEB2', label: '下書き' },
+interface SeqGameStyle {
+  gradient: string
+  glow: string
+  color: string
+  dotColor: string
+  borderColor: string
+  textShadow: string
+  label: string
+}
+
+const STATUS_STYLES: Record<SequenceStatus, SeqGameStyle> = {
+  active: {
+    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
+    glow: '0 0 14px rgba(52,199,89,0.85), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#053D24', dotColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
+    label: 'アクティブ',
+  },
+  paused: {
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+    color: '#5B2E00', dotColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
+    label: '一時停止',
+  },
+  draft: {
+    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
+    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#2C2C2E', dotColor: '#48484A', borderColor: 'rgba(255,255,255,0.35)', textShadow: 'none',
+    label: '下書き',
+  },
 }
 const STEP_ICONS: Record<string, React.ElementType> = { wait: Clock, email: Mail, condition: GitBranch, task: CheckSquare }
-const CARD_SHADOW = '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)'
+const CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -149,8 +174,8 @@ export default function AutomationPage() {
     <div className="space-y-5">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
-        <h1 className="text-[21px] font-semibold text-[#1D1D1F] tracking-[-0.03em]">オートメーション</h1>
-        <p className="text-[13px] text-[#8E8E93] mt-0.5">シーケンスによるメール自動配信・タスク自動生成</p>
+        <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">オートメーション</h1>
+        <p className="text-[13px] text-[#CCDDF0] mt-0.5">シーケンスによるメール自動配信・タスク自動生成</p>
       </motion.div>
 
       {/* KPI */}
@@ -163,11 +188,11 @@ export default function AutomationPage() {
         ].map((kpi, i) => (
           <motion.div key={kpi.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-white rounded-[14px] p-4 relative overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
+            className="bg-[#0c1028] rounded-[8px] p-4 relative overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
             <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${kpi.color}25 0%, transparent 70%)` }} />
             <div className="flex items-center gap-2 mb-2">
               <kpi.icon size={14} style={{ color: kpi.color }} />
-              <span className="text-[11px] text-[#AEAEB2] font-medium uppercase tracking-[0.04em]">{kpi.label}</span>
+              <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">{kpi.label}</span>
             </div>
             <p className="text-[24px] font-bold tracking-[-0.04em]" style={{ color: kpi.color }}>{kpi.value}</p>
           </motion.div>
@@ -177,23 +202,23 @@ export default function AutomationPage() {
       {/* Toolbar */}
       <div className="flex items-center gap-3">
         <div className="relative flex-1 max-w-[280px]">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#AEAEB2' }} />
+          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#99AACC' }} />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="シーケンス名で検索..."
-            className="h-[32px] w-full pl-8 pr-3 text-[13px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none"
-            style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid transparent' }} />
+            className="h-[32px] w-full pl-8 pr-3 text-[13px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
+            style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }} />
         </div>
         <div className="flex items-center gap-1.5">
           {[{ key: 'all' as const, label: '全て' }, { key: 'active' as const, label: 'アクティブ' }, { key: 'paused' as const, label: '一時停止' }, { key: 'draft' as const, label: '下書き' }].map(f => (
             <button key={f.key} onClick={() => setStatusFilter(f.key)}
               className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
-              style={{ background: statusFilter === f.key ? '#1D1D1F' : 'rgba(0,0,0,0.04)', color: statusFilter === f.key ? '#FFF' : '#6E6E73' }}>
+              style={{ background: statusFilter === f.key ? '#2244AA' : 'rgba(136,187,255,0.06)', color: statusFilter === f.key ? '#FFF' : '#88BBFF' }}>
               {f.label}
             </button>
           ))}
         </div>
         <button onClick={() => setShowCreate(true)}
           className="h-[32px] px-3 flex items-center gap-1.5 text-[13px] font-medium text-white rounded-[8px] ml-auto"
-          style={{ background: 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)', boxShadow: '0 2px 8px rgba(255,59,48,0.35)' }}>
+          style={{ background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)', boxShadow: '0 2px 8px rgba(34,68,170,0.4)' }}>
           <Plus size={13} />新規シーケンス
         </button>
       </div>
@@ -205,24 +230,32 @@ export default function AutomationPage() {
           return (
             <motion.div key={seq.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-[14px] p-5 cursor-pointer" style={{ boxShadow: CARD_SHADOW }}
+              className="bg-[#0c1028] rounded-[8px] p-5 cursor-pointer" style={{ boxShadow: CARD_SHADOW }}
               onClick={() => router.push(`/automation/${seq.id}`)}>
               {/* Header */}
               <div className="flex items-start justify-between mb-3">
                 <div className="flex-1 min-w-0">
-                  <h3 className="text-[15px] font-semibold text-[#1D1D1F] truncate">{seq.name}</h3>
-                  <p className="text-[12px] text-[#8E8E93] mt-0.5 truncate">{seq.description}</p>
+                  <h3 className="text-[15px] font-semibold text-[#EEEEFF] truncate">{seq.name}</h3>
+                  <p className="text-[12px] text-[#CCDDF0] mt-0.5 truncate">{seq.description}</p>
                 </div>
-                <span className="shrink-0 ml-3 inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-medium"
-                  style={{ background: st.bg, color: st.text }}>
-                  <span className="w-[5px] h-[5px] rounded-full" style={{ background: st.dot }} />
+                <span
+                  className="shrink-0 ml-3 inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-bold"
+                  style={{
+                    background: st.gradient,
+                    boxShadow: st.glow,
+                    color: st.color,
+                    border: `1px solid ${st.borderColor}`,
+                    textShadow: st.textShadow,
+                    letterSpacing: '0.01em',
+                  }}>
+                  <span className="rounded-full" style={{ width: 6, height: 6, background: st.dotColor, boxShadow: `0 0 4px ${st.dotColor}cc` }} />
                   {st.label}
                 </span>
               </div>
 
               {/* Trigger */}
               <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-[11px] font-medium text-[#AEAEB2]">トリガー:</span>
+                <span className="text-[11px] font-medium text-[#99AACC]">トリガー:</span>
                 <span className="text-[12px] font-medium px-2 py-0.5 rounded-[4px] bg-[rgba(0,85,255,0.08)] text-[#0055FF]">{seq.triggerLabel}</span>
               </div>
 
@@ -237,21 +270,21 @@ export default function AutomationPage() {
                         background: step.type === 'email' ? 'rgba(94,92,230,0.1)' : step.type === 'condition' ? 'rgba(255,159,10,0.1)' : step.type === 'task' ? 'rgba(52,199,89,0.1)' : 'rgba(0,0,0,0.04)',
                       }}>
                         <StepIcon size={11} style={{
-                          color: step.type === 'email' ? '#5E5CE6' : step.type === 'condition' ? '#FF9F0A' : step.type === 'task' ? '#34C759' : '#8E8E93',
+                          color: step.type === 'email' ? '#AA88FF' : step.type === 'condition' ? '#FFDD44' : step.type === 'task' ? '#44FF88' : '#7788AA',
                         }} />
                       </div>
                     </div>
                   )
                 })}
-                <span className="text-[11px] text-[#AEAEB2] ml-1">{seq.steps.length}ステップ</span>
+                <span className="text-[11px] text-[#99AACC] ml-1">{seq.steps.length}ステップ</span>
               </div>
 
               {/* Stats */}
               <div className="flex items-center gap-4 pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                <div className="flex items-center gap-1"><Users size={11} style={{ color: '#0071E3' }} /><span className="text-[12px] text-[#6E6E73]">{seq.enrolledCount}名</span></div>
-                <div className="flex items-center gap-1"><MailOpen size={11} style={{ color: '#5E5CE6' }} /><span className="text-[12px] text-[#6E6E73]">開封{seq.openRate}%</span></div>
-                <div className="flex items-center gap-1"><MousePointerClick size={11} style={{ color: '#FF9F0A' }} /><span className="text-[12px] text-[#6E6E73]">クリック{seq.clickRate}%</span></div>
-                <div className="flex items-center gap-1"><Reply size={11} style={{ color: '#34C759' }} /><span className="text-[12px] text-[#6E6E73]">返信{seq.replyRate}%</span></div>
+                <div className="flex items-center gap-1"><Users size={11} style={{ color: '#0071E3' }} /><span className="text-[12px] text-[#CCDDF0]">{seq.enrolledCount}名</span></div>
+                <div className="flex items-center gap-1"><MailOpen size={11} style={{ color: '#5E5CE6' }} /><span className="text-[12px] text-[#CCDDF0]">開封{seq.openRate}%</span></div>
+                <div className="flex items-center gap-1"><MousePointerClick size={11} style={{ color: '#FF9F0A' }} /><span className="text-[12px] text-[#CCDDF0]">クリック{seq.clickRate}%</span></div>
+                <div className="flex items-center gap-1"><Reply size={11} style={{ color: '#34C759' }} /><span className="text-[12px] text-[#CCDDF0]">返信{seq.replyRate}%</span></div>
               </div>
             </motion.div>
           )
@@ -259,7 +292,7 @@ export default function AutomationPage() {
       </div>
 
       {filtered.length === 0 && (
-        <div className="text-center py-16"><p className="text-[14px] text-[#AEAEB2]">シーケンスが見つかりません</p></div>
+        <div className="text-center py-16"><p className="text-[14px] text-[#99AACC]">シーケンスが見つかりません</p></div>
       )}
 
       {/* Create Sequence Modal */}
@@ -305,54 +338,54 @@ function CreateSequenceModal({ open, onClose, onCreate }: {
         <motion.div className="fixed inset-0 z-50 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
           <div className="absolute inset-0 bg-black/40" onClick={onClose} />
           <motion.div className="relative w-[520px] max-h-[85vh] overflow-y-auto rounded-[16px] p-6"
-            style={{ background: '#FFF', boxShadow: '0 24px 80px rgba(0,0,0,0.18)' }}
+            style={{ background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)', boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}
             initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 8 }}
             transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
 
             <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[17px] font-semibold text-[#1D1D1F]">新規シーケンス作成</h2>
-              <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(0,0,0,0.05)]"><X size={16} style={{ color: '#8E8E93' }} /></button>
+              <h2 className="text-[17px] font-semibold text-[#EEEEFF]">新規シーケンス作成</h2>
+              <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(136,187,255,0.06)]"><X size={16} style={{ color: '#CCDDF0' }} /></button>
             </div>
 
             <div className="space-y-5">
               {/* Name */}
               <div>
-                <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">シーケンス名 *</label>
+                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em]">シーケンス名 *</label>
                 <input value={name} onChange={e => setName(e.target.value)} placeholder="例: 未着手 → 初回接触"
-                  className="mt-1.5 w-full h-[38px] px-3 text-[14px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none"
-                  style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid transparent' }}
+                  className="mt-1.5 w-full h-[38px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
+                  style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
                   onFocus={e => { e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.1)' }}
                   onBlur={e => { e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }} />
               </div>
 
               {/* Description */}
               <div>
-                <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em]">説明</label>
+                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em]">説明</label>
                 <input value={description} onChange={e => setDescription(e.target.value)} placeholder="このシーケンスの目的を入力"
-                  className="mt-1.5 w-full h-[38px] px-3 text-[14px] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] outline-none"
-                  style={{ background: 'rgba(0,0,0,0.04)', border: '1px solid transparent' }}
+                  className="mt-1.5 w-full h-[38px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
+                  style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
                   onFocus={e => { e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.1)' }}
                   onBlur={e => { e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }} />
               </div>
 
               {/* Trigger type */}
               <div>
-                <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em] mb-2 block">トリガー条件</label>
+                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em] mb-2 block">トリガー条件</label>
                 <div className="space-y-2">
                   {TRIGGER_OPTIONS.map(opt => (
                     <button key={opt.key} onClick={() => { setTriggerType(opt.key); setSelectedConditions([]) }}
                       className="w-full flex items-start gap-3 p-3 rounded-[10px] text-left transition-all"
                       style={{
                         background: triggerType === opt.key ? 'rgba(0,85,255,0.06)' : 'rgba(0,0,0,0.02)',
-                        border: triggerType === opt.key ? '1px solid rgba(0,85,255,0.25)' : '1px solid rgba(0,0,0,0.06)',
+                        border: triggerType === opt.key ? '1px solid rgba(0,85,255,0.25)' : '1px solid #2244AA',
                       }}>
                       <div className="w-[16px] h-[16px] rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ borderColor: triggerType === opt.key ? '#0071E3' : '#C7C7CC' }}>
+                        style={{ borderColor: triggerType === opt.key ? '#2244AA' : '#2244AA' }}>
                         {triggerType === opt.key && <div className="w-[8px] h-[8px] rounded-full bg-[#0071E3]" />}
                       </div>
                       <div>
-                        <p className="text-[13px] font-medium" style={{ color: triggerType === opt.key ? '#0071E3' : '#1D1D1F' }}>{opt.label}</p>
-                        <p className="text-[11px] text-[#8E8E93] mt-0.5">{opt.description}</p>
+                        <p className="text-[13px] font-medium" style={{ color: triggerType === opt.key ? '#88BBFF' : '#EEEEFF' }}>{opt.label}</p>
+                        <p className="text-[11px] text-[#CCDDF0] mt-0.5">{opt.description}</p>
                       </div>
                     </button>
                   ))}
@@ -362,7 +395,7 @@ function CreateSequenceModal({ open, onClose, onCreate }: {
               {/* Condition values */}
               {triggerType !== 'manual' && conditionOptions.length > 0 && (
                 <div>
-                  <label className="text-[12px] font-medium text-[#6E6E73] uppercase tracking-[0.04em] mb-2 block">
+                  <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em] mb-2 block">
                     対象ステータス（複数選択可）
                   </label>
                   <div className="flex flex-wrap gap-2">
@@ -373,7 +406,7 @@ function CreateSequenceModal({ open, onClose, onCreate }: {
                           className="h-[30px] px-3 text-[12px] font-medium rounded-full transition-all"
                           style={{
                             background: selected ? '#0071E3' : 'rgba(0,0,0,0.04)',
-                            color: selected ? '#FFF' : '#6E6E73',
+                            color: selected ? '#FFF' : '#88BBFF',
                             boxShadow: selected ? '0 1px 4px rgba(0,113,227,0.3)' : 'none',
                           }}>
                           {c}
@@ -382,21 +415,21 @@ function CreateSequenceModal({ open, onClose, onCreate }: {
                     })}
                   </div>
                   {selectedConditions.length === 0 && (
-                    <p className="text-[11px] text-[#AEAEB2] mt-1.5">選択なしの場合、すべての変更で発動します</p>
+                    <p className="text-[11px] text-[#99AACC] mt-1.5">選択なしの場合、すべての変更で発動します</p>
                   )}
                 </div>
               )}
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 mt-6 pt-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
-              <button onClick={onClose} className="h-[34px] px-4 text-[13px] font-medium text-[#6E6E73] rounded-[8px] hover:bg-[rgba(0,0,0,0.05)]">
+            <div className="flex justify-end gap-2 mt-6 pt-4" style={{ borderTop: '1px solid #2244AA' }}>
+              <button onClick={onClose} className="h-[34px] px-4 text-[13px] font-medium text-[#CCDDF0] rounded-[8px] hover:bg-[rgba(136,187,255,0.06)]">
                 キャンセル
               </button>
               <button onClick={handleSubmit} disabled={!name.trim()}
                 className="h-[34px] px-4 text-[13px] font-semibold text-white rounded-[8px] transition-all"
                 style={{
-                  background: name.trim() ? 'linear-gradient(135deg, #FF4E38 0%, #FF3B30 50%, #CC1A00 100%)' : 'rgba(0,0,0,0.12)',
+                  background: name.trim() ? 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)' : 'rgba(34,68,170,0.3)',
                   boxShadow: name.trim() ? '0 2px 8px rgba(255,59,48,0.35)' : 'none',
                   cursor: name.trim() ? 'pointer' : 'not-allowed',
                 }}>

@@ -19,9 +19,14 @@ export default function LoginPage() {
           <div className="w-9 h-9 bg-[#4F46E5] rounded-[10px] flex items-center justify-center shadow-[0_2px_8px_rgba(79,70,229,0.3)]">
             <Zap size={18} className="text-white" strokeWidth={2.5} />
           </div>
-          <span className="text-xl font-semibold text-[#111827] tracking-[-0.03em]">
-            ClosePilot
-          </span>
+          <div className="flex flex-col">
+            <span className="text-xl font-semibold text-[#111827] tracking-[-0.03em] leading-tight">
+              Intent Force
+            </span>
+            <span className="text-[10px] text-[#9CA3AF] tracking-[0.02em]">
+              for First-Party CRM
+            </span>
+          </div>
         </div>
 
         {/* Card */}
@@ -30,7 +35,7 @@ export default function LoginPage() {
             ログイン
           </h1>
           <p className="text-sm text-[#6B7280] mb-6">
-            ClosePilotにアクセスするには<br />Googleアカウントでログインしてください
+            Intent Forceにアクセスするには<br />Googleアカウントでログインしてください
           </p>
 
           <Button
@@ -61,7 +66,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-5 text-center text-xs text-[#9CA3AF]">
-          © 2026 ClosePilot. All rights reserved.
+          © 2026 Intent Force. All rights reserved.
         </p>
       </motion.div>
     </div>

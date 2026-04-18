@@ -1,0 +1,70 @@
+name: Daily Intent Crawl
+
+on:
+  schedule:
+    - cron: '0 18 * * *' # JST 03:00 = UTC 18:00
+  workflow_dispatch:
+    inputs:
+      department:
+        description: '対象部門（IT / SALES / MARKETING / HR / ENGINEERING）'
+        required: false
+        default: 'IT'
+      max_pages:
+        description: '1キーワードあたりの最大ページ数'
+        required: false
+        default: '10'
+
+concurrency:
+  group: daily-crawl-${{ github.event.inputs.department || 'IT' }}
+  cancel-in-progress: false
+
+jobs:
+  crawl:
+    runs-on: ubuntu-latest
+    timeout-minutes: 55
+    strategy:
+      fail-fast: false
+      matrix:
+        department: ${{ github.event_name == 'workflow_dispatch' && fromJSON(format('["{0}"]', github.event.inputs.department)) || fromJSON('["IT"]') }}
+    env:
+      DATABASE_URL: ${{ secrets.DATABASE_URL }}
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: 10.32.1
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'pnpm'
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Install Playwright browsers
+        run: pnpm exec playwright install --with-deps chromium
+
+      - name: Generate Prisma Client
+        run: pnpm --filter @closepilot/db db:generate
+
+      - name: Run intent crawl
+        run: |
+          pnpm crawl:intents \
+            --department=${{ matrix.department }} \
+            --max-pages=${{ github.event.inputs.max_pages || '10' }}
+
+      - name: Upload logs on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: crawl-logs-${{ matrix.department }}
+          path: |
+            *.log
+            /tmp/playwright/*
+          retention-days: 7

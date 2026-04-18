@@ -6,6 +6,7 @@ generator client {
 datasource db {
   provider   = "postgresql"
   url        = env("DATABASE_URL")
+  directUrl  = env("DIRECT_URL")
   extensions = [pgvector(map: "vector")]
 }
 
@@ -81,6 +82,7 @@ model Company {
   revenueRange    RevenueRange?
   prefecture      String?
   corporateNumber String?
+  masterCompanyId String?
   leadSource      LeadSource?
   leadScore       Int            @default(0)
   leadRank        LeadRank       @default(D)
@@ -89,16 +91,18 @@ model Company {
   createdAt       DateTime       @default(now())
   updatedAt       DateTime       @updatedAt
 
-  org         Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  owner       User         @relation("CompanyOwner", fields: [ownerId], references: [id])
-  contacts    Contact[]
-  deals       Deal[]
-  activities  Activity[]
-  scoreEvents ScoreEvent[]
+  org           Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  owner         User           @relation("CompanyOwner", fields: [ownerId], references: [id])
+  masterCompany CompanyMaster? @relation(fields: [masterCompanyId], references: [id], onDelete: SetNull)
+  contacts      Contact[]
+  deals         Deal[]
+  activities    Activity[]
+  scoreEvents   ScoreEvent[]
 
   @@index([orgId, leadScore(sort: Desc)])
   @@index([orgId, domain])
   @@index([orgId, leadRank])
+  @@index([orgId, masterCompanyId])
 }
 
 enum EmployeeRange {
@@ -535,4 +539,229 @@ model RagQuery {
   org Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
 
   @@index([orgId, createdAt(sort: Desc)])
+}
+
+// ================================================================
+// COMPANY MASTER（テナント非依存の企業マスター）
+// 全テナントで共有される企業DB。abm-toolから移行したデータを保持。
+// ================================================================
+model CompanyMaster {
+  id               String           @id @default(cuid())
+  corporateNumber  String           @unique
+  name             String
+  nameKana         String?
+  websiteUrl       String?
+  prefecture       String
+  city             String?
+  address          String?
+  corporateType    String
+  industryId       String?
+  serviceSummary   String?
+  companyFeatures  String?
+  employeeCount    String?
+  revenue          String?
+  representative   String?
+  representativePhone String?
+  representativeEmail String?
+  enrichmentStatus EnrichmentStatus @default(PENDING)
+  sourceId         String?
+  lastCrawledAt    DateTime?
+  lastEnrichedAt   DateTime?
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+
+  industry         Industry?              @relation(fields: [industryId], references: [id])
+  offices          Office[]
+  departments      Department[]
+  intentSignals    IntentSignal[]
+  companyIntents   CompanyIntent[]
+  serviceTags      CompanyServiceTag[]
+  linkedCompanies  Company[]
+
+  @@index([name])
+  @@index([prefecture])
+  @@index([enrichmentStatus])
+  @@index([industryId])
+  @@index([employeeCount])
+  @@index([lastCrawledAt])
+}
+
+enum EnrichmentStatus {
+  PENDING
+  IN_PROGRESS
+  COMPLETED
+  FAILED
+}
+
+// 業種マスタ（industries）
+model Industry {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  category  String?
+  createdAt DateTime @default(now())
+
+  companies CompanyMaster[]
+}
+
+// サービスタグマスタ（service_tags）
+model ServiceTag {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  createdAt DateTime @default(now())
+
+  companies CompanyServiceTag[]
+}
+
+// 企業×サービスタグ中間テーブル
+model CompanyServiceTag {
+  companyMasterId String
+  tagId           String
+  createdAt       DateTime @default(now())
+
+  companyMaster CompanyMaster @relation(fields: [companyMasterId], references: [id], onDelete: Cascade)
+  tag           ServiceTag    @relation(fields: [tagId], references: [id], onDelete: Cascade)
+
+  @@id([companyMasterId, tagId])
+  @@index([tagId])
+}
+
+// 拠点（offices）
+model Office {
+  id              String     @id @default(cuid())
+  companyMasterId String
+  name            String
+  officeType      OfficeType @default(BRANCH)
+  prefecture      String?
+  city            String?
+  address         String?
+  phone           String?
+  websiteUrl      String?
+  isPrimary       Boolean    @default(false)
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
+
+  companyMaster CompanyMaster @relation(fields: [companyMasterId], references: [id], onDelete: Cascade)
+  departments   Department[]
+
+  @@index([companyMasterId])
+  @@index([officeType])
+  @@index([prefecture])
+}
+
+enum OfficeType {
+  HEADQUARTERS
+  BRANCH
+  SALES_OFFICE
+  FACTORY
+  LAB
+  OTHER
+}
+
+// 部門（departments、ツリー構造）
+model Department {
+  id                 String          @id @default(cuid())
+  companyMasterId    String
+  officeId           String?
+  parentDepartmentId String?
+  name               String
+  departmentType     DepartmentType?
+  headcount          String?
+  description        String?
+  phone              String?
+  email              String?
+  contactPersonName  String?
+  contactPersonTitle String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+
+  companyMaster    CompanyMaster   @relation(fields: [companyMasterId], references: [id], onDelete: Cascade)
+  office           Office?         @relation(fields: [officeId], references: [id], onDelete: SetNull)
+  parentDepartment Department?     @relation("DepartmentTree", fields: [parentDepartmentId], references: [id], onDelete: SetNull)
+  childDepartments Department[]    @relation("DepartmentTree")
+  intentSignals    IntentSignal[]
+  companyIntents   CompanyIntent[]
+
+  @@index([companyMasterId])
+  @@index([officeId])
+  @@index([departmentType])
+  @@index([parentDepartmentId])
+}
+
+enum DepartmentType {
+  SALES
+  MARKETING
+  ENGINEERING
+  IT
+  HR
+  FINANCE
+  LEGAL
+  OPERATIONS
+  MANAGEMENT
+  RD
+  CS
+  OTHER
+}
+
+// インテント個別シグナル（求人情報・プレスリリース）
+model IntentSignal {
+  id              String            @id @default(cuid())
+  companyMasterId String
+  departmentType  DepartmentType?
+  departmentId    String?
+  signalType      IntentSignalType
+  source          String
+  sourceUrl       String
+  title           String
+  description     String?
+  publishedAt     DateTime?
+  rawData         Json?
+  createdAt       DateTime          @default(now())
+
+  companyMaster CompanyMaster @relation(fields: [companyMasterId], references: [id], onDelete: Cascade)
+  department    Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@unique([companyMasterId, sourceUrl])
+  @@index([companyMasterId, publishedAt(sort: Desc)])
+  @@index([companyMasterId, departmentType])
+  @@index([departmentId])
+  @@index([signalType])
+  @@index([publishedAt(sort: Desc)])
+}
+
+enum IntentSignalType {
+  JOB_POSTING
+  PRESS_RELEASE
+  NEWS
+  FUNDING
+  PRODUCT_LAUNCH
+  EVENT
+  OTHER
+}
+
+// 企業×部門の集約インテント（スコアリング用）
+model CompanyIntent {
+  id              String         @id @default(cuid())
+  companyMasterId String
+  departmentType  DepartmentType
+  departmentId    String?
+  intentLevel     IntentLevel    @default(NONE)
+  signalCount     Int            @default(0)
+  latestSignalAt  DateTime?
+  updatedAt       DateTime       @updatedAt
+
+  companyMaster CompanyMaster @relation(fields: [companyMasterId], references: [id], onDelete: Cascade)
+  department    Department?   @relation(fields: [departmentId], references: [id], onDelete: SetNull)
+
+  @@unique([companyMasterId, departmentType])
+  @@index([intentLevel])
+  @@index([companyMasterId])
+  @@index([departmentType])
+  @@index([latestSignalAt(sort: Desc)])
+}
+
+enum IntentLevel {
+  HOT
+  MIDDLE
+  LOW
+  NONE
 }

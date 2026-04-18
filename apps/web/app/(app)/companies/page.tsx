@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useMemo, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   Search,
@@ -10,11 +10,12 @@ import {
   ChevronUp,
   ChevronDown,
   Building2,
-  ExternalLink,
   ChevronLeft,
   ChevronRight,
   BarChart2,
   X,
+  List,
+  Check,
 } from 'lucide-react'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -50,28 +51,92 @@ const MOCK_COMPANIES: Company[] = [
   { id: '10', name: '株式会社アドバンス',      domain: 'advance-co.jp',          signal: 'Low',    score: 0.5, industry: '物流',         owner: '佐藤次郎', lastCallAt: null },
 ]
 
-const INITIAL_COMPANIES = MOCK_COMPANIES
+const INITIAL_COMPANIES: Company[] = []
 
 const ALL_INDUSTRIES = Array.from(new Set(MOCK_COMPANIES.map(c => c.industry)))
 const ALL_OWNERS    = Array.from(new Set(MOCK_COMPANIES.map(c => c.owner)))
 const ALL_SIGNALS: Signal[] = ['Hot', 'Middle', 'Low']
 
-const PAGE_SIZE = 8
+const PAGE_SIZE = 100
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
-const SIGNAL_CONFIG: Record<Signal, { bg: string; text: string; dot: string; label: string }> = {
-  Hot:    { bg: 'rgba(255,59,48,0.1)',  text: '#CF3131', dot: '#FF3B30', label: 'Hot' },
-  Middle: { bg: 'rgba(255,159,10,0.1)', text: '#C07000', dot: '#FF9F0A', label: 'Middle' },
-  Low:    { bg: 'rgba(0,113,227,0.1)',  text: '#0060C7', dot: '#0071E3', label: 'Low' },
+interface SignalGameStyle {
+  gradient: string
+  glow: string
+  color: string
+  dotColor: string
+  borderColor: string
+  textShadow: string
+  label: string
 }
 
-const SCORE_GRADE_CONFIG: Record<ScoreGrade, { color: string; bg: string }> = {
-  A: { color: '#CF3131', bg: 'rgba(255,59,48,0.1)' },
-  B: { color: '#C07000', bg: 'rgba(255,159,10,0.1)' },
-  C: { color: '#5E5CE6', bg: 'rgba(94,92,230,0.1)' },
-  D: { color: '#0060C7', bg: 'rgba(0,113,227,0.1)' },
-  E: { color: '#8E8E93', bg: 'rgba(0,0,0,0.05)' },
+const SIGNAL_CONFIG: Record<Signal, SignalGameStyle> = {
+  Hot: {
+    gradient: 'linear-gradient(135deg, #FFB347 0%, #FF6B35 35%, #FF3B30 70%, #CC1A00 100%)',
+    glow: '0 0 14px rgba(255,59,48,0.85), 0 0 5px rgba(255,107,53,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF',
+    dotColor: '#FFE4D9',
+    borderColor: 'rgba(255,255,255,0.3)',
+    textShadow: '0 1px 2px rgba(120,0,0,0.6)',
+    label: 'Hot',
+  },
+  Middle: {
+    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
+    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+    color: '#5B2E00',
+    dotColor: '#FFFFFF',
+    borderColor: 'rgba(255,255,255,0.4)',
+    textShadow: 'none',
+    label: 'Middle',
+  },
+  Low: {
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    color: '#FFFFFF',
+    dotColor: '#E0F4FF',
+    borderColor: 'rgba(255,255,255,0.3)',
+    textShadow: '0 1px 2px rgba(0,40,90,0.6)',
+    label: 'Low',
+  },
+}
+
+const SCORE_GRADE_CONFIG: Record<ScoreGrade, { color: string; bg: string; gradient: string; glow: string; barColor: string }> = {
+  A: {
+    color: '#FFFFFF',
+    bg: 'rgba(255,59,48,0.25)',
+    gradient: 'linear-gradient(135deg, #FFB347 0%, #FF6B35 35%, #FF3B30 70%, #CC1A00 100%)',
+    glow: '0 0 16px rgba(255,75,40,0.85), 0 0 6px rgba(255,180,80,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    barColor: '#FF6B35',
+  },
+  B: {
+    color: '#7B2D00',
+    bg: 'rgba(255,214,10,0.28)',
+    gradient: 'linear-gradient(135deg, #FFF080 0%, #FFE040 30%, #FFD60A 60%, #FF9F0A 100%)',
+    glow: '0 0 16px rgba(255,214,10,0.85), 0 0 6px rgba(255,240,128,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
+    barColor: '#FFD60A',
+  },
+  C: {
+    color: '#FFFFFF',
+    bg: 'rgba(139,92,246,0.28)',
+    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
+    glow: '0 0 16px rgba(139,92,246,0.85), 0 0 6px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    barColor: '#A78BFA',
+  },
+  D: {
+    color: '#FFFFFF',
+    bg: 'rgba(50,173,230,0.28)',
+    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
+    glow: '0 0 16px rgba(50,173,230,0.85), 0 0 6px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
+    barColor: '#5AC8FA',
+  },
+  E: {
+    color: '#FFFFFF',
+    bg: 'rgba(142,142,147,0.25)',
+    gradient: 'linear-gradient(135deg, #C7C7CC 0%, #AEAEB2 35%, #8E8E93 70%, #636366 100%)',
+    glow: '0 0 12px rgba(142,142,147,0.6), inset 0 1px 0 rgba(255,255,255,0.3)',
+    barColor: '#AEAEB2',
+  },
 }
 
 function scoreToGrade(score: number): ScoreGrade {
@@ -98,17 +163,7 @@ function formatDate(dateStr: string | null): string {
   return `${d.getMonth() + 1}/${d.getDate()}`
 }
 
-function SignalBadge({ signal }: { signal: Signal }) {
-  const s = SIGNAL_CONFIG[signal]
-  return (
-    <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[11px] font-semibold" style={{ background: s.bg, color: s.text }}>
-      <span className="w-[6px] h-[6px] rounded-full" style={{ background: s.dot }} />
-      {s.label}
-    </span>
-  )
-}
-
-function ScoreDisplay({ score, companyName }: { score: number; companyName: string }) {
+function ScoreDisplay({ score }: { score: number }) {
   const [showDetail, setShowDetail] = useState(false)
   const grade = scoreToGrade(score)
   const cfg = SCORE_GRADE_CONFIG[grade]
@@ -118,12 +173,30 @@ function ScoreDisplay({ score, companyName }: { score: number; companyName: stri
     <div className="relative">
       <button
         onClick={e => { e.stopPropagation(); setShowDetail(!showDetail) }}
-        className="flex items-center gap-1.5 hover:opacity-80 transition-opacity"
+        className="flex items-center gap-2 hover:scale-105 transition-transform"
       >
-        <span className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[5px] text-[11px] font-bold" style={{ background: cfg.bg, color: cfg.color }}>
+        <span
+          className="inline-flex items-center justify-center w-[26px] h-[26px] rounded-[6px] text-[12px] font-black"
+          style={{
+            background: cfg.gradient,
+            color: cfg.color,
+            boxShadow: cfg.glow,
+            border: '1px solid rgba(255,255,255,0.25)',
+            textShadow: cfg.color === '#FFFFFF' ? '0 1px 2px rgba(0,0,0,0.4)' : 'none',
+            letterSpacing: '0.04em',
+          }}
+        >
           {grade}
         </span>
-        <span className="text-[13px] font-semibold tabular-nums text-[#1D1D1F]">{score.toFixed(1)}</span>
+        <span
+          className="text-[14px] font-bold tabular-nums"
+          style={{
+            color: '#FFFFFF',
+            textShadow: `0 0 8px ${cfg.barColor}99, 0 0 2px ${cfg.barColor}`,
+          }}
+        >
+          {score.toFixed(1)}
+        </span>
       </button>
 
       <AnimatePresence>
@@ -135,33 +208,52 @@ function ScoreDisplay({ score, companyName }: { score: number; companyName: stri
               animate={{ opacity: 1, y: 0, scale: 1 }}
               exit={{ opacity: 0, y: -4, scale: 0.97 }}
               transition={{ duration: 0.15 }}
-              className="absolute left-0 top-[32px] z-50 w-[300px] rounded-[12px] p-4 bg-white"
-              style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.06), 0 8px 32px rgba(0,0,0,0.14)' }}
+              className="absolute left-0 top-[36px] z-50 w-[300px] rounded-[8px] p-4 bg-[#0c1028]"
+              style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px #2244AA' }}
               onClick={e => e.stopPropagation()}
             >
               <div className="flex items-center justify-between mb-3">
-                <p className="text-[13px] font-semibold text-[#1D1D1F]">スコア詳細</p>
+                <p className="text-[13px] font-semibold text-[#EEEEFF]">インテント詳細</p>
                 <div className="flex items-center gap-1.5">
-                  <span className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[4px] text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.color }}>{grade}</span>
-                  <span className="text-[15px] font-bold tabular-nums" style={{ color: cfg.color }}>{score.toFixed(1)}</span>
-                  <span className="text-[11px] text-[#AEAEB2]">/ 5.0</span>
+                  <span
+                    className="inline-flex items-center justify-center w-[22px] h-[22px] rounded-[5px] text-[11px] font-black"
+                    style={{
+                      background: cfg.gradient,
+                      color: cfg.color,
+                      boxShadow: cfg.glow,
+                      border: '1px solid rgba(255,255,255,0.25)',
+                      textShadow: cfg.color === '#FFFFFF' ? '0 1px 2px rgba(0,0,0,0.4)' : 'none',
+                    }}
+                  >
+                    {grade}
+                  </span>
+                  <span
+                    className="text-[16px] font-black tabular-nums"
+                    style={{
+                      color: '#FFFFFF',
+                      textShadow: `0 0 8px ${cfg.barColor}99, 0 0 2px ${cfg.barColor}`,
+                    }}
+                  >
+                    {score.toFixed(1)}
+                  </span>
+                  <span className="text-[11px] text-[#99AACC]">/ 5.0</span>
                 </div>
               </div>
               <div className="space-y-2.5">
                 {breakdown.map(item => (
                   <div key={item.label}>
                     <div className="flex items-center justify-between mb-0.5">
-                      <span className="text-[11px] font-medium text-[#6E6E73]">{item.label}</span>
-                      <span className="text-[11px] font-semibold tabular-nums text-[#1D1D1F]">{item.value}</span>
+                      <span className="text-[11px] font-medium text-[#CCDDF0]">{item.label}</span>
+                      <span className="text-[11px] font-semibold tabular-nums text-[#EEEEFF]">{item.value}</span>
                     </div>
-                    <p className="text-[10px] text-[#AEAEB2] mb-1">{item.description}</p>
-                    <div className="h-[4px] rounded-full overflow-hidden" style={{ background: 'rgba(0,0,0,0.05)' }}>
-                      <div className="h-full rounded-full" style={{ width: `${(item.value / item.max) * 100}%`, background: cfg.color, transition: 'width 0.3s ease' }} />
+                    <p className="text-[10px] text-[#99AACC] mb-1">{item.description}</p>
+                    <div className="h-[5px] rounded-full overflow-hidden" style={{ background: 'rgba(136,187,255,0.08)' }}>
+                      <div className="h-full rounded-full" style={{ width: `${(item.value / item.max) * 100}%`, background: cfg.gradient, boxShadow: `0 0 6px ${cfg.barColor}80`, transition: 'width 0.3s ease' }} />
                     </div>
                   </div>
                 ))}
               </div>
-              <p className="text-[10px] text-[#AEAEB2] mt-3 pt-2" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+              <p className="text-[10px] text-[#99AACC] mt-3 pt-2" style={{ borderTop: '1px solid rgba(34,68,170,0.2)' }}>
                 スコアは上記5要素の重み付けで自動算出されます
               </p>
             </motion.div>
@@ -175,7 +267,7 @@ function ScoreDisplay({ score, companyName }: { score: number; companyName: stri
 // ─── Sort Icon ────────────────────────────────────────────────────────────────
 
 function SortIcon({ col, sortKey, sortDir }: { col: SortKey; sortKey: SortKey; sortDir: SortDir }) {
-  if (col !== sortKey) return <ArrowUpDown size={13} className="text-[#D1D5DB] ml-1 inline" />
+  if (col !== sortKey) return <ArrowUpDown size={13} className="text-[#88BBFF] ml-1 inline" />
   return sortDir === 'asc'
     ? <ChevronUp size={13} className="text-[#0071E3] ml-1 inline" />
     : <ChevronDown size={13} className="text-[#0071E3] ml-1 inline" />
@@ -194,7 +286,7 @@ function FilterChip({ label, onRemove }: { label: string; onRemove: () => void }
       style={{ background: 'rgba(0,113,227,0.1)', color: '#0071E3' }}
     >
       {label}
-      <button onClick={onRemove} className="hover:text-[#0060C7] transition-colors ml-0.5">
+      <button onClick={onRemove} className="hover:text-[#7AB4FF] transition-colors ml-0.5">
         <X size={11} />
       </button>
     </motion.span>
@@ -220,15 +312,20 @@ const DEFAULT_CREATE_FORM: CreateCompanyForm = {
 
 export default function CompaniesPage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
+  const isListCreateMode = searchParams?.get('mode') === 'list-create'
+
   const [companies, setCompanies] = useState<Company[]>(INITIAL_COMPANIES)
+  const [isLoading, setIsLoading] = useState(true)
   const [search, setSearch]         = useState('')
-  const [filterSignals, setFilterSignals]   = useState<Signal[]>([])
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [showListModal, setShowListModal] = useState(false)
+  const [listForm, setListForm] = useState({ name: '', description: '', owner: '田中太郎' })
   const [filterIndustry, setFilterIndustry] = useState('')
-  const [filterOwner, setFilterOwner]       = useState('')
+  const [filterGrade, setFilterGrade] = useState('')
   const [sortKey, setSortKey]       = useState<SortKey>('score')
   const [sortDir, setSortDir]       = useState<SortDir>('desc')
   const [page, setPage]             = useState(1)
-  const [showSignalFilter, setShowSignalFilter] = useState(false)
   const [showScoreLogic, setShowScoreLogic] = useState(false)
   const [showCreateModal, setShowCreateModal] = useState(false)
   const [createForm, setCreateForm] = useState<CreateCompanyForm>(DEFAULT_CREATE_FORM)
@@ -237,6 +334,79 @@ export default function CompaniesPage() {
     const handler = () => setShowCreateModal(true)
     window.addEventListener('header-action', handler)
     return () => window.removeEventListener('header-action', handler)
+  }, [])
+
+  // 企業マスター (4,071社) を API から取得して Company 型にマッピング
+  useEffect(() => {
+    let cancelled = false
+    ;(async () => {
+      try {
+        const res = await fetch('/api/company-master?take=5000')
+        if (!res.ok) {
+          if (!cancelled) setIsLoading(false)
+          return
+        }
+        const json = (await res.json()) as {
+          data: Array<{
+            id: string
+            name: string
+            websiteUrl: string | null
+            prefecture: string
+            industry: { name: string } | null
+            companyIntents: Array<{
+              intentLevel: 'HOT' | 'MIDDLE' | 'LOW' | 'NONE'
+              signalCount: number
+              latestSignalAt: string | null
+            }>
+          }>
+        }
+        const mapped: Company[] = json.data.map((c) => {
+          const topIntent = c.companyIntents[0]
+          const signal: Signal =
+            topIntent?.intentLevel === 'HOT'
+              ? 'Hot'
+              : topIntent?.intentLevel === 'MIDDLE'
+                ? 'Middle'
+                : 'Low'
+          const score =
+            topIntent?.intentLevel === 'HOT'
+              ? 4.5
+              : topIntent?.intentLevel === 'MIDDLE'
+                ? 3.0
+                : topIntent?.intentLevel === 'LOW'
+                  ? 1.5
+                  : 0.5
+          let domain = ''
+          if (c.websiteUrl) {
+            try {
+              const u = new URL(c.websiteUrl.startsWith('http') ? c.websiteUrl : `https://${c.websiteUrl}`)
+              domain = u.hostname.replace(/^www\./, '')
+            } catch {
+              domain = c.websiteUrl
+            }
+          }
+          return {
+            id: c.id,
+            name: c.name,
+            domain,
+            signal,
+            score,
+            industry: c.industry?.name ?? 'その他',
+            owner: '未割当',
+            lastCallAt: topIntent?.latestSignalAt ?? null,
+          }
+        })
+        if (!cancelled) {
+          setCompanies(mapped)
+          setIsLoading(false)
+        }
+      } catch {
+        if (!cancelled) setIsLoading(false)
+      }
+    })()
+    return () => {
+      cancelled = true
+    }
   }, [])
 
   function handleCreateSubmit() {
@@ -265,14 +435,11 @@ export default function CompaniesPage() {
         c.name.toLowerCase().includes(q) || c.domain.toLowerCase().includes(q)
       )
     }
-    if (filterSignals.length > 0) {
-      list = list.filter(c => filterSignals.includes(c.signal))
-    }
     if (filterIndustry) {
       list = list.filter(c => c.industry === filterIndustry)
     }
-    if (filterOwner) {
-      list = list.filter(c => c.owner === filterOwner)
+    if (filterGrade) {
+      list = list.filter(c => scoreToGrade(c.score) === filterGrade)
     }
 
     list = [...list].sort((a, b) => {
@@ -286,7 +453,7 @@ export default function CompaniesPage() {
     })
 
     return list
-  }, [companies, search, filterSignals, filterIndustry, filterOwner, sortKey, sortDir])
+  }, [companies, search, filterIndustry, filterGrade, sortKey, sortDir])
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE))
   const paged = filtered.slice((page - 1) * PAGE_SIZE, page * PAGE_SIZE)
@@ -297,81 +464,122 @@ export default function CompaniesPage() {
     setPage(1)
   }
 
-  function toggleSignal(s: Signal) {
-    setFilterSignals(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
-    setPage(1)
+  const hasFilters = !!filterIndustry || !!filterGrade
+
+  function toggleSelect(id: string) {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
   }
 
-  const hasFilters = filterSignals.length > 0 || filterIndustry || filterOwner
+  function toggleSelectAll(visibleIds: string[]) {
+    const allSelected = visibleIds.every(id => selectedIds.has(id))
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (allSelected) {
+        visibleIds.forEach(id => next.delete(id))
+      } else {
+        visibleIds.forEach(id => next.add(id))
+      }
+      return next
+    })
+  }
 
   return (
     <div className="space-y-4">
+
+      {/* ── List Create Mode Banner ── */}
+      {isListCreateMode && (
+        <motion.div
+          initial={{ opacity: 0, y: -8 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="rounded-[8px] px-4 py-3 flex items-center justify-between"
+          style={{
+            background: 'linear-gradient(180deg, rgba(34,68,170,0.18) 0%, rgba(26,51,136,0.12) 100%)',
+            border: '1px solid #3355CC',
+            boxShadow: '0 0 16px rgba(34,68,170,0.15)',
+          }}
+        >
+          <div className="flex items-center gap-3">
+            <div className="w-8 h-8 rounded-full flex items-center justify-center" style={{ background: 'rgba(136,187,255,0.12)', border: '1px solid #3355CC' }}>
+              <List size={14} style={{ color: '#88BBFF' }} />
+            </div>
+            <div>
+              <p className="text-[13px] font-bold text-[#EEEEFF]">ISリスト作成モード</p>
+              <p className="text-[11px] text-[#CCDDF0] mt-0.5">リストに追加する企業を選択してください</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3">
+            <span className="text-[12px] text-[#88BBFF]">
+              <span className="text-[16px] font-bold tabular-nums">{selectedIds.size}</span> 社選択中
+            </span>
+            <button
+              onClick={() => toggleSelectAll(filtered.map(c => c.id))}
+              className="px-3 py-1.5 text-[11px] font-medium rounded-[5px] transition-colors"
+              style={{ background: 'rgba(136,187,255,0.08)', border: '1px solid #2244AA', color: '#88BBFF' }}
+            >
+              {filtered.every(c => selectedIds.has(c.id)) && filtered.length > 0 ? '全選択を解除' : `全${filtered.length}社を選択`}
+            </button>
+            <div className="w-px h-5" style={{ background: '#2244AA' }} />
+            <button
+              onClick={() => { setSelectedIds(new Set()); router.push('/companies') }}
+              className="text-[11px] text-[#CCDDF0] hover:text-[#EEEEFF] transition-colors"
+            >
+              キャンセル
+            </button>
+            <button
+              disabled={selectedIds.size === 0}
+              onClick={() => setShowListModal(true)}
+              className="px-4 py-2 text-[12px] font-semibold rounded-[6px] transition-all"
+              style={{
+                background: selectedIds.size > 0 ? 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)' : 'rgba(34,68,170,0.2)',
+                border: selectedIds.size > 0 ? '1px solid #3355CC' : '1px solid transparent',
+                color: selectedIds.size > 0 ? '#FFFFFF' : '#4466AA',
+                cursor: selectedIds.size > 0 ? 'pointer' : 'default',
+              }}
+            >
+              リストを作成 →
+            </button>
+          </div>
+        </motion.div>
+      )}
 
       {/* ── Top Bar ── */}
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-center gap-2 flex-1 max-w-xl">
           {/* Search */}
           <div className="relative flex-1">
-            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#9CA3AF]" />
+            <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-[#CCDDF0]" />
             <input
               type="text"
               placeholder="企業名・ドメインで検索..."
               value={search}
               onChange={e => { setSearch(e.target.value); setPage(1) }}
-              className="w-full pl-9 pr-3 py-2 text-sm bg-white border border-[#E5E7EB] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] focus:outline-none focus:ring-1 focus:ring-[#0071E3] focus:border-[#0071E3] transition-shadow"
+              className="w-full pl-9 pr-3 py-2 text-sm bg-[#0c1028] border border-[#2244AA] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] focus:outline-none focus:ring-1 focus:ring-[#0071E3] focus:border-[#0071E3] transition-shadow"
             />
           </div>
 
-          {/* Signal filter dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setShowSignalFilter(v => !v)}
-              className={`flex items-center gap-1.5 px-3 py-2 text-sm rounded-[8px] border transition-all duration-150 ${
-                filterSignals.length > 0
-                  ? 'border-[rgba(0,113,227,0.3)] text-[#0071E3]'
-                  : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB] hover:text-[#374151]'
-              }`}
-              style={filterSignals.length > 0 ? { background: 'rgba(0,113,227,0.08)' } : undefined}
-            >
-              シグナル
-              {filterSignals.length > 0 && (
-                <span className="w-4 h-4 rounded-full bg-[#0071E3] text-white text-[10px] flex items-center justify-center font-bold">
-                  {filterSignals.length}
-                </span>
-              )}
-              <ChevronDown size={13} />
-            </button>
-            <AnimatePresence>
-              {showSignalFilter && (
-                <motion.div
-                  initial={{ opacity: 0, y: -6, scale: 0.97 }}
-                  animate={{ opacity: 1, y: 0, scale: 1 }}
-                  exit={{ opacity: 0, y: -6, scale: 0.97 }}
-                  transition={{ duration: 0.12 }}
-                  className="absolute top-full mt-1.5 left-0 z-20 bg-white rounded-[10px] p-2 flex flex-col gap-0.5 min-w-[120px]"
-                  style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.08), 0 4px 16px rgba(0,0,0,0.10), 0 16px 48px rgba(0,0,0,0.08)' }}
-                >
-                  {ALL_SIGNALS.map(s => {
-                    const cfg = SIGNAL_CONFIG[s]
-                    const active = filterSignals.includes(s)
-                    return (
-                      <button
-                        key={s}
-                        onClick={() => toggleSignal(s)}
-                        className={`flex items-center gap-2 px-2.5 py-1.5 rounded-[6px] text-[12px] font-medium transition-all ${
-                          active ? '' : 'hover:bg-[rgba(0,0,0,0.04)] text-[#3C3C43]'
-                        }`}
-                        style={active ? { background: cfg.bg, color: cfg.text } : undefined}
-                      >
-                        <span className="w-[6px] h-[6px] rounded-full" style={{ background: cfg.dot }} />
-                        {s}
-                      </button>
-                    )
-                  })}
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* インテント(スコアグレード)絞り込み */}
+          <select
+            value={filterGrade}
+            onChange={e => { setFilterGrade(e.target.value); setPage(1) }}
+            className={`px-3 py-2 text-sm rounded-[8px] border appearance-none cursor-pointer transition-all duration-150 ${
+              filterGrade
+                ? 'border-[rgba(0,113,227,0.3)] text-[#0071E3]'
+                : 'bg-[#0c1028] border-[#2244AA] text-[#CCDDF0] hover:border-[#D1D5DB]'
+            }`}
+            style={filterGrade ? { background: 'rgba(0,113,227,0.08)' } : undefined}
+          >
+            <option value="">インテント</option>
+            <option value="A">A (4.0以上)</option>
+            <option value="B">B (3.0以上)</option>
+            <option value="C">C (2.0以上)</option>
+            <option value="D">D (1.0以上)</option>
+            <option value="E">E (0以上)</option>
+          </select>
 
           {/* Industry filter */}
           <select
@@ -380,58 +588,65 @@ export default function CompaniesPage() {
             className={`px-3 py-2 text-sm rounded-[8px] border appearance-none cursor-pointer transition-all duration-150 ${
               filterIndustry
                 ? 'border-[rgba(0,113,227,0.3)] text-[#0071E3]'
-                : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB]'
+                : 'bg-[#0c1028] border-[#2244AA] text-[#CCDDF0] hover:border-[#D1D5DB]'
             }`}
             style={filterIndustry ? { background: 'rgba(0,113,227,0.08)' } : undefined}
           >
             <option value="">業種</option>
             {ALL_INDUSTRIES.map(i => <option key={i} value={i}>{i}</option>)}
           </select>
-
-          {/* Owner filter */}
-          <select
-            value={filterOwner}
-            onChange={e => { setFilterOwner(e.target.value); setPage(1) }}
-            className={`px-3 py-2 text-sm rounded-[8px] border appearance-none cursor-pointer transition-all duration-150 ${
-              filterOwner
-                ? 'border-[rgba(0,113,227,0.3)] text-[#0071E3]'
-                : 'bg-white border-[#E5E7EB] text-[#6B7280] hover:border-[#D1D5DB]'
-            }`}
-            style={filterOwner ? { background: 'rgba(0,113,227,0.08)' } : undefined}
-          >
-            <option value="">担当者</option>
-            {ALL_OWNERS.map(o => <option key={o} value={o}>{o}</option>)}
-          </select>
         </div>
 
-        <motion.button
-          whileHover={{ filter: 'brightness(1.05)' }}
-          whileTap={{ scale: 0.97 }}
-          transition={{ duration: 0.1 }}
-          onClick={() => setShowCreateModal(true)}
-          className="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-[8px] shrink-0"
-          style={{ background: 'linear-gradient(180deg, #147CE5 0%, #0071E3 100%)', boxShadow: '0 1px 3px rgba(0,113,227,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' }}
-        >
-          <Plus size={15} strokeWidth={2.5} />
-          企業を追加
-        </motion.button>
+        <div className="flex items-center gap-2 shrink-0">
+          {!isListCreateMode && (
+            <motion.button
+              whileTap={{ scale: 0.97 }}
+              transition={{ duration: 0.1 }}
+              onClick={() => router.push('/companies?mode=list-create')}
+              className="flex items-center gap-1.5 px-4 py-2 text-sm font-semibold rounded-[8px]"
+              style={{
+                background: 'rgba(136,187,255,0.06)',
+                border: '1px solid #2244AA',
+                color: '#88BBFF',
+              }}
+            >
+              <List size={14} strokeWidth={2.5} />
+              ISリスト作成
+            </motion.button>
+          )}
+          <motion.button
+            whileHover={{ filter: 'brightness(1.05)' }}
+            whileTap={{ scale: 0.97 }}
+            transition={{ duration: 0.1 }}
+            onClick={() => setShowCreateModal(true)}
+            className="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-[8px]"
+            style={{
+              background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
+              border: '1px solid #3355CC',
+              boxShadow: '0 2px 8px rgba(34,68,170,0.4), inset 0 1px 0 rgba(200,220,255,0.15)',
+            }}
+          >
+            <Plus size={15} strokeWidth={2.5} />
+            企業を追加
+          </motion.button>
+        </div>
       </div>
 
       {/* ── Scoring Logic Panel ── */}
-      <div className="bg-white rounded-[14px] overflow-hidden" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 1px 4px rgba(0,0,0,0.04)' }}>
+      <div className="bg-[#0c1028] rounded-[8px] overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
         <button
           onClick={() => setShowScoreLogic(!showScoreLogic)}
-          className="w-full flex items-center gap-3 px-5 py-3 hover:bg-[rgba(0,0,0,0.015)] transition-colors"
+          className="w-full flex items-center gap-3 px-5 py-3 hover:bg-[rgba(136,187,255,0.04)] transition-colors"
         >
           <div className="w-[24px] h-[24px] rounded-[6px] flex items-center justify-center" style={{ background: 'rgba(94,92,230,0.1)' }}>
             <BarChart2 size={13} style={{ color: '#5E5CE6' }} />
           </div>
           <div className="flex-1 text-left">
-            <p className="text-[13px] font-semibold text-[#1D1D1F]">スコアリングロジック</p>
-            <p className="text-[11px] text-[#8E8E93]">スコアの算出方法と各要素の重み付けを確認</p>
+            <p className="text-[13px] font-semibold text-[#EEEEFF]">インテント算出ロジック</p>
+            <p className="text-[11px] text-[#CCDDF0]">インテントスコアの算出方法と各要素の重み付けを確認</p>
           </div>
           <motion.div animate={{ rotate: showScoreLogic ? 90 : 0 }} transition={{ duration: 0.15 }}>
-            <ChevronRight size={14} style={{ color: '#AEAEB2' }} />
+            <ChevronRight size={14} style={{ color: '#99AACC' }} />
           </motion.div>
         </button>
 
@@ -444,17 +659,28 @@ export default function CompaniesPage() {
               transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
               className="overflow-hidden"
             >
-              <div className="px-5 pb-5" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
+              <div className="px-5 pb-5" style={{ borderTop: '1px solid rgba(34,68,170,0.2)' }}>
                 {/* Grade scale */}
-                <div className="flex items-center gap-3 py-3 mb-3" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)' }}>
-                  <span className="text-[11px] text-[#8E8E93]">グレード:</span>
+                <div className="flex items-center gap-3 py-3 mb-3" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
+                  <span className="text-[11px] text-[#CCDDF0]">グレード:</span>
                   {(['A', 'B', 'C', 'D', 'E'] as const).map(g => {
                     const cfg = SCORE_GRADE_CONFIG[g]
                     const range = g === 'A' ? '4.0-5.0' : g === 'B' ? '3.0-3.9' : g === 'C' ? '2.0-2.9' : g === 'D' ? '1.0-1.9' : '0-0.9'
                     return (
                       <div key={g} className="flex items-center gap-1">
-                        <span className="inline-flex items-center justify-center w-[18px] h-[18px] rounded-[4px] text-[10px] font-bold" style={{ background: cfg.bg, color: cfg.color }}>{g}</span>
-                        <span className="text-[10px] text-[#AEAEB2] tabular-nums">{range}</span>
+                        <span
+                          className="inline-flex items-center justify-center w-[20px] h-[20px] rounded-[5px] text-[10px] font-black"
+                          style={{
+                            background: cfg.gradient,
+                            color: cfg.color,
+                            boxShadow: cfg.glow,
+                            border: '1px solid rgba(255,255,255,0.25)',
+                            textShadow: cfg.color === '#FFFFFF' ? '0 1px 2px rgba(0,0,0,0.4)' : 'none',
+                          }}
+                        >
+                          {g}
+                        </span>
+                        <span className="text-[10px] text-[#99AACC] tabular-nums">{range}</span>
                       </div>
                     )
                   })}
@@ -471,16 +697,16 @@ export default function CompaniesPage() {
                       <div className="w-[6px] h-[6px] rounded-full mt-1.5 shrink-0" style={{ background: item.color }} />
                       <div className="flex-1">
                         <div className="flex items-center gap-2">
-                          <span className="text-[12px] font-semibold text-[#1D1D1F]">{item.label}</span>
+                          <span className="text-[12px] font-semibold text-[#EEEEFF]">{item.label}</span>
                           <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-[3px]" style={{ background: `${item.color}14`, color: item.color }}>{item.weight}</span>
                         </div>
-                        <p className="text-[11px] text-[#8E8E93] mt-0.5 leading-relaxed">{item.description}</p>
+                        <p className="text-[11px] text-[#CCDDF0] mt-0.5 leading-relaxed">{item.description}</p>
                       </div>
                     </div>
                   ))}
                 </div>
 
-                <p className="text-[10px] text-[#AEAEB2] mt-3 pt-2" style={{ borderTop: '1px solid rgba(0,0,0,0.04)' }}>
+                <p className="text-[10px] text-[#99AACC] mt-3 pt-2" style={{ borderTop: '1px solid rgba(34,68,170,0.2)' }}>
                   各要素は0〜5.0の範囲で算出され、重み付けにより最終スコア（5.0満点）が決定されます。スコアは日次で自動更新されます。
                 </p>
               </div>
@@ -499,21 +725,18 @@ export default function CompaniesPage() {
             transition={{ duration: 0.15 }}
             className="flex flex-wrap items-center gap-1.5"
           >
-            <span className="text-xs text-[#AEAEB2]">フィルター:</span>
+            <span className="text-xs text-[#99AACC]">フィルター:</span>
             <AnimatePresence>
-              {filterSignals.map(s => (
-                <FilterChip key={s} label={s} onRemove={() => toggleSignal(s)} />
-              ))}
+              {filterGrade && (
+                <FilterChip label={`インテント ${filterGrade}`} onRemove={() => setFilterGrade('')} />
+              )}
               {filterIndustry && (
                 <FilterChip label={filterIndustry} onRemove={() => setFilterIndustry('')} />
               )}
-              {filterOwner && (
-                <FilterChip label={filterOwner} onRemove={() => setFilterOwner('')} />
-              )}
             </AnimatePresence>
             <button
-              onClick={() => { setFilterSignals([]); setFilterIndustry(''); setFilterOwner('') }}
-              className="text-xs text-[#6E6E73] hover:text-[#1D1D1F] underline ml-1 transition-colors"
+              onClick={() => { setFilterIndustry(''); setFilterGrade('') }}
+              className="text-xs text-[#CCDDF0] hover:text-[#EEEEFF] underline ml-1 transition-colors"
             >
               すべてクリア
             </button>
@@ -522,23 +745,47 @@ export default function CompaniesPage() {
       </AnimatePresence>
 
       {/* ── Table ── */}
-      <div className="bg-white rounded-[14px] overflow-hidden" style={{ boxShadow: '0 0 0 1px rgba(0,0,0,0.05), 0 2px 8px rgba(0,0,0,0.07), 0 8px 28px rgba(0,0,0,0.05)' }}>
+      <div className="bg-[#0c1028] rounded-[8px] overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
 
         {/* Header */}
-        <div className="grid grid-cols-[2fr_1.5fr_80px_140px_1fr_1fr_80px_120px] gap-0 px-5 py-2.5" style={{ borderBottom: '1px solid rgba(0,0,0,0.04)', background: 'rgba(0,0,0,0.018)' }}>
+        <div className="grid grid-cols-[300px_120px_1fr_140px_120px] gap-x-3 px-5 py-2.5" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)', background: 'rgba(16,24,56,0.6)' }}>
+          <div className="flex items-center gap-2.5">
+            {isListCreateMode && (() => {
+              const visibleIds = paged.map(c => c.id)
+              const allChecked = visibleIds.length > 0 && visibleIds.every(id => selectedIds.has(id))
+              const someChecked = visibleIds.some(id => selectedIds.has(id))
+              return (
+                <button
+                  onClick={() => toggleSelectAll(visibleIds)}
+                  className="w-5 h-5 rounded-[5px] flex items-center justify-center shrink-0 transition-all"
+                  style={{
+                    background: allChecked ? 'linear-gradient(180deg, #2244AA, #1a3388)' : 'rgba(16,16,40,0.6)',
+                    border: allChecked || someChecked ? '1px solid #5577DD' : '1px solid #2244AA',
+                    boxShadow: allChecked ? '0 0 8px rgba(85,119,221,0.4)' : 'none',
+                  }}
+                >
+                  {allChecked && <Check size={12} className="text-white" strokeWidth={3} />}
+                  {!allChecked && someChecked && <div className="w-2 h-[2px] bg-[#88BBFF] rounded-full" />}
+                </button>
+              )
+            })()}
+            <div
+              className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.06em] leading-none cursor-pointer hover:text-[#CCDDF0] select-none transition-colors flex items-center"
+              onClick={() => toggleSort('name')}
+            >
+              企業名
+              <SortIcon col="name" sortKey={sortKey} sortDir={sortDir} />
+            </div>
+          </div>
           {[
-            { label: '企業名', key: 'name' as SortKey, sortable: true },
-            { label: 'ドメイン', key: null, sortable: false },
-            { label: 'シグナル', key: 'signal' as SortKey, sortable: true },
-            { label: 'スコア', key: 'score' as SortKey, sortable: true },
+            { label: 'インテント', key: 'score' as SortKey, sortable: true },
+            { label: '', key: null, sortable: false },
             { label: '業種', key: null, sortable: false },
-            { label: '担当者', key: null, sortable: false },
-            { label: '最終コール', key: 'lastCallAt' as SortKey, sortable: true },
             { label: '', key: null, sortable: false },
           ].map((col, i) => (
             <div
               key={i}
-              className={`text-[11px] font-medium text-[#AEAEB2] uppercase tracking-[0.06em] leading-none ${col.sortable ? 'cursor-pointer hover:text-[#6E6E73] select-none transition-colors' : ''} flex items-center`}
+              className={`text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.06em] leading-none ${col.sortable ? 'cursor-pointer hover:text-[#CCDDF0] select-none transition-colors' : ''} flex items-center`}
               onClick={col.key ? () => toggleSort(col.key as SortKey) : undefined}
             >
               {col.label}
@@ -554,91 +801,86 @@ export default function CompaniesPage() {
           variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
         >
           <AnimatePresence mode="wait">
-            {paged.length === 0 ? (
+            {isLoading ? (
+              <motion.div
+                key="loading"
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                className="flex flex-col items-center justify-center py-16 gap-3"
+              >
+                <div className="w-8 h-8 rounded-full border-2 border-[rgba(136,187,255,0.2)] border-t-[#88BBFF] animate-spin" />
+                <p className="text-sm text-[#99AACC]">企業データを読み込み中…</p>
+              </motion.div>
+            ) : paged.length === 0 ? (
               <motion.div
                 key="empty"
                 initial={{ opacity: 0 }}
                 animate={{ opacity: 1 }}
                 className="flex flex-col items-center justify-center py-16 gap-3"
               >
-                <div className="w-12 h-12 rounded-full bg-[#F3F4F6] flex items-center justify-center">
-                  <Building2 size={22} className="text-[#D1D5DB]" />
+                <div className="w-12 h-12 rounded-full bg-[rgba(34,68,170,0.1)] flex items-center justify-center">
+                  <Building2 size={22} className="text-[#88BBFF]" />
                 </div>
-                <p className="text-sm text-[#6B7280]">条件に一致する企業が見つかりません</p>
+                <p className="text-sm text-[#CCDDF0]">条件に一致する企業が見つかりません</p>
               </motion.div>
             ) : (
-              paged.map((company) => (
+              paged.map((company) => {
+                const isSelected = selectedIds.has(company.id)
+                return (
                 <motion.div
                   key={company.id}
                   variants={{
                     hidden: { opacity: 0, y: 8 },
                     visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                   }}
-                  onClick={() => router.push(`/companies/${company.id}`)}
-                  className="grid grid-cols-[2fr_1.5fr_80px_140px_1fr_1fr_80px_120px] gap-0 items-center px-5 py-3.5 last:border-0 hover:bg-[rgba(0,0,0,0.02)] transition-colors duration-100 group cursor-pointer"
-                  style={{ borderBottom: '1px solid rgba(0,0,0,0.03)' }}
+                  onClick={() => isListCreateMode ? toggleSelect(company.id) : router.push(`/companies/${company.id}`)}
+                  onMouseEnter={() => { if (!isListCreateMode) router.prefetch(`/companies/${company.id}`) }}
+                  className="grid grid-cols-[300px_120px_1fr_140px_120px] gap-x-3 items-center px-5 py-3.5 last:border-0 transition-colors duration-100 group cursor-pointer"
+                  style={{
+                    borderBottom: '1px solid rgba(34,68,170,0.15)',
+                    background: isListCreateMode && isSelected ? 'rgba(34,68,170,0.15)' : undefined,
+                  }}
                 >
                   {/* 企業名 */}
                   <div className="flex items-center gap-2.5 min-w-0">
-                    <div className="w-7 h-7 rounded-[7px] flex items-center justify-center shrink-0" style={{ background: 'rgba(0,0,0,0.04)' }}>
-                      <Building2 size={13} className="text-[#9CA3AF]" />
+                    {isListCreateMode && (
+                      <div
+                        className="w-5 h-5 rounded-[5px] flex items-center justify-center shrink-0 transition-all"
+                        style={{
+                          background: isSelected ? 'linear-gradient(180deg, #2244AA, #1a3388)' : 'rgba(16,16,40,0.6)',
+                          border: isSelected ? '1px solid #5577DD' : '1px solid #2244AA',
+                          boxShadow: isSelected ? '0 0 8px rgba(85,119,221,0.4)' : 'none',
+                        }}
+                      >
+                        {isSelected && <Check size={12} className="text-white" strokeWidth={3} />}
+                      </div>
+                    )}
+                    <div className="w-7 h-7 rounded-[7px] flex items-center justify-center shrink-0" style={{ background: 'rgba(136,187,255,0.10)', border: '1px solid rgba(136,187,255,0.15)' }}>
+                      <Building2 size={13} className="text-[#88BBFF]" />
                     </div>
-                    <span className="text-sm font-medium text-[#1D1D1F] truncate">{company.name}</span>
+                    <span className="text-sm font-medium text-[#EEEEFF] truncate">{company.name}</span>
                   </div>
 
-                  {/* ドメイン */}
-                  <div className="flex items-center gap-1 min-w-0">
-                    <span className="text-sm text-[#6E6E73] truncate">{company.domain}</span>
-                    <a
-                      href={`https://${company.domain}`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="opacity-0 group-hover:opacity-100 transition-opacity shrink-0"
-                      onClick={e => e.stopPropagation()}
-                    >
-                      <ExternalLink size={11} className="text-[#9CA3AF] hover:text-[#0071E3]" />
-                    </a>
-                  </div>
-
-                  {/* シグナル */}
+                  {/* インテント (スコア) */}
                   <div>
-                    <SignalBadge signal={company.signal} />
+                    <ScoreDisplay score={company.score} />
                   </div>
 
-                  {/* スコア */}
-                  <div>
-                    <ScoreDisplay score={company.score} companyName={company.name} />
-                  </div>
+                  {/* スペーサー */}
+                  <div />
 
                   {/* 業種 */}
-                  <span className="text-sm text-[#6E6E73] truncate">{company.industry}</span>
-
-                  {/* 担当者 */}
-                  <div className="flex items-center gap-1.5">
-                    <div
-                      className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                      style={{ background: 'linear-gradient(145deg, #0A84FF, #5E5CE6)' }}
-                    >
-                      <span className="text-[9px] font-semibold text-white">
-                        {company.owner[0]}
-                      </span>
-                    </div>
-                    <span className="text-sm text-[#374151] truncate">{company.owner}</span>
-                  </div>
-
-                  {/* 最終コール */}
-                  <span className={`text-sm tabular-nums ${company.lastCallAt ? 'text-[#6B7280]' : 'text-[#D1D5DB]'}`}>
-                    {formatDate(company.lastCallAt)}
-                  </span>
+                  <span className="text-sm text-[#CCDDF0] truncate">{company.industry}</span>
 
                   {/* Action */}
                   <div className="flex justify-end">
-                    <button className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium text-[#0071E3] hover:bg-[rgba(0,113,227,0.08)] px-3 py-1.5 rounded-[6px] transition-all duration-100">
+                    <button className="opacity-0 group-hover:opacity-100 transition-opacity text-xs font-medium text-[#88BBFF] hover:bg-[rgba(136,187,255,0.10)] px-3 py-1.5 rounded-[6px] transition-all duration-100">
                       詳細を見る
                     </button>
                   </div>
                 </motion.div>
-              ))
+                )
+              })
             )}
           </AnimatePresence>
         </motion.div>
@@ -646,7 +888,7 @@ export default function CompaniesPage() {
 
       {/* ── Footer ── */}
       <div className="flex items-center justify-between">
-        <p className="text-xs text-[#AEAEB2]">
+        <p className="text-xs text-[#99AACC]">
           {filtered.length}件中 {Math.min((page - 1) * PAGE_SIZE + 1, filtered.length)}–{Math.min(page * PAGE_SIZE, filtered.length)} 件を表示
         </p>
 
@@ -655,35 +897,147 @@ export default function CompaniesPage() {
             <button
               onClick={() => setPage(p => Math.max(1, p - 1))}
               disabled={page === 1}
-              className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[#6E6E73] hover:bg-[rgba(0,0,0,0.05)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[#CCDDF0] hover:bg-[rgba(136,187,255,0.06)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronLeft size={15} />
             </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map(p => (
-              <button
-                key={p}
-                onClick={() => setPage(p)}
-                className={`w-8 h-8 flex items-center justify-center rounded-[6px] text-sm font-medium transition-colors duration-100 ${
-                  p === page
-                    ? 'bg-[#0071E3] text-white'
-                    : 'text-[#6E6E73] hover:bg-[rgba(0,0,0,0.05)]'
-                }`}
-              >
-                {p}
-              </button>
-            ))}
+            {(() => {
+              // 省略付きページネーション: 先頭/末尾/現在±2 だけ出す
+              const items: Array<number | 'ellipsis-left' | 'ellipsis-right'> = []
+              const siblings = 2
+              const showLeft = page - siblings > 2
+              const showRight = page + siblings < totalPages - 1
+              items.push(1)
+              if (showLeft) items.push('ellipsis-left')
+              const start = Math.max(2, page - siblings)
+              const end = Math.min(totalPages - 1, page + siblings)
+              for (let p = start; p <= end; p++) items.push(p)
+              if (showRight) items.push('ellipsis-right')
+              if (totalPages > 1) items.push(totalPages)
+              return items.map((item, idx) => {
+                if (item === 'ellipsis-left' || item === 'ellipsis-right') {
+                  return (
+                    <span
+                      key={`${item}-${idx}`}
+                      className="w-8 h-8 flex items-center justify-center text-[#99AACC] text-sm select-none"
+                    >
+                      …
+                    </span>
+                  )
+                }
+                return (
+                  <button
+                    key={item}
+                    onClick={() => setPage(item)}
+                    className={`w-8 h-8 flex items-center justify-center rounded-[6px] text-sm font-medium transition-colors duration-100 ${
+                      item === page
+                        ? 'bg-[#0071E3] text-white'
+                        : 'text-[#CCDDF0] hover:bg-[rgba(136,187,255,0.06)]'
+                    }`}
+                  >
+                    {item}
+                  </button>
+                )
+              })
+            })()}
 
             <button
               onClick={() => setPage(p => Math.min(totalPages, p + 1))}
               disabled={page === totalPages}
-              className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[#6E6E73] hover:bg-[rgba(0,0,0,0.05)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+              className="w-8 h-8 flex items-center justify-center rounded-[6px] text-[#CCDDF0] hover:bg-[rgba(136,187,255,0.06)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
             >
               <ChevronRight size={15} />
             </button>
           </div>
         )}
       </div>
+
+      {/* ── ISリスト作成モーダル ── */}
+      <AnimatePresence>
+        {showListModal && (
+          <motion.div
+            initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-4"
+            style={{ background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)' }}
+            onClick={() => setShowListModal(false)}
+          >
+            <motion.div
+              initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96 }}
+              transition={{ duration: 0.22 }}
+              className="rounded-[12px] w-full max-w-[440px] overflow-hidden"
+              style={{ background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)', border: '1px solid #2244AA', boxShadow: '0 24px 64px rgba(0,0,0,0.5)' }}
+              onClick={e => e.stopPropagation()}
+            >
+              <div className="px-5 py-4" style={{ borderBottom: '1px solid #2244AA' }}>
+                <h2 className="text-[15px] font-bold text-[#EEEEFF]">ISリストを作成</h2>
+                <p className="text-[11px] text-[#CCDDF0] mt-1">{selectedIds.size} 社の企業をリストに追加します</p>
+              </div>
+              <div className="p-5 space-y-4">
+                <div>
+                  <label className="block text-[11px] font-bold text-[#99AACC] uppercase tracking-[0.06em] mb-1.5">リスト名</label>
+                  <input
+                    type="text" value={listForm.name}
+                    onChange={e => setListForm(f => ({ ...f, name: e.target.value }))}
+                    placeholder="例: Hot企業フォローリスト"
+                    className="w-full h-[36px] px-3 text-[13px] rounded-[6px] outline-none"
+                    style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA', color: '#EEEEFF' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#99AACC] uppercase tracking-[0.06em] mb-1.5">説明（任意）</label>
+                  <input
+                    type="text" value={listForm.description}
+                    onChange={e => setListForm(f => ({ ...f, description: e.target.value }))}
+                    placeholder="リストの目的"
+                    className="w-full h-[36px] px-3 text-[13px] rounded-[6px] outline-none"
+                    style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA', color: '#EEEEFF' }}
+                  />
+                </div>
+                <div>
+                  <label className="block text-[11px] font-bold text-[#99AACC] uppercase tracking-[0.06em] mb-1.5">担当者</label>
+                  <select
+                    value={listForm.owner}
+                    onChange={e => setListForm(f => ({ ...f, owner: e.target.value }))}
+                    className="w-full h-[36px] px-3 text-[13px] rounded-[6px] outline-none cursor-pointer"
+                    style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA', color: '#EEEEFF' }}
+                  >
+                    <option value="田中太郎">田中太郎</option>
+                    <option value="鈴木花子">鈴木花子</option>
+                    <option value="佐藤次郎">佐藤次郎</option>
+                  </select>
+                </div>
+              </div>
+              <div className="px-5 py-4 flex justify-end gap-2" style={{ borderTop: '1px solid #2244AA' }}>
+                <button
+                  onClick={() => setShowListModal(false)}
+                  className="px-4 py-2 text-[12px] font-medium rounded-[6px]"
+                  style={{ background: 'rgba(136,187,255,0.06)', color: '#88BBFF', border: '1px solid #2244AA' }}
+                >
+                  キャンセル
+                </button>
+                <button
+                  disabled={!listForm.name.trim()}
+                  onClick={() => {
+                    setShowListModal(false)
+                    setSelectedIds(new Set())
+                    router.push('/lists')
+                  }}
+                  className="px-5 py-2 text-[12px] font-bold rounded-[6px]"
+                  style={{
+                    background: listForm.name.trim() ? 'linear-gradient(180deg, #2244AA, #1a3388)' : 'rgba(34,68,170,0.2)',
+                    border: listForm.name.trim() ? '1px solid #3355CC' : '1px solid transparent',
+                    color: listForm.name.trim() ? '#FFFFFF' : '#4466AA',
+                    cursor: listForm.name.trim() ? 'pointer' : 'default',
+                  }}
+                >
+                  リストを作成
+                </button>
+              </div>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Create Company Modal ── */}
       <AnimatePresence>
@@ -702,18 +1056,18 @@ export default function CompaniesPage() {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.96, y: 8 }}
               transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-white rounded-[16px] w-full max-w-[440px] overflow-hidden"
+              className="bg-[#0c1028] rounded-[16px] w-full max-w-[440px] overflow-hidden"
               style={{ boxShadow: '0 24px 64px rgba(0,0,0,0.18)' }}
               onClick={e => e.stopPropagation()}
             >
               {/* Modal Header */}
-              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(0,0,0,0.06)' }}>
-                <h2 className="text-[15px] font-semibold text-[#1D1D1F] tracking-[-0.02em]">企業を作成</h2>
+              <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid #2244AA' }}>
+                <h2 className="text-[15px] font-semibold text-[#EEEEFF] tracking-[-0.02em]">企業を作成</h2>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[rgba(0,0,0,0.06)]"
+                  className="w-7 h-7 rounded-full flex items-center justify-center transition-colors hover:bg-[rgba(136,187,255,0.06)]"
                 >
-                  <X size={14} className="text-[#6E6E73]" />
+                  <X size={14} className="text-[#CCDDF0]" />
                 </button>
               </div>
 
@@ -721,7 +1075,7 @@ export default function CompaniesPage() {
               <div className="p-5 space-y-4">
                 {/* 区分 */}
                 <div>
-                  <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">区分 <span className="text-[#FF3B30]">*</span></label>
+                  <label className="block text-[12px] font-medium text-[#CCDDF0] mb-1.5">区分 <span className="text-[#FF3B30]">*</span></label>
                   <div className="flex gap-2">
                     {(['パートナー企業', 'ダイレクト企業'] as CompanyCategory[]).map(cat => (
                       <button
@@ -730,8 +1084,8 @@ export default function CompaniesPage() {
                         onClick={() => setCreateForm(f => ({ ...f, category: cat }))}
                         className="flex-1 h-[36px] text-[13px] font-medium rounded-[8px] transition-all"
                         style={{
-                          background: createForm.category === cat ? '#1D1D1F' : '#F5F5F7',
-                          color: createForm.category === cat ? '#FFFFFF' : '#6E6E73',
+                          background: createForm.category === cat ? '#2244AA' : 'rgba(136,187,255,0.06)',
+                          color: createForm.category === cat ? '#FFFFFF' : '#88BBFF',
                         }}
                       >
                         {cat}
@@ -742,7 +1096,7 @@ export default function CompaniesPage() {
 
                 {/* 企業名 */}
                 <div>
-                  <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">
+                  <label className="block text-[12px] font-medium text-[#CCDDF0] mb-1.5">
                     企業名 <span className="text-[#FF3B30]">*</span>
                   </label>
                   <input
@@ -750,40 +1104,40 @@ export default function CompaniesPage() {
                     placeholder="株式会社〇〇"
                     value={createForm.name}
                     onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
-                    className="w-full px-3 py-2 text-[13px] bg-[#F5F5F7] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-white transition-all"
+                    className="w-full px-3 py-2 text-[13px] bg-[rgba(34,68,170,0.1)] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-[#0c1028] transition-all"
                   />
                 </div>
 
                 {/* ドメイン */}
                 <div>
-                  <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">ドメイン</label>
+                  <label className="block text-[12px] font-medium text-[#CCDDF0] mb-1.5">ドメイン</label>
                   <input
                     type="text"
                     placeholder="example.co.jp"
                     value={createForm.domain}
                     onChange={e => setCreateForm(f => ({ ...f, domain: e.target.value }))}
-                    className="w-full px-3 py-2 text-[13px] bg-[#F5F5F7] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-white transition-all"
+                    className="w-full px-3 py-2 text-[13px] bg-[rgba(34,68,170,0.1)] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-[#0c1028] transition-all"
                   />
                 </div>
 
                 {/* 業種 + ランク */}
                 <div className="flex gap-3">
                   <div className="flex-1">
-                    <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">業種</label>
+                    <label className="block text-[12px] font-medium text-[#CCDDF0] mb-1.5">業種</label>
                     <input
                       type="text"
                       placeholder="IT・SaaS"
                       value={createForm.industry}
                       onChange={e => setCreateForm(f => ({ ...f, industry: e.target.value }))}
-                      className="w-full px-3 py-2 text-[13px] bg-[#F5F5F7] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-white transition-all"
+                      className="w-full px-3 py-2 text-[13px] bg-[rgba(34,68,170,0.1)] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-[#0c1028] transition-all"
                     />
                   </div>
                   <div className="w-28">
-                    <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">シグナル</label>
+                    <label className="block text-[12px] font-medium text-[#CCDDF0] mb-1.5">シグナル</label>
                     <select
                       value={createForm.signal}
                       onChange={e => setCreateForm(f => ({ ...f, signal: e.target.value as Signal }))}
-                      className="w-full px-3 py-2 text-[13px] bg-[#F5F5F7] rounded-[8px] text-[#1D1D1F] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-white transition-all appearance-none cursor-pointer"
+                      className="w-full px-3 py-2 text-[13px] bg-[rgba(34,68,170,0.1)] rounded-[8px] text-[#EEEEFF] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-[#0c1028] transition-all appearance-none cursor-pointer"
                     >
                       {ALL_SIGNALS.map(s => <option key={s} value={s}>{s}</option>)}
                     </select>
@@ -792,22 +1146,22 @@ export default function CompaniesPage() {
 
                 {/* 担当者 */}
                 <div>
-                  <label className="block text-[12px] font-medium text-[#3C3C43] mb-1.5">担当者</label>
+                  <label className="block text-[12px] font-medium text-[#CCDDF0] mb-1.5">担当者</label>
                   <input
                     type="text"
                     placeholder="田中太郎"
                     value={createForm.owner}
                     onChange={e => setCreateForm(f => ({ ...f, owner: e.target.value }))}
-                    className="w-full px-3 py-2 text-[13px] bg-[#F5F5F7] rounded-[8px] text-[#1D1D1F] placeholder:text-[#AEAEB2] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-white transition-all"
+                    className="w-full px-3 py-2 text-[13px] bg-[rgba(34,68,170,0.1)] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-[#0c1028] transition-all"
                   />
                 </div>
               </div>
 
               {/* Modal Footer */}
-              <div className="flex items-center justify-end gap-2.5 px-5 py-4" style={{ borderTop: '1px solid rgba(0,0,0,0.06)' }}>
+              <div className="flex items-center justify-end gap-2.5 px-5 py-4" style={{ borderTop: '1px solid #2244AA' }}>
                 <button
                   onClick={() => setShowCreateModal(false)}
-                  className="px-4 py-2 text-[13px] font-medium text-[#6E6E73] hover:text-[#1D1D1F] hover:bg-[rgba(0,0,0,0.04)] rounded-[8px] transition-all"
+                  className="px-4 py-2 text-[13px] font-medium text-[#CCDDF0] hover:text-[#EEEEFF] hover:bg-[rgba(0,0,0,0.04)] rounded-[8px] transition-all"
                 >
                   キャンセル
                 </button>
