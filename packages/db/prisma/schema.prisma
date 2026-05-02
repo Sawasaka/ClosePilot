@@ -52,11 +52,14 @@ model User {
   slackUserId  String?
   createdAt    DateTime @default(now())
 
-  org            Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  ownedDeals     Deal[]       @relation("DealOwner")
-  ownedCompanies Company[]    @relation("CompanyOwner")
+  org            Organization       @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  ownedDeals     Deal[]              @relation("DealOwner")
+  ownedCompanies Company[]           @relation("CompanyOwner")
   tasks          Task[]
   activities     Activity[]
+  googleAccount  UserGoogleAccount?
+  emailMessages  EmailMessage[]
+  meetingEvents  MeetingEvent[]
 
   @@unique([orgId, email])
   @@index([orgId])
@@ -98,6 +101,8 @@ model Company {
   deals         Deal[]
   activities    Activity[]
   scoreEvents   ScoreEvent[]
+  emailMessages EmailMessage[]
+  meetingEvents MeetingEvent[]
 
   @@index([orgId, leadScore(sort: Desc)])
   @@index([orgId, domain])
@@ -175,12 +180,14 @@ model Contact {
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 
-  org        Organization @relation(fields: [orgId], references: [id], onDelete: Cascade)
-  company    Company      @relation(fields: [companyId], references: [id], onDelete: Cascade)
-  deals      Deal[]
-  activities Activity[]
-  tasks      Task[]
-  currentSeq Sequence?    @relation(fields: [currentSeqId], references: [id])
+  org           Organization   @relation(fields: [orgId], references: [id], onDelete: Cascade)
+  company       Company        @relation(fields: [companyId], references: [id], onDelete: Cascade)
+  deals         Deal[]
+  activities    Activity[]
+  tasks         Task[]
+  currentSeq    Sequence?      @relation(fields: [currentSeqId], references: [id])
+  emailMessages EmailMessage[]
+  meetingEvents MeetingEvent[]
 
   @@index([orgId, approachStatus])
   @@index([orgId, companyId])
@@ -263,6 +270,8 @@ model Deal {
   transcripts   Transcript[]
   researchBrief ResearchBrief?
   stageHistory  StageHistory[]
+  emailMessages EmailMessage[]
+  meetingEvents MeetingEvent[]
 
   @@index([orgId, stage])
   @@index([orgId, ownerId])
@@ -436,14 +445,30 @@ model Transcript {
   stageAdvanced   Boolean        @default(false)
   createdAt       DateTime       @default(now())
 
-  deal Deal? @relation(fields: [dealId], references: [id])
+  // Google Meet 連携メタデータ
+  meetingEventId     String?  @unique
+  conferenceRecordId String?  @unique // Meet API: conferenceRecords/{name}
+  googleDocId        String?           // 議事録 Google Doc の Drive file ID
+  googleDocUrl       String?
+  source             TranscriptSource @default(MANUAL)
+
+  deal         Deal?         @relation(fields: [dealId], references: [id])
+  meetingEvent MeetingEvent? @relation(fields: [meetingEventId], references: [id])
 
   @@index([dealId, createdAt(sort: Desc)])
+  @@index([conferenceRecordId])
 }
 
 enum TranscriptType {
   CALL
   MEETING
+}
+
+enum TranscriptSource {
+  MANUAL
+  GOOGLE_MEET
+  ZOOM
+  OTHER
 }
 
 // ============================
@@ -764,4 +789,233 @@ enum IntentLevel {
   MIDDLE
   LOW
   NONE
+}
+
+// ============================
+// GOOGLE 連携 — OAuth トークン保存
+// ============================
+model UserGoogleAccount {
+  id           String    @id @default(cuid())
+  userId       String    @unique
+  googleSub    String    @unique
+  email        String
+  accessToken  String?
+  refreshToken String?
+  expiresAt    DateTime?
+  scope        String?
+  // Gmail History API 用カーソル（差分同期）
+  gmailHistoryId String?
+  // Calendar 同期トークン
+  calendarSyncToken String?
+  // 最終同期時刻（観測用）
+  lastGmailSyncAt    DateTime?
+  lastCalendarSyncAt DateTime?
+  lastMeetSyncAt     DateTime?
+  lastChatSyncAt     DateTime?
+  // 機能ごとの有効/無効（ユーザーが個別に ON/OFF できる）
+  gmailEnabled    Boolean @default(true)
+  calendarEnabled Boolean @default(true)
+  meetEnabled     Boolean @default(true)
+  chatEnabled     Boolean @default(false)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ============================
+// GMAIL — メールメッセージ
+// ============================
+model EmailMessage {
+  id             String         @id @default(cuid())
+  orgId          String
+  userId         String
+  gmailMessageId String
+  gmailThreadId  String
+  subject        String?
+  snippet        String?
+  bodyText       String?
+  bodyHtml       String?
+  fromAddress    String
+  fromName       String?
+  toAddresses    String[]       @default([])
+  ccAddresses    String[]       @default([])
+  sentAt         DateTime
+  direction      EmailDirection
+  labels         String[]       @default([])
+
+  // 紐付け（メアド一致で自動 / 手動上書き）
+  contactId String?
+  companyId String?
+  dealId    String?
+  matchedBy String? // 'email_match' | 'manual'
+
+  rawHeaders Json?
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contact Contact? @relation(fields: [contactId], references: [id], onDelete: SetNull)
+  company Company? @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  deal    Deal?    @relation(fields: [dealId], references: [id], onDelete: SetNull)
+
+  @@unique([userId, gmailMessageId])
+  @@index([orgId, contactId])
+  @@index([orgId, companyId])
+  @@index([orgId, dealId])
+  @@index([gmailThreadId])
+  @@index([orgId, sentAt(sort: Desc)])
+}
+
+enum EmailDirection {
+  SENT
+  RECEIVED
+}
+
+// ============================
+// MEETING — Calendar / Meet イベント
+// ============================
+model MeetingEvent {
+  id              String   @id @default(cuid())
+  orgId           String
+  userId          String
+  calendarId      String   @default("primary")
+  calendarEventId String
+  iCalUID         String?
+
+  title       String
+  description String?
+  startsAt    DateTime
+  endsAt      DateTime
+  meetUrl     String?
+  meetCode    String?
+  conferenceId String?
+
+  attendeeEmails String[] @default([])
+  organizerEmail String?
+
+  // 紐付け（参加者メアド → コンタクト一致）
+  primaryContactId String?
+  contactIds       String[] @default([])
+  companyId        String?
+  dealId           String?
+
+  status          MeetingStatus @default(SCHEDULED)
+  // 取引上の n 回目商談（COMPLETED 時に算出）
+  occurrenceIndex Int?
+  meetingType     MeetingType?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  primaryContact Contact?     @relation(fields: [primaryContactId], references: [id], onDelete: SetNull)
+  company        Company?     @relation(fields: [companyId], references: [id], onDelete: SetNull)
+  deal           Deal?        @relation(fields: [dealId], references: [id], onDelete: SetNull)
+  transcript     Transcript?
+
+  @@unique([userId, calendarEventId])
+  @@index([orgId, startsAt(sort: Desc)])
+  @@index([orgId, dealId])
+  @@index([orgId, primaryContactId])
+  @@index([orgId, status])
+}
+
+enum MeetingStatus {
+  SCHEDULED   // カレンダー登録済み（未開催）
+  HELD        // 開催済み（議事録未取得）
+  COMPLETED   // 議事録取得済み
+  CANCELED
+}
+
+enum MeetingType {
+  FIRST       // 初回商談
+  FOLLOW_UP   // 2回目以降
+  PROPOSAL    // 提案
+  NEGOTIATION // 交渉
+  CLOSING     // クロージング
+  OTHER
+}
+
+// ============================
+// SLACK 連携 — ワークスペース接続情報
+// ============================
+model SlackWorkspace {
+  id            String   @id @default(cuid())
+  orgId         String
+  installerUserId String   // CRM 側の User.id（インストールしたユーザー）
+  teamId        String   // Slack の team_id (T...)
+  teamName      String
+  enterpriseId  String?
+  // OAuth tokens (Bot 用)
+  botToken      String   // xoxb-...
+  botUserId     String?  // U... (Bot のユーザーID)
+  // optional: User 用 token
+  userToken     String?  // xoxp-...
+  scope         String?
+  enabled       Boolean  @default(true)
+  lastSyncAt    DateTime?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  @@unique([orgId, teamId])
+  @@index([installerUserId])
+}
+
+// ============================
+// SLACK — メッセージ取り込み
+// ============================
+model SlackMessage {
+  id              String   @id @default(cuid())
+  orgId           String
+  workspaceId     String
+  channelId       String
+  channelName     String?
+  ts              String   // Slack の message timestamp (一意キー兼)
+  threadTs        String?
+  senderUserId    String?  // Slack の U...
+  senderName      String?
+  senderEmail     String?
+  text            String
+  permalink       String?
+  postedAt        DateTime
+  contactId       String?
+  companyId       String?
+  dealId          String?
+  matchedBy       String?
+  createdAt       DateTime @default(now())
+
+  @@unique([workspaceId, channelId, ts])
+  @@index([orgId, contactId])
+  @@index([orgId, dealId])
+  @@index([orgId, postedAt(sort: Desc)])
+}
+
+// ============================
+// GOOGLE CHAT — メッセージ
+// ============================
+model ChatMessage {
+  id             String   @id @default(cuid())
+  orgId          String
+  userId         String
+  // Chat API 上の name: spaces/{space}/messages/{id}
+  chatName       String   @unique
+  spaceName      String   // spaces/{space}
+  spaceDisplayName String?
+  threadName     String?
+  senderEmail    String?
+  senderDisplayName String?
+  text           String
+  createdAtChat  DateTime
+  // 紐付け
+  contactId String?
+  companyId String?
+  dealId    String?
+  matchedBy String?
+  createdAt DateTime @default(now())
+
+  @@index([orgId, contactId])
+  @@index([orgId, dealId])
+  @@index([spaceName])
+  @@index([orgId, createdAtChat(sort: Desc)])
 }

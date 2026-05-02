@@ -1,0 +1,341 @@
+# ============================================================
+# 営業オペレーション / CRM / KPI フレームワーク辞書（15選）
+# ============================================================
+meta:
+  category: 営業オペレーション / CRM / KPI
+  total_frameworks: 15
+frameworks:
+
+  - id: F-THE-MODEL
+    name: The Model
+    name_ja: ザ・モデル
+    category: sales_ops
+    purpose: "マーケ→IS→FS→CSの分業設計で営業プロセスを最適化する"
+    elements:
+      - key: Marketing
+        ja: マーケティング（リード獲得）
+      - key: InsideSales
+        ja: インサイドセールス（商談化）
+      - key: FieldSales
+        ja: フィールドセールス（受注）
+      - key: CustomerSuccess
+        ja: カスタマーサクセス（継続・拡大）
+      - key: HandoffCriteria
+        ja: 引き渡し基準
+      - key: FunnelMetrics
+        ja: ファネル指標
+    level: intermediate
+    pitfall: "分業が目的化して部門間の壁ができがち。共通KPIと定期的な連携会議が不可欠"
+    combo: [F-SALES-PROCESS, F-KPI-TREE-OPS]
+
+  - id: F-SALES-PROCESS
+    name: Sales Process Design (IS/FS/CS)
+    name_ja: 営業プロセス設計（IS/FS/CS）
+    category: sales_ops
+    purpose: "ステージ定義と移行条件を明確にし、再現性のある営業を実現する"
+    elements:
+      - key: StageDefinition
+        ja: ステージ定義
+      - key: ExitCriteria
+        ja: 移行条件（イグジットクライテリア）
+      - key: RequiredActions
+        ja: 各ステージの必須アクション
+      - key: Timeline
+        ja: 標準リードタイム
+      - key: StageVerification
+        ja: ステージ検証方法
+      - key: Rollback
+        ja: 差し戻し基準
+    level: intermediate
+    pitfall: "ステージを自己申告にすると甘くなる。客観的な移行条件を定義する"
+    combo: [F-THE-MODEL, F-PIPELINE]
+
+  - id: F-PIPELINE
+    name: Pipeline Management
+    name_ja: パイプライン管理
+    category: sales_ops
+    purpose: "パイプライン量×速度×率で営業成果を管理する"
+    elements:
+      - key: PipelineVolume
+        ja: パイプライン総量
+      - key: Velocity
+        ja: 進行速度（リードタイム）
+      - key: ConversionRate
+        ja: ステージ間転換率
+      - key: AverageDealSize
+        ja: 平均案件単価
+      - key: Coverage
+        ja: パイプラインカバレッジ（目標比）
+      - key: Aging
+        ja: エイジング（滞留案件）
+    level: intermediate
+    pitfall: "量だけ積んでも質が低ければ意味がない。カバレッジと質のバランスを取る"
+    combo: [F-FORECAST, F-KPI-TREE-OPS]
+
+  - id: F-LEAD-STAGE
+    name: Lead Stage Design (MQL/SQL/SAL)
+    name_ja: リードステージ設計（MQL/SQL/SAL）
+    category: sales_ops
+    purpose: "リードの成熟度を分類し、適切なタイミングで営業に引き渡す"
+    elements:
+      - key: MQL
+        ja: マーケティング認定リード
+      - key: SQL
+        ja: セールス認定リード
+      - key: SAL
+        ja: セールス受入済みリード
+      - key: ScoringCriteria
+        ja: スコアリング基準
+      - key: NurturingPath
+        ja: ナーチャリング経路
+      - key: RecycleCriteria
+        ja: リサイクル基準
+    level: intermediate
+    pitfall: "MQLの定義が曖昧だとISに低品質リードが大量に流れる。マーケとISで定義を合意する"
+    combo: [F-THE-MODEL, F-SLA]
+
+  - id: F-SLA
+    name: SLA Design
+    name_ja: SLA設計（IS→FS引き渡し条件）
+    category: sales_ops
+    purpose: "IS→FSの引き渡し条件を明文化し、部門間の期待値を揃える"
+    elements:
+      - key: QualificationCriteria
+        ja: 引き渡し条件（BANT等）
+      - key: ResponseTime
+        ja: 応答時間SLA
+      - key: RequiredInfo
+        ja: 必須情報項目
+      - key: FeedbackLoop
+        ja: フィードバックループ
+      - key: EscalationRule
+        ja: エスカレーションルール
+      - key: AcceptanceRate
+        ja: 受入率の計測
+    level: intermediate
+    pitfall: "SLAを作っても運用されないことが多い。違反時のアクションまで設計する"
+    combo: [F-LEAD-STAGE, F-SALES-PROCESS]
+
+  - id: F-CRM-DESIGN
+    name: CRM Design
+    name_ja: CRM設計
+    category: sales_ops
+    purpose: "入力項目/パイプライン/レポートを設計し、データドリブンな営業を実現する"
+    elements:
+      - key: ObjectModel
+        ja: オブジェクトモデル（リード/取引先/商談）
+      - key: RequiredFields
+        ja: 必須入力項目
+      - key: PipelineStages
+        ja: パイプラインステージ
+      - key: Automation
+        ja: 自動化ルール
+      - key: Reports
+        ja: レポート・ダッシュボード
+      - key: DataHygiene
+        ja: データ衛生ルール
+    level: intermediate
+    pitfall: "項目を増やしすぎると入力負荷で形骸化する。最小限の必須項目から始める"
+    combo: [F-PIPELINE, F-DASHBOARD]
+
+  - id: F-KPI-TREE-OPS
+    name: KPI Tree (Sales)
+    name_ja: KPIツリー（営業）
+    category: sales_ops
+    purpose: "売上→商談→活動にKPIを分解し、打ち手を特定する"
+    elements:
+      - key: Revenue
+        ja: 売上目標
+      - key: DealCount
+        ja: 商談数
+      - key: WinRate
+        ja: 受注率
+      - key: AverageDealSize
+        ja: 平均単価
+      - key: ActivityVolume
+        ja: 活動量（架電/訪問/メール）
+      - key: ConversionRates
+        ja: 各ステージ転換率
+    level: intermediate
+    pitfall: "活動量KPIだけ追うと質が下がる。成果KPIとプロセスKPIのバランスを取る"
+    combo: [F-THE-MODEL, F-PIPELINE]
+
+  - id: F-FORECAST
+    name: Forecast Management
+    name_ja: フォーキャスト管理
+    category: sales_ops
+    purpose: "着地予測の精度を高め、経営判断に使える数字を提供する"
+    elements:
+      - key: ForecastCategory
+        ja: フォーキャストカテゴリ（Commit/Best Case/Pipeline）
+      - key: WeightedPipeline
+        ja: 加重パイプライン
+      - key: HistoricalAccuracy
+        ja: 過去の予測精度
+      - key: CoverageRatio
+        ja: カバレッジ比率
+      - key: Upside_Downside
+        ja: アップサイド/ダウンサイド
+      - key: ForecastCadence
+        ja: 予測更新サイクル
+    level: intermediate
+    pitfall: "営業の楽観バイアスを前提に設計する。過去実績との乖離率を常に補正する"
+    combo: [F-PIPELINE, F-DEAL-REVIEW]
+
+  - id: F-DEAL-REVIEW
+    name: Deal Review
+    name_ja: ディールレビュー
+    category: sales_ops
+    purpose: "案件の健全性を定期的に確認し、リスクを早期に検出する"
+    elements:
+      - key: DealHealth
+        ja: 案件ヘルスチェック
+      - key: DecisionCriteria
+        ja: 意思決定基準の確認
+      - key: CompetitorStatus
+        ja: 競合状況
+      - key: NextStep
+        ja: ネクストステップの明確さ
+      - key: RiskFlag
+        ja: リスクフラグ
+      - key: CoachingAction
+        ja: マネージャーのコーチングアクション
+    level: intermediate
+    pitfall: "レビューが報告会になりがち。問題発見→アクション決定の場にする"
+    combo: [F-FORECAST, F-WIN-LOSS]
+
+  - id: F-WIN-LOSS
+    name: Win/Loss Analysis
+    name_ja: 勝敗分析
+    category: sales_ops
+    purpose: "勝因/敗因を構造的に分析し、営業力を組織的に向上させる"
+    elements:
+      - key: WinFactors
+        ja: 勝因分析
+      - key: LossFactors
+        ja: 敗因分析
+      - key: CompetitorInsight
+        ja: 競合インサイト
+      - key: BuyerFeedback
+        ja: バイヤーフィードバック
+      - key: ProcessGap
+        ja: プロセス上のギャップ
+      - key: ActionItems
+        ja: 改善アクション
+    level: intermediate
+    pitfall: "営業個人の属人的な振り返りに留めず、組織的にパターンを抽出する"
+    combo: [F-DEAL-REVIEW, F-ENABLEMENT]
+
+  - id: F-ENABLEMENT
+    name: Sales Enablement
+    name_ja: セールスイネーブルメント
+    category: sales_ops
+    purpose: "営業が成果を出すための武器（コンテンツ・ツール・研修）を整備する"
+    elements:
+      - key: ContentLibrary
+        ja: コンテンツライブラリ
+      - key: Playbook
+        ja: プレイブック
+      - key: Training
+        ja: トレーニングプログラム
+      - key: Tools
+        ja: セールスツール
+      - key: Onboarding
+        ja: 新人オンボーディング
+      - key: Certification
+        ja: 認定制度
+    level: intermediate
+    pitfall: "コンテンツを作って終わりにしない。利用率と成果への寄与を計測する"
+    combo: [F-TALK-SCRIPT, F-PROPOSAL]
+
+  - id: F-TALK-SCRIPT
+    name: Talk Script Design
+    name_ja: トークスクリプト設計
+    category: sales_ops
+    purpose: "トークスクリプトの設計と運用で営業品質を標準化する"
+    elements:
+      - key: Opening
+        ja: オープニング
+      - key: Questioning
+        ja: ヒアリング（質問設計）
+      - key: ValuePresentation
+        ja: 価値提示
+      - key: ObjectionHandling
+        ja: 反論処理
+      - key: Closing
+        ja: クロージング
+      - key: Branching
+        ja: 分岐シナリオ
+    level: intermediate
+    pitfall: "棒読みスクリプトは逆効果。骨格を押さえた上で自然な会話に落とし込む"
+    combo: [F-ENABLEMENT, F-PROPOSAL]
+
+  - id: F-PROPOSAL
+    name: Proposal Design
+    name_ja: 提案書設計
+    category: sales_ops
+    purpose: "提案書の構成と説得ロジックを設計し、受注率を高める"
+    elements:
+      - key: ExecutiveSummary
+        ja: エグゼクティブサマリー
+      - key: CurrentState
+        ja: 現状の課題
+      - key: DesiredState
+        ja: あるべき姿
+      - key: Solution
+        ja: 解決策
+      - key: ROI
+        ja: 投資対効果
+      - key: Implementation
+        ja: 導入ステップ
+    level: intermediate
+    pitfall: "機能紹介に偏りがち。顧客の課題→解決→効果のストーリーを軸にする"
+    combo: [F-TALK-SCRIPT, F-ENABLEMENT]
+
+  - id: F-PDCA
+    name: PDCA/OODA
+    name_ja: PDCA/OODAサイクル
+    category: sales_ops
+    purpose: "改善サイクルの型を営業活動に適用し、継続的な成長を実現する"
+    elements:
+      - key: Plan
+        ja: 計画（Plan）
+      - key: Do
+        ja: 実行（Do）
+      - key: Check
+        ja: 評価（Check）
+      - key: Act
+        ja: 改善（Act）
+      - key: Observe
+        ja: 観察（Observe）- OODA
+      - key: Orient
+        ja: 状況判断（Orient）- OODA
+      - key: Decide
+        ja: 意思決定（Decide）- OODA
+      - key: OODAct
+        ja: 行動（Act）- OODA
+    level: beginner
+    pitfall: "Checkを飛ばしてDo→Doを繰り返しがち。振り返りの時間を仕組みで確保する"
+    combo: [F-KPI-TREE-OPS, F-WIN-LOSS]
+
+  - id: F-DASHBOARD
+    name: Dashboard/Report Design
+    name_ja: ダッシュボード/レポート設計
+    category: sales_ops
+    purpose: "何を/誰に/いつ/どう見せるかを設計し、データで意思決定する文化を作る"
+    elements:
+      - key: Audience
+        ja: 閲覧者（経営/マネージャー/担当者）
+      - key: KeyMetrics
+        ja: 主要指標
+      - key: UpdateFrequency
+        ja: 更新頻度
+      - key: Visualization
+        ja: 可視化方法
+      - key: DrillDown
+        ja: ドリルダウン設計
+      - key: ActionTrigger
+        ja: アクショントリガー（閾値アラート）
+    level: intermediate
+    pitfall: "見るだけのダッシュボードは使われなくなる。アクションに繋がる設計にする"
+    combo: [F-CRM-DESIGN, F-KPI-TREE-OPS]

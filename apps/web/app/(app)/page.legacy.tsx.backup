@@ -1,0 +1,503 @@
+'use client'
+
+import { useState, useEffect, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
+import { motion, AnimatePresence } from 'framer-motion'
+import {
+  Send,
+  Building2,
+  Columns3,
+  Mail,
+  FileText,
+  BookOpen,
+  LayoutDashboard,
+  Zap,
+  Bot,
+  User,
+} from 'lucide-react'
+import {
+  ObsPageShell,
+  ObsHero,
+  ObsCard,
+  ObsChip,
+  ObsButton,
+  ObsInput,
+} from '@/components/obsidian'
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUGGESTION ENGINE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+interface Suggestion {
+  id: string
+  type: 'action' | 'skill' | 'engage'
+  icon: string
+  title: string
+  message: string
+  progress?: { current: number; target: number }
+  actions: { label: string; href?: string; dismiss?: boolean }[]
+  priority: number
+}
+
+// ── Mock User Context ──────────────────────────────────────────────────────
+
+const USER_CONTEXT = {
+  name: '田中太郎',
+  level: 12,
+  rank: 'シルバー',
+  badges: ['コールマスター'],
+  skills: [
+    { name: 'ヒアリング力', value: 4, max: 5 },
+    { name: '提案力', value: 3, max: 5 },
+    { name: 'クロージング力', value: 2, max: 5 },
+    { name: 'プロダクト知識', value: 4, max: 5 },
+    { name: '業界知識', value: 3, max: 5 },
+  ],
+  streak: 5,
+
+  goals: {
+    calls: { target: 500, current: 320 },
+    appointments: { target: 10, current: 5 },
+    deals: { target: 3, current: 1 },
+    emails: { target: 100, current: 65 },
+  },
+  remainingDays: 12,
+
+  teamMembers: [
+    { name: '鈴木花子', rank: 'ゴールド', level: 15 },
+    { name: '佐藤次郎', rank: 'シルバー', level: 8 },
+  ],
+
+  todayTaskCount: 8,
+  overdueCount: 4,
+}
+
+// ── Rank Comparison Helper ────────────────────────────────────────────────
+
+const RANK_ORDER: Record<string, number> = {
+  'ブロンズ': 0, 'シルバー': 1, 'ゴールド': 2, 'プラチナ': 3, 'ダイヤモンド': 4,
+}
+
+function rankAtLeast(userRank: string, minRank: string): boolean {
+  return (RANK_ORDER[userRank] ?? 0) >= (RANK_ORDER[minRank] ?? 0)
+}
+
+// ── Suggestion Rules ──────────────────────────────────────────────────────
+
+function generateSuggestions(ctx: typeof USER_CONTEXT): Suggestion[] {
+  const suggestions: Suggestion[] = []
+
+  // Rule 1: アポ目標の進捗が遅れている
+  const apptGoal = ctx.goals.appointments
+  const apptPct = apptGoal.current / apptGoal.target
+  if (apptPct < 0.5 && ctx.remainingDays <= 15) {
+    const remaining = apptGoal.target - apptGoal.current
+    const callsPerAppt = ctx.goals.calls.current > 0 && apptGoal.current > 0
+      ? Math.ceil(ctx.goals.calls.current / apptGoal.current)
+      : 100
+    const totalCallsNeeded = remaining * callsPerAppt
+    const dailyCalls = Math.ceil(totalCallsNeeded / ctx.remainingDays)
+
+    suggestions.push({
+      id: 'action-appt-behind',
+      type: 'action',
+      icon: '🎯',
+      title: '行動提案',
+      message: `月間アポ目標${apptGoal.target}件に対し現在${apptGoal.current}件。残り${ctx.remainingDays}営業日で達成するには、1日${dailyCalls}件のコールが必要です。`,
+      progress: { current: apptGoal.current, target: apptGoal.target },
+      actions: [
+        { label: 'アクション計画を見る', href: '/talent/goals' },
+        { label: 'スキップ', dismiss: true },
+      ],
+      priority: 10,
+    })
+  }
+
+  // Rule 2: 期限超過タスクが多い
+  if (ctx.overdueCount >= 3) {
+    suggestions.push({
+      id: 'action-overdue',
+      type: 'action',
+      icon: '⚠️',
+      title: '期限超過アラート',
+      message: `期限超過のタスクが${ctx.overdueCount}件あります。リスケジュールまたは対応しましょう。`,
+      actions: [
+        { label: '確認する', href: '/overdue' },
+        { label: 'スキップ', dismiss: true },
+      ],
+      priority: 9,
+    })
+  }
+
+  // Rule 3: ハイランカーに研修開催を提案
+  if (rankAtLeast(ctx.rank, 'ゴールド') && ctx.badges.length >= 3) {
+    suggestions.push({
+      id: 'skill-host-training',
+      type: 'skill',
+      icon: '🏆',
+      title: '研修開催の提案',
+      message: `${ctx.badges[ctx.badges.length - 1]}バッジを獲得！あなたの知見をチームに共有しませんか？`,
+      actions: [
+        { label: '研修を開催する', href: '/metaverse/rooms' },
+        { label: '後で', dismiss: true },
+      ],
+      priority: 8,
+    })
+  }
+
+  // Rule 4: 弱いスキルがあり、チームにゴールド以上がいる
+  const weakSkills = ctx.skills.filter(s => s.value <= 2)
+  const goldMembers = ctx.teamMembers.filter(m => rankAtLeast(m.rank, 'ゴールド'))
+  if (weakSkills.length > 0 && goldMembers.length > 0) {
+    const weakest = weakSkills.sort((a, b) => a.value - b.value)[0]
+    const mentor = goldMembers[0]
+    suggestions.push({
+      id: `skill-request-${weakest.name}`,
+      type: 'skill',
+      icon: '📚',
+      title: 'スキルアップ提案',
+      message: `「${weakest.name}」が${weakest.value}/${weakest.max}です。${mentor.name}さん（${mentor.rank}）に研修を依頼しませんか？`,
+      actions: [
+        { label: '研修を依頼', href: '/metaverse/rooms' },
+        { label: 'スキップ', dismiss: true },
+      ],
+      priority: 7,
+    })
+  }
+
+  // Rule 5: 連続ログインボーナスが近い
+  if (ctx.streak >= 5) {
+    const nextBonus = Math.ceil(ctx.streak / 7) * 7
+    const daysUntilBonus = nextBonus - ctx.streak
+    if (daysUntilBonus <= 2) {
+      suggestions.push({
+        id: 'engage-streak',
+        type: 'engage',
+        icon: '🔥',
+        title: 'ログインボーナス',
+        message: `${ctx.streak}日連続ログイン中！あと${daysUntilBonus}日で${nextBonus}日ボーナス達成です。`,
+        actions: [
+          { label: 'クエストを見る', href: '/talent/quests' },
+          { label: 'スキップ', dismiss: true },
+        ],
+        priority: 6,
+      })
+    }
+  }
+
+  // Rule 6: 今日のタスクが多い
+  if (ctx.todayTaskCount >= 5) {
+    suggestions.push({
+      id: 'action-tasks-today',
+      type: 'action',
+      icon: '📋',
+      title: '今日のタスク',
+      message: `今日のタスクが${ctx.todayTaskCount}件あります。優先順位を確認しましょう。`,
+      actions: [
+        { label: '確認する', href: '/today' },
+        { label: 'スキップ', dismiss: true },
+      ],
+      priority: 5,
+    })
+  }
+
+  // Rule 7: 月間コール目標がもうすぐ達成
+  const callPct = ctx.goals.calls.current / ctx.goals.calls.target
+  if (callPct >= 0.8 && callPct < 1) {
+    const remaining = ctx.goals.calls.target - ctx.goals.calls.current
+    suggestions.push({
+      id: 'engage-calls-almost',
+      type: 'engage',
+      icon: '🚀',
+      title: 'あと少し！',
+      message: `月間コール目標まであと${remaining}件！ゴールが見えています。`,
+      progress: { current: ctx.goals.calls.current, target: ctx.goals.calls.target },
+      actions: [
+        { label: '目標を確認', href: '/talent/goals' },
+        { label: 'スキップ', dismiss: true },
+      ],
+      priority: 4,
+    })
+  }
+
+  return suggestions.sort((a, b) => b.priority - a.priority)
+}
+
+// ── Dismiss Management (localStorage) ─────────────────────────────────────
+
+const DISMISS_KEY = 'bgm_dismissed_suggestions'
+const ONE_WEEK_MS = 7 * 24 * 60 * 60 * 1000
+
+function getDismissed(): Record<string, number> {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(DISMISS_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw) as Record<string, number>
+    const now = Date.now()
+    // 1週間超えたものを削除
+    const cleaned: Record<string, number> = {}
+    for (const [id, ts] of Object.entries(parsed)) {
+      if (now - ts < ONE_WEEK_MS) cleaned[id] = ts
+    }
+    localStorage.setItem(DISMISS_KEY, JSON.stringify(cleaned))
+    return cleaned
+  } catch { return {} }
+}
+
+function dismissSuggestion(id: string) {
+  if (typeof window === 'undefined') return
+  const current = getDismissed()
+  current[id] = Date.now()
+  localStorage.setItem(DISMISS_KEY, JSON.stringify(current))
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// QUICK ACTIONS & CHAT
+// ═══════════════════════════════════════════════════════════════════════════════
+
+const QUICK_ACTIONS = [
+  { label: '企業登録',       href: '/companies', icon: Building2 },
+  { label: 'パイプライン',   href: '/pipeline',  icon: Columns3 },
+  { label: 'マーケティング', href: '/nurturing',  icon: Mail },
+  { label: 'プロダクト',     href: '/meetings',   icon: FileText },
+  { label: 'ナレッジ検索',   href: '/knowledge',  icon: BookOpen },
+  { label: 'ダッシュボード', href: '/dashboard',  icon: LayoutDashboard },
+]
+
+interface Message { id: string; role: 'assistant' | 'user'; content: string }
+
+const INITIAL_MESSAGES: Message[] = [
+  { id: 'welcome', role: 'assistant', content: 'おはようございます！BGM へようこそ。\n\n何かお手伝いできることはありますか？' },
+]
+
+// サジェスチョンの type → ObsChip tone マッピング
+function suggestionTone(type: Suggestion['type']): 'low' | 'primary' | 'middle' {
+  if (type === 'action') return 'low'
+  if (type === 'skill') return 'primary'
+  return 'middle' // engage
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// PAGE
+// ═══════════════════════════════════════════════════════════════════════════════
+
+export default function HomePage() {
+  const router = useRouter()
+  const [messages, setMessages] = useState<Message[]>(INITIAL_MESSAGES)
+  const [input, setInput] = useState('')
+  const [dismissed, setDismissed] = useState<Record<string, number>>({})
+
+  useEffect(() => { setDismissed(getDismissed()) }, [])
+
+  const suggestions = useMemo(() => {
+    const all = generateSuggestions(USER_CONTEXT)
+    return all.filter(s => !dismissed[s.id]).slice(0, 3)
+  }, [dismissed])
+
+  function handleDismiss(id: string) {
+    dismissSuggestion(id)
+    setDismissed(getDismissed())
+  }
+
+  function handleSend() {
+    if (!input.trim()) return
+    const userMsg: Message = { id: `u-${Date.now()}`, role: 'user', content: input.trim() }
+    setMessages(prev => [...prev, userMsg])
+    setInput('')
+    setTimeout(() => {
+      setMessages(prev => [...prev, {
+        id: `a-${Date.now()}`, role: 'assistant',
+        content: 'かしこまりました。該当する情報を確認しています...\n\n（AI接続は今後実装予定です）',
+      }])
+    }, 800)
+  }
+
+  return (
+    <ObsPageShell>
+      <div className="max-w-[1280px] mx-auto px-10 pb-16">
+        <ObsHero
+          eyebrow="Home"
+          title="BGM"
+          caption="Business Growth Management. あなたの商談・ヒアリング・成長を一ヶ所で。"
+          action={
+            <div
+              className="w-12 h-12 rounded-[var(--radius-obs-md)] flex items-center justify-center"
+              style={{
+                background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+              }}
+            >
+              <Zap size={22} style={{ color: 'var(--color-obs-on-primary)' }} strokeWidth={2.5} />
+            </div>
+          }
+        />
+
+        <div className="flex flex-col gap-6 max-w-3xl mx-auto">
+
+          {/* ── Suggestion Cards ── */}
+          <AnimatePresence>
+            {suggestions.length > 0 && (
+              <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col gap-2">
+                {suggestions.map((s, i) => {
+                  const tone = suggestionTone(s.type)
+                  return (
+                    <motion.div
+                      key={s.id}
+                      initial={{ opacity: 0, y: 10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      exit={{ opacity: 0, x: -20, height: 0 }}
+                      transition={{ delay: i * 0.08, duration: 0.25 }}
+                    >
+                      <ObsCard depth="high" padding="md" radius="lg">
+                        <div className="flex items-start gap-3">
+                          <span className="text-[22px] shrink-0 mt-0.5">{s.icon}</span>
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <ObsChip tone={tone}>{s.title}</ObsChip>
+                            </div>
+                            <p className="text-[13px] leading-relaxed" style={{ color: 'var(--color-obs-text)' }}>
+                              {s.message}
+                            </p>
+
+                            {/* プログレスバー */}
+                            {s.progress && (
+                              <div className="flex items-center gap-2 mt-2.5">
+                                <div
+                                  className="flex-1 h-2 rounded-full overflow-hidden"
+                                  style={{ backgroundColor: 'var(--color-obs-surface-lowest)' }}
+                                >
+                                  <div
+                                    className="h-full rounded-full"
+                                    style={{
+                                      width: `${(s.progress.current / s.progress.target) * 100}%`,
+                                      background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                                    }}
+                                  />
+                                </div>
+                                <span
+                                  className="text-[11px] font-medium tabular-nums"
+                                  style={{ color: 'var(--color-obs-text-muted)' }}
+                                >
+                                  {s.progress.current}/{s.progress.target}
+                                </span>
+                              </div>
+                            )}
+
+                            {/* アクション */}
+                            <div className="flex items-center gap-2 mt-3">
+                              {s.actions.map(a => (
+                                a.dismiss ? (
+                                  <ObsButton
+                                    key={a.label}
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleDismiss(s.id)}
+                                    className="ml-auto"
+                                  >
+                                    {a.label}
+                                  </ObsButton>
+                                ) : (
+                                  <ObsButton
+                                    key={a.label}
+                                    variant="primary"
+                                    size="sm"
+                                    onClick={() => a.href && router.push(a.href)}
+                                  >
+                                    {a.label}
+                                  </ObsButton>
+                                )
+                              ))}
+                            </div>
+                          </div>
+                        </div>
+                      </ObsCard>
+                    </motion.div>
+                  )
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* ── Messages ── */}
+          <div className="flex-1 flex flex-col gap-4">
+            {messages.map((msg, i) => (
+              <motion.div key={msg.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.25, delay: i === 0 ? 0.3 : 0 }}
+                className={`flex gap-3 ${msg.role === 'user' ? 'flex-row-reverse' : ''}`}>
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                  style={{
+                    backgroundColor: msg.role === 'assistant'
+                      ? 'var(--color-obs-primary-container)'
+                      : 'var(--color-obs-surface-highest)',
+                  }}
+                >
+                  {msg.role === 'assistant'
+                    ? <Bot size={14} style={{ color: 'var(--color-obs-on-primary)' }} />
+                    : <User size={14} style={{ color: 'var(--color-obs-text)' }} />}
+                </div>
+                <ObsCard
+                  depth={msg.role === 'user' ? 'highest' : 'high'}
+                  padding="sm"
+                  radius="lg"
+                  className="max-w-[80%]"
+                >
+                  <p
+                    className="text-[13.5px] leading-relaxed whitespace-pre-line"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
+                    {msg.content}
+                  </p>
+                </ObsCard>
+              </motion.div>
+            ))}
+          </div>
+
+          {/* ── Quick Actions ── */}
+          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.4 }}>
+            <div className="flex flex-wrap gap-2 justify-center">
+              {QUICK_ACTIONS.map(action => {
+                const Icon = action.icon
+                return (
+                  <ObsButton
+                    key={action.href}
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => router.push(action.href)}
+                  >
+                    <Icon size={13} className="inline mr-1.5" />
+                    {action.label}
+                  </ObsButton>
+                )
+              })}
+            </div>
+          </motion.div>
+
+          {/* ── Input ── */}
+          <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.45 }}>
+            <ObsCard depth="high" padding="sm" radius="lg">
+              <div className="flex items-center gap-2">
+                <ObsInput
+                  value={input}
+                  onChange={e => setInput(e.target.value)}
+                  onKeyDown={e => e.key === 'Enter' && !e.shiftKey && handleSend()}
+                  placeholder="BGM にご質問ください..."
+                  className="flex-1"
+                />
+                <ObsButton
+                  variant="primary"
+                  size="md"
+                  onClick={handleSend}
+                  disabled={!input.trim()}
+                  className="shrink-0"
+                >
+                  <Send size={14} className="inline" />
+                </ObsButton>
+              </div>
+            </ObsCard>
+          </motion.div>
+        </div>
+      </div>
+    </ObsPageShell>
+  )
+}

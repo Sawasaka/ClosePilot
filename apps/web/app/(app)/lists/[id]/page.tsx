@@ -2,67 +2,87 @@
 
 import { useState, useMemo } from 'react'
 import { useParams, useRouter } from 'next/navigation'
-import { motion } from 'framer-motion'
+import Link from 'next/link'
 import {
-  ChevronLeft, Search, Plus,
-  ArrowUpDown, ChevronUp, ChevronDown, User, Phone, Mail,
+  ChevronLeft,
+  Search,
+  ArrowUpDown,
+  ChevronUp,
+  ChevronDown,
+  Phone,
+  Mail,
+  ChevronDown as CaretDown,
+  FileEdit,
+  Megaphone,
+  Share2,
+  Calendar,
+  UserCheck,
+  PhoneOutgoing,
+  Send,
+  Handshake,
+  Globe,
+  HelpCircle,
 } from 'lucide-react'
-import type { Rank, ApproachStatus, CallList, CallListItem } from '@/types/crm'
-import { RANK_CONFIG } from '@/types/crm'
-import { StatusGameBadge } from '@/components/ui/GameBadge'
+import type { ApproachStatus, CallList, CallListItem } from '@/types/crm'
+import { ObsPageShell } from '@/components/obsidian'
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
-const MOCK_LISTS: Record<string, CallList> = {
+const MOCK_LISTS: Record<string, CallList & { accent: string }> = {
   'list-1': {
     id: 'list-1', name: '今週のコール対象', description: '今週中にコールすべきターゲット',
     ownerName: '田中太郎', contactCount: 12, completedCount: 5, appointmentCount: 2,
-    color: '#0071E3', createdAt: '2026-03-24', updatedAt: '2026-03-26',
+    color: '#4a9eff', accent: '#4a9eff',
+    createdAt: '2026-03-24', updatedAt: '2026-03-26',
   },
   'list-2': {
     id: 'list-2', name: '再フォローリスト', description: '不在/不通で再コールが必要',
     ownerName: '田中太郎', contactCount: 8, completedCount: 1, appointmentCount: 0,
-    color: '#FF9F0A', createdAt: '2026-03-20', updatedAt: '2026-03-25',
+    color: '#ffb347', accent: '#ffb347',
+    createdAt: '2026-03-20', updatedAt: '2026-03-25',
   },
   'list-3': {
     id: 'list-3', name: 'セミナー参加者リスト', description: '3/15セミナー参加者へのフォローアップ',
     ownerName: '鈴木花子', contactCount: 20, completedCount: 14, appointmentCount: 5,
-    color: '#34C759', createdAt: '2026-03-16', updatedAt: '2026-03-22',
+    color: '#4ad98a', accent: '#4ad98a',
+    createdAt: '2026-03-16', updatedAt: '2026-03-22',
   },
   'list-4': {
     id: 'list-4', name: 'Aランク未着手', description: 'Aランクでまだ未アプローチの企業',
     ownerName: '田中太郎', contactCount: 6, completedCount: 0, appointmentCount: 0,
-    color: '#FF3B30', createdAt: '2026-03-18', updatedAt: '2026-03-26',
+    color: '#ff6b6b', accent: '#ff6b6b',
+    createdAt: '2026-03-18', updatedAt: '2026-03-26',
   },
 }
 
-const MOCK_ITEMS: Record<string, CallListItem[]> = {
+type CallListItemEx = CallListItem & { leadSource: LeadSourceType }
+
+const MOCK_ITEMS: Record<string, CallListItemEx[]> = {
   'list-1': [
-    { id: 'li-1', listId: 'list-1', contactId: '1', contactName: '田中 誠', contactTitle: '営業部長', companyId: '1', companyName: '株式会社テクノリード', rank: 'A', status: 'アポ獲得', callAttempts: 3, emailsSent: 5, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', priority: 1 },
-    { id: 'li-2', listId: 'list-1', contactId: '2', contactName: '山本 佳子', contactTitle: 'マネージャー', companyId: '2', companyName: '合同会社フューチャー', rank: 'A', status: '接続済み', callAttempts: 5, emailsSent: 8, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22', priority: 2 },
-    { id: 'li-3', listId: 'list-1', contactId: '3', contactName: '佐々木 拓也', contactTitle: '代表取締役', companyId: '3', companyName: '株式会社イノベーション', rank: 'A', status: 'Next Action', callAttempts: 2, emailsSent: 3, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25', priority: 3 },
-    { id: 'li-4', listId: 'list-1', contactId: '4', contactName: '中村 理恵', contactTitle: '購買担当', companyId: '4', companyName: '株式会社グロース', rank: 'B', status: '不在', callAttempts: 4, emailsSent: 2, lastCallAt: '2026-03-15', nextActionAt: null, priority: 4 },
-    { id: 'li-5', listId: 'list-1', contactId: '5', contactName: '小林 健太', contactTitle: '部長', companyId: '5', companyName: '有限会社サクセス', rank: 'B', status: '不通', callAttempts: 6, emailsSent: 1, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', priority: 5 },
-    { id: 'li-6', listId: 'list-1', contactId: '6', contactName: '鈴木 美香', contactTitle: '課長', companyId: '6', companyName: '株式会社ネクスト', rank: 'C', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 6 },
-    { id: 'li-7', listId: 'list-1', contactId: '7', contactName: '加藤 雄介', contactTitle: '取締役', companyId: '7', companyName: '合同会社ビジョン', rank: 'C', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 7 },
-    { id: 'li-8', listId: 'list-1', contactId: '8', contactName: '吉田 千春', contactTitle: '部長', companyId: '8', companyName: '株式会社スタート', rank: 'C', status: 'コール不可', callAttempts: 8, emailsSent: 4, lastCallAt: '2026-03-01', nextActionAt: null, priority: 8 },
+    { id: 'li-1', listId: 'list-1', contactId: '1', contactName: '田中 誠', contactTitle: '営業部長', companyId: '1', companyName: '株式会社テクノリード', rank: 'A', status: 'アポ獲得', callAttempts: 3, emailsSent: 5, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', priority: 1, leadSource: 'inbound' },
+    { id: 'li-2', listId: 'list-1', contactId: '2', contactName: '山本 佳子', contactTitle: 'マネージャー', companyId: '2', companyName: '合同会社フューチャー', rank: 'A', status: '接続済み', callAttempts: 5, emailsSent: 8, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22', priority: 2, leadSource: 'event' },
+    { id: 'li-3', listId: 'list-1', contactId: '3', contactName: '佐々木 拓也', contactTitle: '代表取締役', companyId: '3', companyName: '株式会社イノベーション', rank: 'A', status: 'Next Action', callAttempts: 2, emailsSent: 3, lastCallAt: '2026-03-18', nextActionAt: '2026-03-25', priority: 3, leadSource: 'referral' },
+    { id: 'li-4', listId: 'list-1', contactId: '4', contactName: '中村 理恵', contactTitle: '購買担当', companyId: '4', companyName: '株式会社グロース', rank: 'B', status: '不在', callAttempts: 4, emailsSent: 2, lastCallAt: '2026-03-15', nextActionAt: null, priority: 4, leadSource: 'paid_ads' },
+    { id: 'li-5', listId: 'list-1', contactId: '5', contactName: '小林 健太', contactTitle: '部長', companyId: '5', companyName: '有限会社サクセス', rank: 'B', status: '不通', callAttempts: 6, emailsSent: 1, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', priority: 5, leadSource: 'web_form' },
+    { id: 'li-6', listId: 'list-1', contactId: '6', contactName: '鈴木 美香', contactTitle: '課長', companyId: '6', companyName: '株式会社ネクスト', rank: 'C', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 6, leadSource: 'cold_call' },
+    { id: 'li-7', listId: 'list-1', contactId: '7', contactName: '加藤 雄介', contactTitle: '取締役', companyId: '7', companyName: '合同会社ビジョン', rank: 'C', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 7, leadSource: 'cold_mail' },
+    { id: 'li-8', listId: 'list-1', contactId: '8', contactName: '吉田 千春', contactTitle: '部長', companyId: '8', companyName: '株式会社スタート', rank: 'C', status: 'コール不可', callAttempts: 8, emailsSent: 4, lastCallAt: '2026-03-01', nextActionAt: null, priority: 8, leadSource: 'sns' },
   ],
   'list-2': [
-    { id: 'li-9', listId: 'list-2', contactId: '4', contactName: '中村 理恵', contactTitle: '購買担当', companyId: '4', companyName: '株式会社グロース', rank: 'B', status: '不在', callAttempts: 4, emailsSent: 2, lastCallAt: '2026-03-15', nextActionAt: null, priority: 1 },
-    { id: 'li-10', listId: 'list-2', contactId: '5', contactName: '小林 健太', contactTitle: '部長', companyId: '5', companyName: '有限会社サクセス', rank: 'B', status: '不通', callAttempts: 6, emailsSent: 1, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', priority: 2 },
+    { id: 'li-9', listId: 'list-2', contactId: '4', contactName: '中村 理恵', contactTitle: '購買担当', companyId: '4', companyName: '株式会社グロース', rank: 'B', status: '不在', callAttempts: 4, emailsSent: 2, lastCallAt: '2026-03-15', nextActionAt: null, priority: 1, leadSource: 'paid_ads' },
+    { id: 'li-10', listId: 'list-2', contactId: '5', contactName: '小林 健太', contactTitle: '部長', companyId: '5', companyName: '有限会社サクセス', rank: 'B', status: '不通', callAttempts: 6, emailsSent: 1, lastCallAt: '2026-03-14', nextActionAt: '2026-03-23', priority: 2, leadSource: 'web_form' },
   ],
   'list-3': [
-    { id: 'li-11', listId: 'list-3', contactId: '1', contactName: '田中 誠', contactTitle: '営業部長', companyId: '1', companyName: '株式会社テクノリード', rank: 'A', status: 'アポ獲得', callAttempts: 3, emailsSent: 5, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', priority: 1 },
+    { id: 'li-11', listId: 'list-3', contactId: '1', contactName: '田中 誠', contactTitle: '営業部長', companyId: '1', companyName: '株式会社テクノリード', rank: 'A', status: 'アポ獲得', callAttempts: 3, emailsSent: 5, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28', priority: 1, leadSource: 'event' },
   ],
   'list-4': [
-    { id: 'li-12', listId: 'list-4', contactId: '6', contactName: '鈴木 美香', contactTitle: '課長', companyId: '6', companyName: '株式会社ネクスト', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 1 },
-    { id: 'li-13', listId: 'list-4', contactId: '7', contactName: '加藤 雄介', contactTitle: '取締役', companyId: '7', companyName: '合同会社ビジョン', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 2 },
-    { id: 'li-14', listId: 'list-4', contactId: '9', contactName: '高橋 健一', contactTitle: 'CTO', companyId: '9', companyName: '株式会社デジタルフォース', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 3 },
+    { id: 'li-12', listId: 'list-4', contactId: '6', contactName: '鈴木 美香', contactTitle: '課長', companyId: '6', companyName: '株式会社ネクスト', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 1, leadSource: 'cold_call' },
+    { id: 'li-13', listId: 'list-4', contactId: '7', contactName: '加藤 雄介', contactTitle: '取締役', companyId: '7', companyName: '合同会社ビジョン', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 2, leadSource: 'partner' },
+    { id: 'li-14', listId: 'list-4', contactId: '9', contactName: '高橋 健一', contactTitle: 'CTO', companyId: '9', companyName: '株式会社デジタルフォース', rank: 'A', status: '未着手', callAttempts: 0, emailsSent: 0, lastCallAt: null, nextActionAt: null, priority: 3, leadSource: 'organic_search' },
   ],
 }
 
 // ─── Filter / Sort types ─────────────────────────────────────────────────────
-// コンタクトページと連動: ステータス6種 + Next Action 5種
 
 type FilterKey = 'all' | '未着手' | '不通' | '不在' | '接続済み' | 'コール不可' | 'アポ獲得'
 type SortKey = 'priority' | 'name' | 'rank'
@@ -78,163 +98,170 @@ const FILTERS: { key: FilterKey; label: string }[] = [
   { key: 'アポ獲得', label: 'アポ獲得' },
 ]
 
-const STATUS_ORDER: Record<ApproachStatus, number> = {
-  '未着手': 0, '不通': 1, '不在': 2, '接続済み': 3,
-  'コール不可': 4, 'アポ獲得': 5, 'Next Action': 6,
+// ─── 色定義（Liquid Obsidian: 薄い同色背景 + ●ドット + 同色文字） ───────────
+
+type ObsChipStyle = { core: string; bg: string }
+
+// ステータス
+const STATUS_STYLES: Record<string, ObsChipStyle> = {
+  '未着手':      { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' },
+  '不通':        { core: 'var(--color-obs-hot)',        bg: 'rgba(255,107,107,0.14)' },
+  '不在':        { core: 'var(--color-obs-middle)',     bg: 'rgba(255,184,107,0.14)' },
+  '接続済み':    { core: 'var(--color-obs-low)',        bg: 'rgba(126,198,255,0.14)' },
+  'コール不可':  { core: 'var(--color-obs-hot)',        bg: 'rgba(255,107,107,0.14)' },
+  'アポ獲得':    { core: '#4ad98a',                     bg: 'rgba(74,217,138,0.14)' },
+  'Next Action': { core: 'var(--color-obs-primary)',    bg: 'rgba(171,199,255,0.14)' },
 }
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// Next Action: Liquid Obsidian の primary / low / emerald / middle / muted に統一
+type NextActionValue = 'メール' | 'コール' | '商談' | '連絡待ち' | 'フォロー' | null
+const ALL_NEXT_ACTIONS: Exclude<NextActionValue, null>[] = ['メール', 'コール', '商談', '連絡待ち', 'フォロー']
 
-function formatDate(d: string | null) {
-  if (!d) return '—'
-  const date = new Date(d)
-  return `${date.getMonth() + 1}/${date.getDate()}`
+const NEXT_ACTION_STYLES: Record<string, ObsChipStyle> = {
+  'メール':     { core: 'var(--color-obs-primary)',    bg: 'rgba(171,199,255,0.14)' },
+  'コール':     { core: 'var(--color-obs-low)',        bg: 'rgba(126,198,255,0.14)' },
+  '商談':       { core: '#4ad98a',                     bg: 'rgba(74,217,138,0.14)' },
+  '連絡待ち':   { core: 'var(--color-obs-middle)',     bg: 'rgba(255,184,107,0.14)' },
+  'フォロー':   { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' },
 }
 
-// ─── RankBadge ───────────────────────────────────────────────────────────────
+const UNSET_STYLE: ObsChipStyle = { core: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)' }
 
-function RankBadge({ rank }: { rank: Rank }) {
-  const cfg = RANK_CONFIG[rank]
+
+// ─── リード経由元（チャネル種別） ────────────────────────────────────────────
+type LeadSourceType =
+  | 'web_form'
+  | 'organic_search'
+  | 'paid_ads'
+  | 'sns'
+  | 'event'
+  | 'referral'
+  | 'cold_call'
+  | 'cold_mail'
+  | 'partner'
+  | 'inbound'
+  | 'other'
+
+const LEAD_SOURCE_STYLES: Record<LeadSourceType, { Icon: React.ElementType; label: string; chipBg: string; chipRing: string; fg: string }> = {
+  web_form:       { Icon: FileEdit,      label: 'Webフォーム',     chipBg: 'rgba(171,199,255,0.10)', chipRing: 'inset 0 0 0 1px rgba(171,199,255,0.32)', fg: 'var(--color-obs-primary)' },
+  organic_search: { Icon: Search,        label: '自然検索',         chipBg: 'rgba(171,199,255,0.08)', chipRing: 'inset 0 0 0 1px rgba(171,199,255,0.28)', fg: 'var(--color-obs-primary)' },
+  paid_ads:       { Icon: Megaphone,     label: '広告経由',         chipBg: 'rgba(171,199,255,0.14)', chipRing: 'inset 0 0 0 1px rgba(171,199,255,0.40)', fg: 'var(--color-obs-primary)' },
+  sns:            { Icon: Share2,        label: 'SNS',              chipBg: 'rgba(171,199,255,0.10)', chipRing: 'inset 0 0 0 1px rgba(171,199,255,0.32)', fg: 'var(--color-obs-primary)' },
+  event:          { Icon: Calendar,      label: '展示会・イベント', chipBg: 'rgba(255,204,102,0.12)', chipRing: 'inset 0 0 0 1px rgba(255,204,102,0.35)', fg: '#FFCC66' },
+  referral:       { Icon: UserCheck,     label: '紹介',             chipBg: 'rgba(110,231,183,0.12)', chipRing: 'inset 0 0 0 1px rgba(110,231,183,0.35)', fg: '#6EE7B7' },
+  cold_call:      { Icon: PhoneOutgoing, label: '新規コール',       chipBg: 'rgba(171,199,255,0.10)', chipRing: 'inset 0 0 0 1px rgba(171,199,255,0.32)', fg: 'var(--color-obs-primary)' },
+  cold_mail:      { Icon: Send,          label: '新規メール',       chipBg: 'rgba(171,199,255,0.10)', chipRing: 'inset 0 0 0 1px rgba(171,199,255,0.32)', fg: 'var(--color-obs-primary)' },
+  partner:        { Icon: Handshake,     label: 'パートナー',       chipBg: 'rgba(192,124,255,0.12)', chipRing: 'inset 0 0 0 1px rgba(192,124,255,0.35)', fg: '#C07CFF' },
+  inbound:        { Icon: Globe,         label: 'インバウンド',     chipBg: 'rgba(110,231,183,0.10)', chipRing: 'inset 0 0 0 1px rgba(110,231,183,0.30)', fg: '#6EE7B7' },
+  other:          { Icon: HelpCircle,    label: 'その他',           chipBg: 'rgba(143,140,144,0.12)', chipRing: 'inset 0 0 0 1px rgba(143,140,144,0.35)', fg: 'var(--color-obs-text-muted)' },
+}
+
+function LeadSourceBadge({ type }: { type: LeadSourceType }) {
+  const s = LEAD_SOURCE_STYLES[type]
+  const Icon = s.Icon
   return (
     <span
-      className="inline-flex items-center justify-center w-[24px] h-[24px] rounded-[6px] text-[11px] font-black"
-      style={{
-        background: cfg.gradient,
-        color: cfg.color,
-        boxShadow: `${cfg.glow}, inset 0 1px 0 rgba(255,255,255,0.4)`,
-        border: '1px solid rgba(255,255,255,0.25)',
-        textShadow: cfg.color === '#fff' ? '0 1px 2px rgba(0,0,0,0.4)' : 'none',
-        letterSpacing: '0.04em',
-      }}
+      className="inline-flex items-center gap-1.5 px-2 h-6 rounded-full text-[10.5px] font-semibold whitespace-nowrap"
+      style={{ backgroundColor: s.chipBg, color: s.fg, boxShadow: s.chipRing }}
     >
-      {rank}
+      <Icon size={11} strokeWidth={2} />
+      {s.label}
     </span>
   )
 }
 
-// ─── Next Action ────────────────────────────────────────────────────────────
-// コンタクトページと連動: メール / コール / 商談 / 連絡待ち / フォロー
+// ─── Components ──────────────────────────────────────────────────────────────
 
-type NextActionValue = 'メール' | 'コール' | '商談' | '連絡待ち' | 'フォロー' | null
-const ALL_NEXT_ACTIONS: NextActionValue[] = ['メール', 'コール', '商談', '連絡待ち', 'フォロー']
-
-interface NextActionStyle {
-  gradient: string
-  glow: string
-  color: string
-  dotColor: string
-  borderColor: string
-  textShadow: string
-  hoverColor: string
+function StatusBadge({ status }: { status: string }) {
+  const s = STATUS_STYLES[status] ?? STATUS_STYLES['未着手']
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"
+      style={{ backgroundColor: s.bg, color: s.core }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.core }} />
+      {status}
+    </span>
+  )
 }
 
-const NEXT_ACTION_GAME_STYLES: Record<string, NextActionStyle> = {
-  'メール': {
-    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
-    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF',
-    dotColor: '#E9E5FF',
-    borderColor: 'rgba(255,255,255,0.3)',
-    textShadow: '0 1px 2px rgba(50,20,100,0.6)',
-    hoverColor: '#C4B5FD',
-  },
-  'コール': {
-    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
-    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF',
-    dotColor: '#E0F4FF',
-    borderColor: 'rgba(255,255,255,0.3)',
-    textShadow: '0 1px 2px rgba(0,40,90,0.6)',
-    hoverColor: '#7DD3FC',
-  },
-  '商談': {
-    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
-    glow: '0 0 14px rgba(52,199,89,0.85), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#053D24',
-    dotColor: '#FFFFFF',
-    borderColor: 'rgba(255,255,255,0.4)',
-    textShadow: 'none',
-    hoverColor: '#6EE7B7',
-  },
-  '連絡待ち': {
-    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
-    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-    color: '#5B2E00',
-    dotColor: '#FFFFFF',
-    borderColor: 'rgba(255,255,255,0.4)',
-    textShadow: 'none',
-    hoverColor: '#FFCC66',
-  },
-  'フォロー': {
-    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
-    glow: '0 0 14px rgba(236,72,153,0.85), 0 0 5px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF',
-    dotColor: '#FCE7F3',
-    borderColor: 'rgba(255,255,255,0.3)',
-    textShadow: '0 1px 2px rgba(110,15,60,0.6)',
-    hoverColor: '#F9A8D4',
-  },
-}
-
-const UNSET_GAME_STYLE: NextActionStyle = {
-  gradient: 'linear-gradient(135deg, #4A4A52 0%, #3A3A42 100%)',
-  glow: '0 0 8px rgba(174,174,178,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
-  color: '#D8DCE6',
-  dotColor: '#AEAEB2',
-  borderColor: 'rgba(255,255,255,0.15)',
-  textShadow: 'none',
-  hoverColor: '#D8DCE6',
-}
-
-function NextActionSelect({ value, onChange }: { value: NextActionValue; onChange: (v: NextActionValue) => void }) {
+function NextActionSelect({
+  value,
+  onChange,
+}: {
+  value: NextActionValue
+  onChange: (v: NextActionValue) => void
+}) {
   const [open, setOpen] = useState(false)
-  const style: NextActionStyle = value ? NEXT_ACTION_GAME_STYLES[value]! : UNSET_GAME_STYLE
-  const label = value ?? '未設定'
-
+  const style = value ? NEXT_ACTION_STYLES[value]! : UNSET_STYLE
+  const label = value ?? '設定'
   return (
     <div className="relative">
       <button
-        onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
-        className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-bold whitespace-nowrap hover:scale-105 transition-transform"
-        style={{
-          background: style.gradient,
-          boxShadow: style.glow,
-          color: style.color,
-          border: `1px solid ${style.borderColor}`,
-          textShadow: style.textShadow,
-          letterSpacing: '0.01em',
+        onClick={(e) => {
+          e.stopPropagation()
+          setOpen((v) => !v)
         }}
+        className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap transition-colors"
+        style={{ backgroundColor: style.bg, color: style.core }}
       >
-        <span
-          className="rounded-full shrink-0"
-          style={{ width: 6, height: 6, background: style.dotColor, boxShadow: `0 0 4px ${style.dotColor}cc` }}
-        />
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: style.core }} />
         {label}
+        <CaretDown size={10} style={{ color: style.core, opacity: 0.65 }} />
       </button>
       {open && (
         <>
-          <div className="fixed inset-0 z-30" onClick={e => { e.stopPropagation(); setOpen(false) }} />
-          <div className="absolute top-full left-0 mt-1 z-40 bg-[#0c1028] rounded-[8px] py-1 min-w-[140px]"
-            style={{ boxShadow: '0 4px 20px rgba(0,0,0,0.5), 0 0 0 1px #2244AA' }}>
-            {ALL_NEXT_ACTIONS.map(a => {
-              if (!a) return null
-              const s = NEXT_ACTION_GAME_STYLES[a]!
+          <div className="fixed inset-0 z-30" onClick={(e) => { e.stopPropagation(); setOpen(false) }} />
+          <div
+            className="absolute top-full left-0 mt-1 z-40 rounded-[var(--radius-obs-md)] py-1 min-w-[140px]"
+            style={{
+              backgroundColor: 'var(--color-obs-surface-highest)',
+              boxShadow: '0 8px 24px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.3)',
+            }}
+          >
+            {ALL_NEXT_ACTIONS.map((a) => {
+              const s = NEXT_ACTION_STYLES[a]!
               const selected = a === value
               return (
-                <button key={a} onClick={e => { e.stopPropagation(); onChange(a); setOpen(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(136,187,255,0.06)] transition-colors"
-                  style={{ color: s.hoverColor, fontWeight: selected ? 700 : 500 }}>
-                  <span className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: s.dotColor, boxShadow: `0 0 4px ${s.dotColor}` }} />
+                <button
+                  key={a}
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onChange(a)
+                    setOpen(false)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 h-7 text-[12px] text-left transition-colors"
+                  style={{
+                    color: selected ? s.core : 'var(--color-obs-text-muted)',
+                    backgroundColor: selected ? s.bg : 'transparent',
+                  }}
+                  onMouseOver={(e) => {
+                    if (!selected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                  }}
+                  onMouseOut={(e) => {
+                    if (!selected) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                  }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.core }} />
                   {a}
                 </button>
               )
             })}
             {value && (
               <>
-                <div className="mx-2 my-0.5 h-px" style={{ background: 'rgba(34,68,170,0.15)' }} />
-                <button onClick={e => { e.stopPropagation(); onChange(null); setOpen(false) }}
-                  className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left text-[#99AACC] hover:bg-[rgba(136,187,255,0.04)] transition-colors">
-                  <span className="w-[6px] h-[6px] rounded-full bg-[#AEAEB2] shrink-0" />
+                <div className="mx-2 my-1 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onChange(null)
+                    setOpen(false)
+                  }}
+                  className="w-full flex items-center gap-2 px-3 h-7 text-[12px] text-left transition-colors"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                  onMouseOver={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)' }}
+                  onMouseOut={(e) => { (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent' }}
+                >
+                  <span className="w-1.5 h-1.5 rounded-full bg-[var(--color-obs-text-subtle)]" />
                   クリア
                 </button>
               </>
@@ -246,23 +273,32 @@ function NextActionSelect({ value, onChange }: { value: NextActionValue; onChang
   )
 }
 
-// ─── SortHeader ──────────────────────────────────────────────────────────────
-
 function SortHeader({
-  label, sortKey, currentSort, currentDir, onSort,
+  label,
+  sortKey,
+  currentSort,
+  currentDir,
+  onSort,
 }: {
-  label: string; sortKey: SortKey; currentSort: SortKey; currentDir: SortDir
+  label: string
+  sortKey: SortKey
+  currentSort: SortKey
+  currentDir: SortDir
   onSort: (k: SortKey) => void
 }) {
   const active = currentSort === sortKey
   return (
     <button
-      className="flex items-center gap-1 text-[11px] uppercase tracking-[0.04em] font-medium"
-      style={{ color: active ? '#88BBFF' : '#4466AA' }}
+      className="flex items-center gap-1 text-[11px] uppercase tracking-[0.08em] font-medium"
+      style={{ color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-subtle)' }}
       onClick={() => onSort(sortKey)}
     >
       {label}
-      {active ? (currentDir === 'asc' ? <ChevronUp size={10} /> : <ChevronDown size={10} />) : <ArrowUpDown size={10} />}
+      {active ? (
+        currentDir === 'asc' ? <ChevronUp size={11} /> : <ChevronDown size={11} />
+      ) : (
+        <ArrowUpDown size={11} />
+      )}
     </button>
   )
 }
@@ -273,10 +309,8 @@ export default function ListDetailPage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
   const list = MOCK_LISTS[id]
-  const [items, setItems] = useState(MOCK_ITEMS[id] || [])
-  type ItemNextAction = Record<string, NextActionValue>
-  const [nextActions, setNextActions] = useState<ItemNextAction>({})
-
+  const [items] = useState<CallListItemEx[]>(MOCK_ITEMS[id] || [])
+  const [nextActions, setNextActions] = useState<Record<string, NextActionValue>>({})
   const [search, setSearch] = useState('')
   const [filter, setFilter] = useState<FilterKey>('all')
   const [filterNextAction, setFilterNextAction] = useState<NextActionValue | 'all'>('all')
@@ -284,33 +318,35 @@ export default function ListDetailPage() {
   const [sortDir, setSortDir] = useState<SortDir>('asc')
 
   const handleSort = (key: SortKey) => {
-    if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
-    else { setSortKey(key); setSortDir('asc') }
+    if (sortKey === key) setSortDir((d) => (d === 'asc' ? 'desc' : 'asc'))
+    else {
+      setSortKey(key)
+      setSortDir('asc')
+    }
   }
 
   const filtered = useMemo(() => {
     let result = [...items]
     if (search.trim()) {
       const q = search.toLowerCase()
-      result = result.filter(i =>
-        i.contactName.toLowerCase().includes(q) || i.companyName.toLowerCase().includes(q)
+      result = result.filter(
+        (i) => i.contactName.toLowerCase().includes(q) || i.companyName.toLowerCase().includes(q),
       )
     }
-    if (filter !== 'all') result = result.filter(i => i.status === filter)
+    if (filter !== 'all') result = result.filter((i) => i.status === filter)
     if (filterNextAction !== 'all') {
       if (filterNextAction === null) {
-        result = result.filter(i => !nextActions[i.id])
+        result = result.filter((i) => !nextActions[i.id])
       } else {
-        result = result.filter(i => nextActions[i.id] === filterNextAction)
+        result = result.filter((i) => nextActions[i.id] === filterNextAction)
       }
     }
-
     result.sort((a, b) => {
       let cmp = 0
       switch (sortKey) {
         case 'priority': cmp = a.priority - b.priority; break
-        case 'name': cmp = a.contactName.localeCompare(b.contactName); break
-        case 'rank': cmp = a.rank.localeCompare(b.rank); break
+        case 'name':     cmp = a.contactName.localeCompare(b.contactName); break
+        case 'rank':     cmp = a.rank.localeCompare(b.rank); break
       }
       return sortDir === 'asc' ? cmp : -cmp
     })
@@ -319,263 +355,330 @@ export default function ListDetailPage() {
 
   if (!list) {
     return (
-      <div className="text-center py-20">
-        <p className="text-[14px] text-[#99AACC]">リストが見つかりません</p>
-      </div>
+      <ObsPageShell>
+        <div className="w-full px-8 xl:px-12 2xl:px-16 py-20 text-center">
+          <p className="text-sm" style={{ color: 'var(--color-obs-text-muted)' }}>
+            リストが見つかりません
+          </p>
+        </div>
+      </ObsPageShell>
     )
   }
 
-  const appointmentCount = items.filter(i => i.status === 'アポ獲得').length
-  const totalCalls = items.reduce((sum, i) => sum + i.callAttempts, 0)
-  const totalEmails = items.reduce((sum, i) => sum + i.emailsSent, 0)
+  const appointmentCount = items.filter((i) => i.status === 'アポ獲得').length
+  const totalCalls = items.reduce((s, i) => s + i.callAttempts, 0)
+  const totalEmails = items.reduce((s, i) => s + i.emailsSent, 0)
 
   return (
-    <>
-      {/* Back + Title */}
-      <motion.div
-        className="mb-5"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <button
-          onClick={() => router.push('/lists')}
-          className="flex items-center gap-1 text-[13px] text-[#CCDDF0] hover:text-[#EEEEFF] transition-colors mb-2"
-        >
-          <ChevronLeft size={14} />
-          リスト一覧
-        </button>
-        <div className="flex items-center gap-3">
-          <div className="w-[12px] h-[12px] rounded-full shrink-0" style={{ background: list.color }} />
-          <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">
-            {list.name}
-          </h1>
+    <ObsPageShell>
+      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
+        {/* Back link */}
+        <div className="pt-6 pb-2">
+          <Link
+            href="/lists"
+            className="inline-flex items-center gap-1.5 text-sm transition-colors duration-150"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            <ChevronLeft size={14} />
+            リスト一覧
+          </Link>
         </div>
-        {list.description && (
-          <p className="text-[13px] text-[#CCDDF0] mt-0.5 ml-[24px]">{list.description}</p>
-        )}
-      </motion.div>
 
-      {/* KPI */}
-      <motion.div
-        className="flex items-center gap-6 mb-5 ml-[24px]"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.04, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="flex items-center gap-1.5 text-[13px]">
-          <span className="text-[#CCDDF0]">合計</span>
-          <span className="font-semibold text-[#EEEEFF]">{items.length}件</span>
+        {/* Hero */}
+        <div className="mb-6 mt-2 max-w-5xl">
+          <div className="flex items-center gap-3 mb-2">
+            <span
+              className="w-3 h-3 rounded-full shrink-0"
+              style={{
+                backgroundColor: list.accent,
+                boxShadow: `0 0 12px ${list.accent}80, 0 0 3px ${list.accent}`,
+              }}
+            />
+            <h1
+              className="font-[family-name:var(--font-display)] text-[clamp(1.75rem,3vw,2.5rem)] font-semibold tracking-[-0.025em] leading-[1.1]"
+              style={{ color: 'var(--color-obs-text)' }}
+            >
+              {list.name}
+            </h1>
+          </div>
+          {list.description && (
+            <p className="text-sm ml-6" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {list.description}
+            </p>
+          )}
         </div>
-        <div className="w-px h-4" style={{ background: 'rgba(34,68,170,0.4)' }} />
-        <div className="flex items-center gap-1.5 text-[13px]">
-          <span className="text-[#CCDDF0]">アポ獲得</span>
-          <span className="font-semibold text-[#FF9F0A]">{appointmentCount}件</span>
-        </div>
-        <div className="w-px h-4" style={{ background: 'rgba(34,68,170,0.4)' }} />
-        <div className="flex items-center gap-1.5 text-[13px]">
-          <Phone size={12} className="text-[#88BBFF]" style={{ filter: 'drop-shadow(0 0 4px rgba(136,187,255,0.6))' }} />
-          <span className="text-[#CCDDF0]">コール合計</span>
-          <span className="font-bold text-[#FFFFFF]" style={{ textShadow: '0 0 6px rgba(136,187,255,0.5)' }}>
-            {totalCalls}
-          </span>
-        </div>
-        <div className="w-px h-4" style={{ background: 'rgba(34,68,170,0.4)' }} />
-        <div className="flex items-center gap-1.5 text-[13px]">
-          <Mail size={12} className="text-[#A78BFA]" style={{ filter: 'drop-shadow(0 0 4px rgba(167,139,250,0.6))' }} />
-          <span className="text-[#CCDDF0]">メール合計</span>
-          <span className="font-bold text-[#FFFFFF]" style={{ textShadow: '0 0 6px rgba(167,139,250,0.5)' }}>
-            {totalEmails}
-          </span>
-        </div>
-      </motion.div>
 
-      {/* Filter + Actions */}
-      <motion.div
-        className="flex items-center justify-between mb-4"
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.08, ease: [0.16, 1, 0.3, 1] }}
-      >
-        <div className="flex flex-col gap-2">
+        {/* Stats bar */}
+        <div className="flex items-center gap-5 mb-8 ml-6 flex-wrap">
+          <StatPill label="合計" value={`${items.length}件`} />
+          <div className="w-px h-4" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+          <StatPill label="アポ獲得" value={`${appointmentCount}件`} accent="#6ef7a5" />
+          <div className="w-px h-4" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+          <StatPill label="コール合計" value={totalCalls} icon={<Phone size={11} />} accent="#4a9eff" />
+          <div className="w-px h-4" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+          <StatPill label="メール合計" value={totalEmails} icon={<Mail size={11} />} accent="#abc7ff" />
+        </div>
+
+        {/* Filters */}
+        <div className="flex flex-col gap-3 mb-5">
           {/* ステータス */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-[#99AACC] font-bold uppercase tracking-[0.04em] mr-1 w-[88px] shrink-0">ステータス</span>
-            {FILTERS.map(f => (
-              <button
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="text-[10px] font-bold uppercase tracking-[0.12em] w-[88px] shrink-0"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              ステータス
+            </span>
+            {FILTERS.map((f) => (
+              <FilterPill
                 key={f.key}
+                active={filter === f.key}
                 onClick={() => setFilter(f.key)}
-                className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
-                style={{
-                  background: filter === f.key ? '#2244AA' : 'rgba(136,187,255,0.06)', color: filter === f.key ? '#FFFFFF' : '#88BBFF',
-                }}
+                style={f.key !== 'all' ? STATUS_STYLES[f.label] : undefined}
               >
                 {f.label}
-              </button>
+              </FilterPill>
             ))}
           </div>
+
           {/* Next Action */}
-          <div className="flex items-center gap-1.5">
-            <span className="text-[10px] text-[#99AACC] font-bold uppercase tracking-[0.04em] mr-1 w-[88px] shrink-0">Next Action</span>
-            <button
-              onClick={() => setFilterNextAction('all')}
-              className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
-              style={{
-                background: filterNextAction === 'all' ? '#2244AA' : 'rgba(136,187,255,0.06)', color: filterNextAction === 'all' ? '#FFFFFF' : '#88BBFF',
-              }}
+          <div className="flex items-center gap-2 flex-wrap">
+            <span
+              className="text-[10px] font-bold uppercase tracking-[0.12em] w-[88px] shrink-0"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
             >
+              Next Action
+            </span>
+            <FilterPill active={filterNextAction === 'all'} onClick={() => setFilterNextAction('all')}>
               全て
-            </button>
-            {ALL_NEXT_ACTIONS.map(a => {
-              if (!a) return null
-              const active = filterNextAction === a
-              return (
-                <button
-                  key={a}
-                  onClick={() => setFilterNextAction(prev => prev === a ? 'all' : a)}
-                  className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
-                  style={{
-                    background: active ? '#2244AA' : 'rgba(136,187,255,0.06)', color: active ? '#FFFFFF' : '#88BBFF',
-                  }}
-                >
-                  {a}
-                </button>
-              )
-            })}
-            <button
-              onClick={() => setFilterNextAction(prev => prev === null ? 'all' : null)}
-              className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
-              style={{
-                background: filterNextAction === null ? '#2244AA' : 'rgba(136,187,255,0.06)', color: filterNextAction === null ? '#FFFFFF' : '#88BBFF',
-              }}
+            </FilterPill>
+            {ALL_NEXT_ACTIONS.map((a) => (
+              <FilterPill
+                key={a}
+                active={filterNextAction === a}
+                onClick={() => setFilterNextAction((p) => (p === a ? 'all' : a))}
+                style={NEXT_ACTION_STYLES[a]}
+              >
+                {a}
+              </FilterPill>
+            ))}
+            <FilterPill
+              active={filterNextAction === null}
+              onClick={() => setFilterNextAction((p) => (p === null ? 'all' : null))}
             >
               未設定
-            </button>
+            </FilterPill>
+
+            {/* Search (右寄せ) */}
+            <div className="ml-auto relative">
+              <Search
+                size={13}
+                className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              />
+              <input
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                placeholder="検索..."
+                className="h-8 w-[200px] pl-8 pr-3 text-[12px] rounded-[var(--radius-obs-md)] outline-none transition-shadow focus:ring-2 focus:ring-[var(--color-obs-primary)]/40"
+                style={{
+                  backgroundColor: 'var(--color-obs-surface-lowest)',
+                  color: 'var(--color-obs-text)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+                }}
+              />
+            </div>
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search size={12} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#99AACC' }} />
-            <input
-              value={search}
-              onChange={e => setSearch(e.target.value)}
-              placeholder="検索..."
-              className="h-[28px] w-[160px] pl-7 pr-3 text-[12px] rounded-[6px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
-              style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
-            />
-          </div>
-        </div>
-      </motion.div>
-
-      {/* Table */}
-      <motion.div
-        className="rounded-[8px] overflow-hidden"
-        style={{
-          background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-          boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)',
-        }}
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-      >
-        {/* Header — コンタクト一覧と統一 */}
+        {/* Table */}
         <div
-          className="grid items-center gap-x-3 px-5 py-2.5"
+          className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+          style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+        >
+          {/* Header */}
+          <div
+            className="grid items-center gap-x-3 px-5 py-3"
+            style={{ gridTemplateColumns: '40px 1fr 150px 140px 150px 80px 80px' }}
+          >
+            <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>#</span>
+            <SortHeader label="氏名" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
+            <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>リード経由元</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>ステータス</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.1em]" style={{ color: 'var(--color-obs-text-subtle)' }}>Next Action</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-right" style={{ color: 'var(--color-obs-text-subtle)' }}>コール</span>
+            <span className="text-[10px] font-medium uppercase tracking-[0.1em] text-right" style={{ color: 'var(--color-obs-text-subtle)' }}>メール</span>
+          </div>
+
+          {/* Rows */}
+          {filtered.map((item, i) => (
+            <div
+              key={item.id}
+              onClick={() => router.push(`/contacts/${item.contactId}`)}
+              className="grid items-center gap-x-3 px-5 py-3 cursor-pointer transition-colors duration-150"
+              style={{
+                gridTemplateColumns: '40px 1fr 150px 140px 150px 80px 80px',
+                boxShadow: i < filtered.length - 1 ? 'inset 0 -1px 0 0 rgba(65,71,83,0.2)' : 'none',
+                transitionTimingFunction: 'var(--ease-liquid)',
+              }}
+              onMouseOver={(e) => {
+                ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(67,66,71,0.3)'
+              }}
+              onMouseOut={(e) => {
+                ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+              }}
+            >
+              <span className="text-[12px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                {item.priority}
+              </span>
+
+              {/* 氏名 + 会社名 */}
+              <div className="flex items-center gap-2.5 min-w-0">
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-bold"
+                  style={{
+                    background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                    color: 'var(--color-obs-on-primary)',
+                    boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.18)',
+                  }}
+                >
+                  {item.contactName[0]}
+                </div>
+                <div className="min-w-0 flex-1">
+                  <p className="text-[13px] font-medium truncate tracking-[-0.01em]" style={{ color: 'var(--color-obs-text)' }}>
+                    {item.contactName}
+                  </p>
+                  <p className="text-[11px] truncate" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                    {item.companyName}
+                  </p>
+                </div>
+              </div>
+
+              {/* リード経由元 */}
+              <div><LeadSourceBadge type={item.leadSource} /></div>
+
+              {/* ステータス */}
+              <div><StatusBadge status={item.status as ApproachStatus} /></div>
+
+              {/* Next Action */}
+              <div onClick={(e) => e.stopPropagation()}>
+                <NextActionSelect
+                  value={nextActions[item.id] ?? null}
+                  onChange={(val) => setNextActions((prev) => ({ ...prev, [item.id]: val }))}
+                />
+              </div>
+
+              {/* コール数 */}
+              <div className="flex items-center justify-end gap-1.5">
+                <Phone size={11} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                <span
+                  className="text-[13px] font-semibold tabular-nums"
+                  style={{ color: item.callAttempts > 0 ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)' }}
+                >
+                  {item.callAttempts}
+                </span>
+              </div>
+
+              {/* メール数 */}
+              <div className="flex items-center justify-end gap-1.5">
+                <Mail size={11} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                <span
+                  className="text-[13px] font-semibold tabular-nums"
+                  style={{ color: item.emailsSent > 0 ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)' }}
+                >
+                  {item.emailsSent}
+                </span>
+              </div>
+            </div>
+          ))}
+
+          {filtered.length === 0 && (
+            <div className="py-12 text-center">
+              <p className="text-sm" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                該当するコンタクトがありません
+              </p>
+            </div>
+          )}
+        </div>
+      </div>
+    </ObsPageShell>
+  )
+}
+
+// ─── Sub components ──────────────────────────────────────────────────────────
+
+function StatPill({
+  label,
+  value,
+  icon,
+  accent,
+}: {
+  label: string
+  value: string | number
+  icon?: React.ReactNode
+  accent?: string
+}) {
+  return (
+    <div className="inline-flex items-center gap-1.5">
+      {icon && (
+        <span
+          className="inline-flex"
           style={{
-            gridTemplateColumns: '32px 220px 50px 130px 130px 60px 60px',
-            borderBottom: '1px solid #2244AA',
+            color: accent ?? 'var(--color-obs-text-subtle)',
+            filter: accent ? `drop-shadow(0 0 4px ${accent}80)` : 'none',
           }}
         >
-          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">#</span>
-          <SortHeader label="氏名" sortKey="name" currentSort={sortKey} currentDir={sortDir} onSort={handleSort} />
-          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">温度感</span>
-          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">ステータス</span>
-          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">Next Action</span>
-          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">コール</span>
-          <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">メール</span>
-        </div>
+          {icon}
+        </span>
+      )}
+      <span className="text-[12px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+        {label}
+      </span>
+      <span
+        className="text-[13px] font-bold tabular-nums"
+        style={{
+          color: accent ?? 'var(--color-obs-text)',
+          textShadow: accent ? `0 0 6px ${accent}55` : 'none',
+        }}
+      >
+        {value}
+      </span>
+    </div>
+  )
+}
 
-        {/* Rows — コンタクト一覧と統一 */}
-        {filtered.map((item, i) => (
-          <motion.div
-            key={item.id}
-            className="grid items-center gap-x-3 px-5 py-2.5 cursor-pointer"
-            style={{
-              gridTemplateColumns: '32px 220px 50px 130px 130px 60px 60px',
-              borderBottom: i < filtered.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none',
-            }}
-            whileHover={{ background: 'rgba(136,187,255,0.04)' }}
-            transition={{ duration: 0.1 }}
-            onClick={() => router.push(`/contacts/${item.contactId}`)}
-          >
-            <span className="text-[12px] text-[#99AACC]">{item.priority}</span>
-
-            {/* 氏名 + 会社名(下) */}
-            <div className="flex items-center gap-2.5 min-w-0">
-              <div className="w-7 h-7 rounded-full flex items-center justify-center shrink-0 text-[11px] font-semibold text-white" style={{ background: 'linear-gradient(145deg, #5AC8FA 0%, #0A84FF 50%, #5E5CE6 100%)', boxShadow: '0 0 14px rgba(94,92,230,0.7), 0 0 5px rgba(125,211,252,0.9), inset 0 1px 0 rgba(255,255,255,0.4)', border: '1px solid rgba(255,255,255,0.3)' }}>
-                {item.contactName[0]}
-              </div>
-              <div className="min-w-0 flex-1">
-                <p className="text-[13px] font-medium text-[#EEEEFF] truncate">{item.contactName}</p>
-                <p className="text-[11px] text-[#99AACC] truncate">{item.companyName}</p>
-              </div>
-            </div>
-
-            {/* 温度感 (ランクA→高, B→中, C→低) */}
-            <div>
-              {(() => {
-                const heatLabel = item.rank === 'A' ? '高' : item.rank === 'B' ? '中' : '低'
-                const cfg = RANK_CONFIG[item.rank]
-                return (
-                  <span
-                    className="inline-flex items-center justify-center rounded-full text-[10px] font-black whitespace-nowrap shrink-0"
-                    style={{
-                      width: 24,
-                      height: 24,
-                      background: cfg.gradient,
-                      boxShadow: `${cfg.glow}`,
-                      color: cfg.color,
-                      border: '1px solid rgba(255,255,255,0.3)',
-                      letterSpacing: '0.04em',
-                    }}
-                  >
-                    {heatLabel}
-                  </span>
-                )
-              })()}
-            </div>
-
-            <StatusGameBadge status={item.status} />
-            <NextActionSelect
-              value={nextActions[item.id] ?? null}
-              onChange={val => setNextActions(prev => ({ ...prev, [item.id]: val }))}
-            />
-
-            {/* コール数 */}
-            <div className="flex items-center gap-1">
-              <Phone size={11} className="text-[#88BBFF] shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(136,187,255,0.6))' }} />
-              <span className="text-[12px] font-bold tabular-nums" style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(136,187,255,0.5)' }}>
-                {item.callAttempts}
-              </span>
-            </div>
-
-            {/* メール送信数 */}
-            <div className="flex items-center gap-1">
-              <Mail size={11} className="text-[#A78BFA] shrink-0" style={{ filter: 'drop-shadow(0 0 4px rgba(167,139,250,0.6))' }} />
-              <span className="text-[12px] font-bold tabular-nums" style={{ color: '#FFFFFF', textShadow: '0 0 6px rgba(167,139,250,0.5)' }}>
-                {item.emailsSent}
-              </span>
-            </div>
-          </motion.div>
-        ))}
-
-        {filtered.length === 0 && (
-          <div className="text-center py-10">
-            <p className="text-[13px] text-[#99AACC]">該当するコンタクトがありません</p>
-          </div>
-        )}
-      </motion.div>
-    </>
+function FilterPill({
+  children,
+  active,
+  onClick,
+  style,
+}: {
+  children: React.ReactNode
+  active: boolean
+  onClick: () => void
+  style?: ObsChipStyle
+}) {
+  const useCustom = active && style
+  return (
+    <button
+      onClick={onClick}
+      className="h-7 px-3 text-[11px] font-medium rounded-full transition-all duration-150"
+      style={{
+        backgroundColor: useCustom
+          ? style.bg
+          : active
+            ? 'rgba(171,199,255,0.14)'
+            : 'rgba(65,71,83,0.15)',
+        color: useCustom
+          ? style.core
+          : active
+            ? 'var(--color-obs-primary)'
+            : 'var(--color-obs-text-muted)',
+        boxShadow: 'none',
+        transitionTimingFunction: 'var(--ease-liquid)',
+      }}
+    >
+      {children}
+    </button>
   )
 }

@@ -1,6 +1,6 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/trpc'
-import { standardQueue, JOB_NAMES } from '@closepilot/queue'
+import { standardQueue, JOB_NAMES } from '@bgm/queue'
 
 export const dealsRouter = router({
   list: protectedProcedure

@@ -1,0 +1,389 @@
+# ============================================================
+# セクション × フレームワーク マッピング（シードデータ）
+# ============================================================
+# 用途: Rookie Craft — 各セクションの「おすすめFW道具棚」
+# type:
+#   recommended  = ★推奨（3-5個）— セクションの問いに直結するFW
+#   supplementary = ◇補助（2-3個）— 深掘り・別角度の分析用
+# bulk_library:
+#   セクションに一括表示される施策/テクニックライブラリ
+# ============================================================
+
+mappings:
+
+  # ──────────────────────────────────────────────────────────
+  # A. 事業の核
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-01
+    section_name: 事業目的・ビジョン
+    recommended:
+      - F-BMC          # ビジネスモデルキャンバス — 9ブロックで事業全体像を俯瞰
+      - F-LEAN-CANVAS  # リーンキャンバス — 課題/解決/指標に特化して検証
+      - F-NORTH-STAR   # ノーススター指標 — 事業が追うべき最重要指標
+      - F-OGSM         # OGSM — 目的→戦略→指標の構造化
+    supplementary:
+      - F-V2MOM          # V2MOM — ビジョン・価値・手法・障害・指標
+      - F-TRANSFORMATIONAL # 変革型リーダーシップ — ビジョンで鼓舞する視点
+
+  - section_id: SEC-02
+    section_name: 事業概要・コンセプト
+    recommended:
+      - F-VPC-BIZ   # VPC（ビジネスモデル版） — 顧客と価値提案のフィット
+      - F-VP        # バリュープロポジション — 価値提案の設計
+      - F-4P        # マーケティングミックス — Product/Price/Place/Promotion
+      - F-MESSAGING # メッセージング — 価値を言語化するフレーム
+    supplementary:
+      - F-PMF         # PMF — Product-Market Fit の検証
+      - F-BLUE-OCEAN  # ブルーオーシャン戦略 — 新市場創造の視点
+
+  # ──────────────────────────────────────────────────────────
+  # B. 顧客理解
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-03
+    section_name: ターゲット定義
+    recommended:
+      - F-STP         # STP分析 — セグメンテーション→ターゲティング→ポジショニング
+      - F-ICP         # 理想顧客像 — 理想の顧客プロファイル定義
+      - F-TAM         # TAM/SAM/SOM — 市場規模の3層把握
+      - F-SEG-MATRIX  # セグメンテーション・マトリクス — セグメント評価の構造化
+    supplementary:
+      - F-6R          # 6R — ターゲット評価の6基準
+      - F-ABM-TARGET  # ABMターゲット — アカウントベースのターゲティング
+
+  - section_id: SEC-04
+    section_name: ペルソナ・意思決定構造
+    recommended:
+      - F-PERSONA  # ペルソナ — 顧客像の具体化
+      - F-DMU-MAP  # DMUマップ — 意思決定関係者の構造可視化
+      - F-CJ       # カスタマージャーニー — 顧客の行動・思考の流れ
+      - F-ANUM     # エーナム — 決裁者を最初に押さえる
+    supplementary:
+      - F-MEDDIC          # メディック — Economic Buyer特定
+      - F-PROBLEM-CLUSTER # 問題クラスター — 関連問題の構造化
+
+  - section_id: SEC-05
+    section_name: 顧客課題
+    recommended:
+      - F-JTBD   # ジョブ理論 — 顧客が「雇いたい仕事」を明らかに
+      - F-SPIN   # SPIN Selling — 質問で課題を顧客自身に言語化させる
+      - F-GAP    # Gap Selling — 現状→理想→ギャップで課題定義
+      - F-5WHYS  # なぜなぜ5回 — 表面課題の根本原因に到達
+    supplementary:
+      - F-JTBD-BIZ        # JTBD（ビジネスモデル版） — ジョブの事業化視点
+      - F-PROBLEM-CLUSTER # 問題クラスター — 課題間の関連性を可視化
+
+  # ──────────────────────────────────────────────────────────
+  # C. 市場環境
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-06
+    section_name: 市場規模
+    recommended:
+      - F-TAM        # TAM/SAM/SOM — 市場規模の3層分析
+      - F-LIFECYCLE  # 製品ライフサイクル — 市場の成熟段階を把握
+      - F-UNIT-ECON  # ユニットエコノミクス — 顧客1人あたりの経済性
+      - F-ANSOFF     # アンゾフ・マトリクス — 成長方向の検討
+    supplementary:
+      - F-BCG  # BCGマトリクス — 事業ポートフォリオ評価
+      - F-GE   # GEマトリクス — 市場魅力度×競争力
+
+  - section_id: SEC-07
+    section_name: 市場トレンド・外部環境
+    recommended:
+      - F-PEST      # PEST分析 — マクロ環境4因子
+      - F-PESTLE    # PESTLE分析 — 法的・環境要因も包括
+      - F-SCENARIO  # シナリオプランニング — 複数の将来像を描く
+      - F-5FORCES   # 5フォース分析 — 業界の競争構造
+    supplementary:
+      - F-LIFECYCLE   # 製品ライフサイクル — 市場成熟段階
+      - F-STRAT-GROUP # 戦略グループ — 競合のポジション分析
+
+  - section_id: SEC-08
+    section_name: 競合マッピング
+    recommended:
+      - F-COMP-MAP    # コンペティターマップ — 競合の全体像を可視化
+      - F-5FORCES     # 5フォース分析 — 業界の競争力学
+      - F-STRAT-GROUP # 戦略グループ — 競合グルーピング
+      - F-3C          # 3C分析 — 顧客・競合・自社の構造
+    supplementary:
+      - F-POS-MAP  # ポジショニングマップ — 2軸で競合マッピング
+      - F-3C-PREP  # 3C分析（商談準備版） — 質問設計の事前準備
+
+  - section_id: SEC-09
+    section_name: 競合比較・参入障壁
+    recommended:
+      - F-BARRIER    # 参入障壁分析 — 参入のハードル評価
+      - F-VRIO       # VRIO — 資源の持続的競争優位
+      - F-SWOT       # SWOT分析 — 強み・弱み・機会・脅威
+      - F-CORE-COMP  # コアコンピタンス — 核となる能力の特定
+    supplementary:
+      - F-LANCHESTER # ランチェスター戦略 — 弱者/強者の戦い方
+      - F-SCOTSMAN   # スコッツマン — 撤退基準の明確化
+
+  # ──────────────────────────────────────────────────────────
+  # D. 戦略設計
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-10
+    section_name: ポジショニング
+    recommended:
+      - F-POS-MAP        # ポジショニングマップ — 2軸でポジション可視化
+      - F-STP            # STP分析 — ポジショニング決定
+      - F-PORTER-GENERIC # ポーター3戦略 — コストリーダー/差別化/集中
+      - F-BLUE-OCEAN     # ブルーオーシャン戦略 — 非競争領域の開拓
+    supplementary:
+      - F-4C          # 4C分析 — 顧客視点のマーケティング
+      - F-STRAT-GROUP # 戦略グループ — 競合ポジション参照
+
+  - section_id: SEC-11
+    section_name: 差別化・勝ち筋
+    recommended:
+      - F-VRIO       # VRIO — 模倣困難な資源の特定
+      - F-CORE-COMP  # コアコンピタンス — 組織能力の源泉
+      - F-VC         # バリューチェーン — 価値創造プロセスの分析
+      - F-TOWS       # TOWS分析 — SWOT→戦略オプション導出
+    supplementary:
+      - F-BLUE-OCEAN # ブルーオーシャン戦略 — 価値革新の視点
+      - F-LANCHESTER # ランチェスター戦略 — 弱者の差別化戦略
+
+  - section_id: SEC-12
+    section_name: 価値提案
+    recommended:
+      - F-VP        # バリュープロポジション — 価値提案の設計
+      - F-VPC       # VPキャンバス — 顧客の仕事/痛み/利得とのフィット
+      - F-MESSAGING # メッセージング — 価値の言語化
+      - F-KANO      # 狩野モデル — 当たり前品質/魅力品質の整理
+    supplementary:
+      - F-4C        # 4C分析 — 顧客価値視点
+      - F-JTBD-STRAT # JTBD（戦略版） — ジョブ起点の価値設計
+
+  # ──────────────────────────────────────────────────────────
+  # E. プロダクト・収益
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-13
+    section_name: プロダクト / サービス設計
+    recommended:
+      - F-BMC          # ビジネスモデルキャンバス — プロダクトの事業構造内の位置付け
+      - F-PMF          # PMF — Product-Market Fit の検証
+      - F-KANO         # 狩野モデル — 機能の優先度づけ
+      - F-LEAN-CANVAS  # リーンキャンバス — MVP設計の指針
+    supplementary:
+      - F-JTBD-BIZ # JTBD（ビジネスモデル版） — ジョブ起点のプロダクト設計
+      - F-4P       # マーケティングミックス — Product要素の整理
+
+  - section_id: SEC-14
+    section_name: 価格設計
+    recommended:
+      - F-PRICE-DESIGN # プライシング設計 — 価格戦略の全体設計
+      - F-PRICING      # プライシングモデル — 価格モデルの選択
+      - F-FREEMIUM     # フリーミアム — 無料/有料の線引き設計
+      - F-RAZOR        # レーザー＆ブレード — 本体安/消耗品型モデル
+    supplementary:
+      - F-BUNDLE       # バンドリング — セット販売戦略
+      - F-SUBSCRIPTION # サブスクリプション — 継続課金モデル
+
+  - section_id: SEC-15
+    section_name: 収益モデル
+    recommended:
+      - F-REVENUE      # レベニューモデル — 収益の流れの設計
+      - F-SUBSCRIPTION # サブスクリプション — 継続課金の構造
+      - F-MARKETPLACE  # マーケットプレイス — 場のビジネスモデル
+      - F-PLATFORM     # プラットフォーム — プラットフォーム型事業
+    supplementary:
+      - F-UNIT-ECON-BIZ # ユニットエコノミクス（BM版） — LTV/CACの試算
+      - F-PLG-SLG       # PLG/SLG — 成長ドライバーの選択
+
+  # ──────────────────────────────────────────────────────────
+  # F. マーケティング
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-16
+    section_name: チャネル戦略
+    recommended:
+      - F-FUNNEL  # ファネル — 認知→検討→購買の流れ
+      - F-AIDMA   # AIDMA — 注意→興味→欲求→記憶→行動
+      - F-AISAS   # AISAS — 注意→興味→検索→行動→共有
+      - F-AARRR   # AARRR — 獲得→活性化→継続→紹介→収益
+      - F-CJ      # カスタマージャーニー — 接点の全体設計
+    supplementary:
+      - F-PLG-SLG # PLG/SLG — 成長モデルとチャネルの関係
+      - F-7P      # 7P — サービスマーケティングの全体像
+    bulk_library: MT  # マーケティング施策ライブラリ（85施策）も道具棚に表示
+
+  - section_id: SEC-17
+    section_name: マーケティング施策プラン
+    recommended:
+      - F-4P    # マーケティングミックス — 施策の4軸整理
+      - F-7P    # 7P — サービス含む施策の7軸
+      - F-4C    # 4C分析 — 顧客視点での施策チェック
+      - F-AARRR # AARRR — 各ステージの施策設計
+    supplementary:
+      - F-FUNNEL          # ファネル — ファネル段階ごとの施策
+      - F-DASHBOARD-STRAT # ダッシュボード（戦略版） — 施策効果の計測設計
+    bulk_library: MT  # マーケティング施策ライブラリ（85施策）が主要な道具棚
+
+  # ──────────────────────────────────────────────────────────
+  # G. 営業設計
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-18
+    section_name: 営業戦略
+    recommended:
+      - F-BANT           # バント — 「買えるか」の最短判定
+      - F-CHAMP          # チャンプ — 課題起点の確度判定
+      - F-3C             # 3C分析 — 顧客・競合・自社の整理
+      - F-PIPELINE-STRAT # パイプライン戦略 — 営業パイプラインの全体設計
+    supplementary:
+      - F-ANUM  # エーナム — 決裁者ファーストの判定
+      - F-FAINT # フェイント — 予算なし案件の投資可能性判定
+      - F-NEAT  # ニートセリング — ROI軸の案件評価
+
+  - section_id: SEC-19
+    section_name: 営業プロセス設計
+    recommended:
+      - F-THE-MODEL     # ザ・モデル — マーケ→IS→FS→CSの分業設計
+      - F-SALES-PROCESS # 営業プロセス設計 — ステージ定義と移行条件
+      - F-PIPELINE      # パイプライン管理 — 量×速度×率の管理
+      - F-LEAD-STAGE    # リードステージ設計 — MQL/SQL/SALの分類
+    supplementary:
+      - F-SLA        # SLA設計 — IS→FS引き渡し条件
+      - F-CRM-DESIGN # CRM設計 — データドリブン営業の基盤
+
+  - section_id: SEC-20
+    section_name: 営業ツール・提案書設計
+    recommended:
+      - F-PROPOSAL   # 提案書設計 — 提案書の構成と説得ロジック
+      - F-ENABLEMENT # セールスイネーブルメント — 営業武器の整備
+      - F-MEDDIC     # メディック — 大型案件の構造管理
+      - F-3C-PREP    # 3C分析（商談準備） — 商談前の質問設計
+    supplementary:
+      - F-SPICED   # スパイスド — Critical Eventで受注タイミングを握る
+      - F-MEDDPICC # メドピック — 法務・調達が重い案件向け
+
+  - section_id: SEC-21
+    section_name: トークスクリプト設計
+    recommended:
+      - F-TALK-SCRIPT # トークスクリプト設計 — スクリプトの構造化
+      - F-SPIN        # SPIN Selling — 質問で課題を顧客に言語化させる
+      - F-NEADS       # ニーズ — リプレイス時の乗換動機引き出し
+      - F-GPCTBA      # GPCTBA/C&I — ゴールから逆算する網羅的ヒアリング
+    supplementary:
+      - F-GAP  # Gap Selling — 現状→理想→ギャップ
+      - F-BANT # バント — 基本の確認項目
+    bulk_library: T  # トーク技術ライブラリ（37テクニック）も道具棚に表示
+
+  # ──────────────────────────────────────────────────────────
+  # H. カスタマーサクセス
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-22
+    section_name: CS戦略設計
+    recommended:
+      - F-CS-DESIGN # CS設計 — カスタマーサクセスの全体設計
+      - F-CJ        # カスタマージャーニー — 顧客体験の全体設計
+      - F-AARRR     # AARRR — Retention/Revenue指標
+      - F-NEADS     # ニーズ — 既存顧客の満足・不満把握
+      - F-JTBD      # ジョブ理論 — 顧客が本当に求めるジョブ
+    supplementary:
+      - F-SUBSCRIPTION # サブスクリプション — 継続課金モデルとの連動
+      - F-VPC-BIZ      # VPC（ビジネスモデル版） — 顧客の痛み/利得の再確認
+
+  - section_id: SEC-23
+    section_name: CS指標・データ分析
+    recommended:
+      - F-KPI-TREE-OPS  # KPIツリー（営業） — 指標を分解して打ち手を特定
+      - F-UNIT-ECON-BIZ # ユニットエコノミクス（BM版） — LTV/CACの計測
+      - F-DASHBOARD     # ダッシュボード設計 — データ可視化の設計
+      - F-NORTH-STAR    # ノーススター指標 — CS上の最重要指標
+    supplementary:
+      - F-PDCA     # PDCA/OODA — 改善サイクル
+      - F-WIN-LOSS # 勝敗分析 — 解約/継続の構造的分析
+    note: MT-NPS, MT-COHORT, MT-SURVEY も参照可能
+
+  # ──────────────────────────────────────────────────────────
+  # I. 組織・実行体制
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-24
+    section_name: 組織設計
+    recommended:
+      - F-7S             # マッキンゼー7S — 7要素の整合で組織能力診断
+      - F-STAR-MODEL     # スターモデル — 戦略起点で5要素を設計
+      - F-FUNCTIONAL-ORG # 機能別組織 — 基本の組織構造パターン
+      - F-AGILE-ORG      # アジャイル組織 — 変化に強い組織設計
+    supplementary:
+      - F-SPOTIFY-MODEL   # Spotifyモデル — Squad/Tribe/Chapter/Guild
+      - F-TEAM-TOPOLOGIES # チームトポロジー — チーム間のインタラクション設計
+
+  - section_id: SEC-25
+    section_name: 人員計画・採用戦略
+    recommended:
+      - F-RACI       # RACI — 役割と責任の明確化
+      - F-GREINER    # グレイナーモデル — 成長段階に応じた組織課題
+      - F-SKILL-WILL # スキル/ウィルマトリクス — 人材のアセスメント
+      - F-70-20-10   # 70:20:10 — 学習・育成の配分
+    supplementary:
+      - F-DELEGATION-POKER # デリゲーションポーカー — 権限委譲の設計
+      - F-EXPERIENTIAL     # 経験学習モデル — 育成手法の設計
+
+  - section_id: SEC-26
+    section_name: マネジメント手法
+    recommended:
+      - F-SL         # 状況対応型リーダーシップ — 成熟度に応じたスタイル切替
+      - F-1ON1-LEAD  # 1on1（リーダー版） — 対話型マネジメント
+      - F-GROW-LEAD  # GROWモデル（リーダー版） — コーチング型の目標達成支援
+      - F-SERVANT    # サーバントリーダーシップ — 支援型リーダーシップ
+    supplementary:
+      - F-PSYCH-SAFETY-LEAD   # 心理的安全性（リーダー版） — 発言しやすい環境づくり
+      - F-5-DYSFUNCTIONS      # チーム5つの機能不全 — チームの問題診断
+
+  - section_id: SEC-27
+    section_name: 評価・インセンティブ設計
+    recommended:
+      - F-OKR  # OKR — 目標と成果指標の設定
+      - F-MBO  # MBO — 目標管理制度
+      - F-BSC  # バランススコアカード — 4視点での評価バランス
+      - F-SDT  # 自己決定理論 — 内発的動機づけの3要素
+    supplementary:
+      - F-TWO-FACTOR # 二要因理論 — 衛生要因/動機づけ要因
+      - F-EXPECTANCY # 期待理論 — 報酬設計の動機づけモデル
+
+  # ──────────────────────────────────────────────────────────
+  # J. 管理・総括
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-28
+    section_name: KPI・管理体制
+    recommended:
+      - F-KPI-TREE     # KPIツリー — 目標を指標に分解
+      - F-KPI-TREE-OPS # KPIツリー（営業版） — 売上→活動量の分解
+      - F-DASHBOARD    # ダッシュボード設計 — データ可視化と意思決定
+      - F-PDCA-KPI     # PDCA-KPI — KPIベースの改善サイクル
+    supplementary:
+      - F-FORECAST        # フォーキャスト管理 — 着地予測の精度向上
+      - F-DASHBOARD-STRAT # ダッシュボード（戦略版） — 戦略指標の設計
+
+  - section_id: SEC-29
+    section_name: リスク分析・撤退ライン
+    recommended:
+      - F-SWOT      # SWOT分析 — 脅威と弱みの識別
+      - F-TOWS      # TOWS分析 — 脅威→戦略オプション導出
+      - F-SCENARIO  # シナリオプランニング — 最悪ケースの想定
+      - F-SCOTSMAN  # スコッツマン — 撤退基準の明確化
+    supplementary:
+      - F-BCG         # BCGマトリクス — 事業の「負け犬」判定
+      - F-DEAL-REVIEW # ディールレビュー — リスクフラグの早期検出
+
+  - section_id: SEC-30
+    section_name: 実行ロードマップ
+    recommended:
+      - F-HOSHIN # 方針管理 — 方針展開の構造化
+      - F-OGSM   # OGSM — 目的→戦略→指標→施策
+      - F-PDCA   # PDCA/OODA — 実行の改善サイクル
+      - F-KOTTER # コッターの8段階 — 変革のステップ管理
+    supplementary:
+      - F-ADKAR          # ADKAR — 個人の変革プロセス
+      - F-FORECAST-STRAT # フォーキャスト（戦略版） — 実行計画の予測管理

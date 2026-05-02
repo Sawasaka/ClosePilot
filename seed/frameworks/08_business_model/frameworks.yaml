@@ -1,0 +1,355 @@
+# ============================================================
+# ビジネスモデル / マネタイズ フレームワーク辞書（15選）
+# ============================================================
+meta:
+  category: ビジネスモデル / マネタイズ
+  total_frameworks: 15
+frameworks:
+
+  - id: F-BMC
+    name: Business Model Canvas
+    name_ja: ビジネスモデルキャンバス
+    category: business_model
+    purpose: "9ブロックでビジネスモデルを可視化する"
+    elements:
+      - key: CustomerSegments
+        ja: 顧客セグメント
+      - key: ValuePropositions
+        ja: 価値提案
+      - key: Channels
+        ja: チャネル
+      - key: CustomerRelationships
+        ja: 顧客との関係
+      - key: RevenueStreams
+        ja: 収益の流れ
+      - key: KeyResources
+        ja: 主要リソース
+      - key: KeyActivities
+        ja: 主要活動
+      - key: KeyPartners
+        ja: 主要パートナー
+      - key: CostStructure
+        ja: コスト構造
+    level: intermediate
+    pitfall: "全ブロックを均等に埋めがちだが、差別化の核となるブロックに重点を置く"
+    combo: [F-VPC-BIZ, F-LEAN-CANVAS]
+
+  - id: F-LEAN-CANVAS
+    name: Lean Canvas
+    name_ja: リーンキャンバス
+    category: business_model
+    purpose: "課題/解決/指標/優位性に特化してビジネスモデルを検証する"
+    elements:
+      - key: Problem
+        ja: 課題
+      - key: CustomerSegments
+        ja: 顧客セグメント
+      - key: UniqueValueProposition
+        ja: 独自の価値提案
+      - key: Solution
+        ja: ソリューション
+      - key: UnfairAdvantage
+        ja: 圧倒的な優位性
+      - key: RevenueStreams
+        ja: 収益の流れ
+      - key: CostStructure
+        ja: コスト構造
+      - key: KeyMetrics
+        ja: 主要指標
+      - key: Channels
+        ja: チャネル
+    level: intermediate
+    pitfall: "Unfair Advantageを安易に書くと差別化にならない。本当に真似できない要素か吟味する"
+    combo: [F-BMC, F-PMF]
+
+  - id: F-VPC-BIZ
+    name: Value Proposition Canvas
+    name_ja: バリュープロポジションキャンバス
+    category: business_model
+    purpose: "Pains/Gains/Jobsとプロダクトの適合度を検証する"
+    elements:
+      - key: CustomerJobs
+        ja: 顧客のジョブ
+      - key: Pains
+        ja: ペイン（苦痛）
+      - key: Gains
+        ja: ゲイン（利得）
+      - key: Products_Services
+        ja: 製品・サービス
+      - key: PainRelievers
+        ja: ペインリリーバー
+      - key: GainCreators
+        ja: ゲインクリエイター
+    level: intermediate
+    pitfall: "自社視点でGainを盛りすぎる。顧客インタビューで実際のJobsを検証すること"
+    combo: [F-BMC, F-JTBD-BIZ]
+
+  - id: F-PMF
+    name: Product-Market Fit
+    name_ja: プロダクトマーケットフィット
+    category: business_model
+    purpose: "プロダクトが市場に刺さっているか検証する"
+    elements:
+      - key: TargetCustomer
+        ja: ターゲット顧客
+      - key: UnderservedNeed
+        ja: 満たされていないニーズ
+      - key: ValueProposition
+        ja: 価値提案
+      - key: FeatureSet
+        ja: 機能セット
+      - key: PMF_Signal
+        ja: PMFシグナル（NPS・リテンション等）
+      - key: SeanEllisTest
+        ja: ショーン・エリステスト（40%基準）
+    level: intermediate
+    pitfall: "一度PMFを達成しても市場変化で崩れる。継続的にシグナルを計測する"
+    combo: [F-LEAN-CANVAS, F-UNIT-ECON-BIZ]
+
+  - id: F-JTBD-BIZ
+    name: Jobs To Be Done (ビジネスモデル文脈)
+    name_ja: ジョブ理論（ビジネスモデル文脈）
+    category: business_model
+    purpose: "機能でなく顧客が片付けたい用事の完了に焦点を当てる"
+    elements:
+      - key: FunctionalJob
+        ja: 機能的ジョブ
+      - key: EmotionalJob
+        ja: 感情的ジョブ
+      - key: SocialJob
+        ja: 社会的ジョブ
+      - key: JobStatement
+        ja: ジョブステートメント
+      - key: HireCriteria
+        ja: 採用基準（顧客がプロダクトを雇う理由）
+      - key: FireCriteria
+        ja: 解雇基準（顧客がプロダクトをやめる理由）
+    level: intermediate
+    pitfall: "ジョブを機能要件と混同しがち。状況・動機・期待成果のセットで捉える"
+    combo: [F-VPC-BIZ, F-PMF]
+
+  - id: F-REVENUE
+    name: Revenue Model Types
+    name_ja: 収益モデル類型
+    category: business_model
+    purpose: "サブスク/従量/広告/マケプレ/ライセンス等の収益モデルを整理する"
+    elements:
+      - key: Subscription
+        ja: サブスクリプション
+      - key: UsageBased
+        ja: 従量課金
+      - key: Advertising
+        ja: 広告モデル
+      - key: Marketplace
+        ja: マーケットプレイス手数料
+      - key: Licensing
+        ja: ライセンス
+      - key: Transaction
+        ja: 取引手数料
+      - key: Freemium
+        ja: フリーミアム
+    level: beginner
+    pitfall: "1つのモデルに固執せず、複合型の可能性も検討する"
+    combo: [F-BMC, F-PRICING]
+
+  - id: F-SUBSCRIPTION
+    name: Subscription Design
+    name_ja: サブスクリプション設計
+    category: business_model
+    purpose: "MRR/ARR/Churn/NRRを軸にサブスク収益を設計する"
+    elements:
+      - key: MRR
+        ja: 月次経常収益
+      - key: ARR
+        ja: 年次経常収益
+      - key: GrossChurn
+        ja: グロスチャーン
+      - key: NetChurn
+        ja: ネットチャーン
+      - key: NRR
+        ja: ネットリテンションレート
+      - key: Expansion
+        ja: エクスパンション収益
+      - key: ContractLength
+        ja: 契約期間設計
+    level: intermediate
+    pitfall: "新規獲得ばかりに注力し、チャーン対策を後回しにするとバケツの穴が広がる"
+    combo: [F-UNIT-ECON-BIZ, F-CS-DESIGN]
+
+  - id: F-FREEMIUM
+    name: Freemium Design
+    name_ja: フリーミアム設計
+    category: business_model
+    purpose: "無料→有料の壁設計で転換率を最大化する"
+    elements:
+      - key: FreeFeatureSet
+        ja: 無料機能セット
+      - key: PaidFeatureSet
+        ja: 有料機能セット
+      - key: ConversionTrigger
+        ja: 転換トリガー
+      - key: UsageLimit
+        ja: 利用制限
+      - key: ConversionRate
+        ja: 転換率
+      - key: TimeToValue
+        ja: 価値実感までの時間
+    level: intermediate
+    pitfall: "無料で十分満足させると転換しない。価値の核心部分を有料側に残す"
+    combo: [F-PRICING, F-SUBSCRIPTION]
+
+  - id: F-MARKETPLACE
+    name: Marketplace Model
+    name_ja: マーケットプレイスモデル
+    category: business_model
+    purpose: "両面マーケットの鶏卵問題を解き、流動性を確保する"
+    elements:
+      - key: SupplySide
+        ja: サプライサイド（売り手）
+      - key: DemandSide
+        ja: デマンドサイド（買い手）
+      - key: ChickenAndEgg
+        ja: 鶏と卵の問題
+      - key: Liquidity
+        ja: 流動性
+      - key: TakeRate
+        ja: テイクレート
+      - key: NetworkEffect
+        ja: ネットワーク効果
+      - key: Disintermediation
+        ja: 中抜きリスク
+    level: advanced
+    pitfall: "両面同時にスケールさせようとすると破綻する。片面を先に固める戦略が必要"
+    combo: [F-PLATFORM, F-UNIT-ECON-BIZ]
+
+  - id: F-PLATFORM
+    name: Platform Strategy
+    name_ja: プラットフォーム戦略
+    category: business_model
+    purpose: "ネットワーク効果×API×エコシステムでプラットフォームを構築する"
+    elements:
+      - key: CoreInteraction
+        ja: コアインタラクション
+      - key: NetworkEffect
+        ja: ネットワーク効果（直接/間接）
+      - key: API_Ecosystem
+        ja: API・エコシステム
+      - key: Governance
+        ja: ガバナンス
+      - key: DataAdvantage
+        ja: データ優位性
+      - key: MultiHoming
+        ja: マルチホーミングコスト
+    level: advanced
+    pitfall: "プラットフォームを名乗るだけではネットワーク効果は生まれない。価値交換の仕組みが核"
+    combo: [F-MARKETPLACE, F-BMC]
+
+  - id: F-UNIT-ECON-BIZ
+    name: Unit Economics
+    name_ja: ユニットエコノミクス
+    category: business_model
+    purpose: "LTV/CAC/回収期間で事業が儲かるか証明する"
+    elements:
+      - key: LTV
+        ja: 顧客生涯価値
+      - key: CAC
+        ja: 顧客獲得コスト
+      - key: LTV_CAC_Ratio
+        ja: LTV/CAC比率（3倍以上が目安）
+      - key: PaybackPeriod
+        ja: CAC回収期間
+      - key: GrossMargin
+        ja: 粗利率
+      - key: Cohort
+        ja: コホート分析
+    level: intermediate
+    pitfall: "LTVを楽観的に見積もりすぎる。チャーンを正確に計測し保守的に算出する"
+    combo: [F-SUBSCRIPTION, F-PRICING]
+
+  - id: F-PRICING
+    name: Pricing (Good-Better-Best)
+    name_ja: 価格設計（松竹梅）
+    category: business_model
+    purpose: "3プランでアンカリング効果を活かし最適価格帯に誘導する"
+    elements:
+      - key: GoodPlan
+        ja: エントリープラン（梅）
+      - key: BetterPlan
+        ja: スタンダードプラン（竹）
+      - key: BestPlan
+        ja: プレミアムプラン（松）
+      - key: AnchorEffect
+        ja: アンカリング効果
+      - key: ValueMetric
+        ja: 価値指標（課金軸）
+      - key: PriceSensitivity
+        ja: 価格感度分析
+    level: intermediate
+    pitfall: "プラン間の差が不明確だと選択に迷う。各プランのペルソナを明確にする"
+    combo: [F-FREEMIUM, F-UNIT-ECON-BIZ]
+
+  - id: F-RAZOR
+    name: Razor & Blade
+    name_ja: レーザー＆ブレードモデル
+    category: business_model
+    purpose: "本体安売り＋消耗品で長期的に回収するモデルを設計する"
+    elements:
+      - key: RazorProduct
+        ja: 本体製品（低価格/無料）
+      - key: BladeProduct
+        ja: 消耗品・補充品（継続収益）
+      - key: LockIn
+        ja: ロックイン設計
+      - key: RepurchaseCycle
+        ja: 再購入サイクル
+      - key: MarginStructure
+        ja: マージン構造
+      - key: CompetitorEntry
+        ja: 互換品参入リスク
+    level: intermediate
+    pitfall: "ロックインが強すぎると顧客離反を招く。適度な切替コストに留める"
+    combo: [F-REVENUE, F-UNIT-ECON-BIZ]
+
+  - id: F-BUNDLE
+    name: Bundle/Unbundle
+    name_ja: バンドル/アンバンドル
+    category: business_model
+    purpose: "セット販売と単品化のどちらが価値最大化になるか判断する"
+    elements:
+      - key: BundleStrategy
+        ja: バンドル戦略（セット販売）
+      - key: UnbundleStrategy
+        ja: アンバンドル戦略（単品化）
+      - key: CustomerWTP
+        ja: 顧客の支払意思額
+      - key: CrossSell
+        ja: クロスセル機会
+      - key: Cannibalization
+        ja: カニバリゼーションリスク
+      - key: MarketCycle
+        ja: バンドル⇔アンバンドルの市場サイクル
+    level: intermediate
+    pitfall: "バンドルで売上増に見えても、不要な機能を押し付けると解約につながる"
+    combo: [F-PRICING, F-REVENUE]
+
+  - id: F-CS-DESIGN
+    name: Customer Success Design
+    name_ja: カスタマーサクセス設計
+    category: business_model
+    purpose: "オンボーディング→活用→拡大の顧客成功プロセスを設計する"
+    elements:
+      - key: Onboarding
+        ja: オンボーディング
+      - key: Adoption
+        ja: 活用促進
+      - key: Expansion
+        ja: 拡大（アップセル/クロスセル）
+      - key: HealthScore
+        ja: ヘルススコア
+      - key: TimeToValue
+        ja: 価値実感までの時間
+      - key: RenewalProcess
+        ja: リニューアルプロセス
+    level: intermediate
+    pitfall: "CSを解約防止だけと捉えず、顧客の成功を通じた拡大収益を設計する"
+    combo: [F-SUBSCRIPTION, F-UNIT-ECON-BIZ]

@@ -1,4 +1,4 @@
-import { prisma, CompanyMaster, Prisma, EnrichmentStatus, IntentLevel } from '@closepilot/db'
+import { prisma, CompanyMaster, Prisma, EnrichmentStatus, IntentLevel } from '@bgm/db'
 
 export type SearchFilters = {
   query?: string

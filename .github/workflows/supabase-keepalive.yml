@@ -1,0 +1,36 @@
+name: Supabase Keep-Alive
+
+# Supabase Freeプランは7日間アクセスがないとプロジェクトが自動一時停止される。
+# 毎日簡単なクエリを発行して稼働状態を維持する。
+# daily-crawl-intents も同じ役割を果たすが、クロール失敗やskip日を想定して独立実行する。
+
+on:
+  schedule:
+    - cron: '0 15 * * *'  # JST 00:00 = UTC 15:00
+  workflow_dispatch:
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Ping Supabase REST API
+        run: |
+          set -e
+          STATUS=$(curl -s -o /tmp/response.json -w "%{http_code}" \
+            "${SUPABASE_URL}/rest/v1/companies?select=id&limit=1" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}")
+
+          echo "HTTP Status: $STATUS"
+          cat /tmp/response.json | head -c 200
+
+          if [ "$STATUS" != "200" ]; then
+            echo "Keep-alive failed. Check Supabase status."
+            exit 1
+          fi
+
+          echo "Supabase project is alive."
+        env:
+          SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}

@@ -1,0 +1,214 @@
+'use client'
+
+import { useRef, useState } from 'react'
+import { useRouter } from 'next/navigation'
+import {
+  ArrowUp,
+  Sparkles,
+  Paperclip,
+  Mic,
+} from 'lucide-react'
+import { ObsPageShell } from '@/components/obsidian'
+
+// ─── Suggested prompts ───────────────────────────────────────────────────────
+const SUGGESTED_PROMPTS = [
+  '今週アプローチすべき HOT 企業を教えて',
+  'パイプラインで停滞している案件を洗い出して',
+  '直近の議事録から共通の課題を抽出して',
+  'IT 部門の採用インテントが強い企業 TOP10',
+]
+
+export default function HomePage() {
+  const router = useRouter()
+  const [prompt, setPrompt] = useState('')
+  const taRef = useRef<HTMLTextAreaElement | null>(null)
+
+  const handleSubmit = () => {
+    const q = prompt.trim()
+    if (!q) return
+    // TODO: RAG エンドポイントに送信する — いまはナレッジページへ検索クエリとして渡す
+    router.push(`/knowledge?q=${encodeURIComponent(q)}`)
+  }
+
+  return (
+    <ObsPageShell>
+      <div
+        className="min-h-[calc(100vh-80px)] flex flex-col items-center justify-center px-8 pb-20"
+        style={{
+          backgroundImage:
+            'radial-gradient(circle at 50% 20%, rgba(171,199,255,0.06) 0%, transparent 45%), radial-gradient(circle at 20% 80%, rgba(0,113,227,0.04) 0%, transparent 50%)',
+        }}
+      >
+        {/* ── Hero title ── */}
+        <div className="flex flex-col items-center gap-2 mb-8">
+          <div
+            className="inline-flex items-center gap-1.5 px-3 h-7 rounded-full mb-6 text-[11px] font-medium tracking-[0.12em] uppercase"
+            style={{
+              backgroundColor: 'var(--color-obs-surface-high)',
+              color: 'var(--color-obs-text-muted)',
+            }}
+          >
+            <Sparkles size={11} style={{ color: 'var(--color-obs-primary)' }} />
+            Business Growth Management
+          </div>
+
+          <h1
+            className="font-[family-name:var(--font-display)] text-center font-semibold tracking-[-0.035em] leading-[1.02]"
+            style={{
+              fontSize: 'clamp(2.5rem, 5.5vw, 4rem)',
+              background:
+                'linear-gradient(180deg, var(--color-obs-text) 0%, var(--color-obs-text-muted) 120%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}
+          >
+            BGM Intelligence{' '}
+            <span
+              style={{
+                background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                WebkitBackgroundClip: 'text',
+                WebkitTextFillColor: 'transparent',
+                backgroundClip: 'text',
+              }}
+            >
+              Hub
+            </span>
+          </h1>
+
+          <p
+            className="text-sm mt-2 text-center max-w-xl"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            企業DB・商談・議事録・課題ボードすべてを横断して問いかける
+          </p>
+        </div>
+
+        {/* ── Chat / RAG Input ── */}
+        <div className="w-full max-w-[780px] relative">
+          <div
+            className="rounded-[var(--radius-obs-2xl)] p-1.5 transition-shadow duration-300"
+            style={{
+              backgroundColor: 'var(--color-obs-surface-high)',
+              boxShadow: prompt
+                ? '0 0 0 2px rgba(171,199,255,0.18), 0 20px 40px rgba(0,0,0,0.35)'
+                : '0 10px 30px rgba(0,0,0,0.3)',
+              transitionTimingFunction: 'var(--ease-liquid)',
+            }}
+          >
+            <textarea
+              ref={taRef}
+              value={prompt}
+              onChange={(e) => setPrompt(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === 'Enter' && !e.shiftKey && !e.nativeEvent.isComposing) {
+                  e.preventDefault()
+                  handleSubmit()
+                }
+              }}
+              placeholder="BGMに何でも尋ねる — 企業・商談・議事録を横断検索"
+              rows={2}
+              className="w-full bg-transparent resize-none outline-none px-5 pt-4 pb-2 text-[15px] leading-relaxed"
+              style={{
+                color: 'var(--color-obs-text)',
+              }}
+            />
+
+            <div className="flex items-center justify-between px-3 pb-2 pt-1">
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                  onMouseOver={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-highest)'
+                  }}
+                  onMouseOut={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                  }}
+                  title="添付"
+                >
+                  <Paperclip size={16} />
+                </button>
+                <button
+                  type="button"
+                  className="inline-flex items-center gap-1.5 h-8 px-3 rounded-full text-[12px] font-medium transition-colors duration-150"
+                  style={{
+                    backgroundColor: 'var(--color-obs-surface-highest)',
+                    color: 'var(--color-obs-text-muted)',
+                  }}
+                  title="検索対象"
+                >
+                  <Sparkles size={12} style={{ color: 'var(--color-obs-primary)' }} />
+                  全データ
+                </button>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                  onMouseOver={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-highest)'
+                  }}
+                  onMouseOut={(e) => {
+                    (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                  }}
+                  title="音声入力"
+                >
+                  <Mic size={15} />
+                </button>
+                <button
+                  type="button"
+                  onClick={handleSubmit}
+                  disabled={!prompt.trim()}
+                  className="w-9 h-9 rounded-full flex items-center justify-center transition-all duration-200 disabled:opacity-30 disabled:cursor-not-allowed"
+                  style={{
+                    background: prompt.trim()
+                      ? 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
+                      : 'var(--color-obs-surface-highest)',
+                    color: prompt.trim() ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)',
+                    boxShadow: prompt.trim() ? 'inset 0 1px 0 rgba(255,255,255,0.18)' : 'none',
+                    transitionTimingFunction: 'var(--ease-liquid)',
+                  }}
+                  title="送信 (Enter)"
+                >
+                  <ArrowUp size={15} strokeWidth={2.5} />
+                </button>
+              </div>
+            </div>
+          </div>
+
+          {/* Suggested prompts */}
+          <div className="flex flex-wrap items-center justify-center gap-2 mt-5">
+            {SUGGESTED_PROMPTS.map((s) => (
+              <button
+                key={s}
+                onClick={() => {
+                  setPrompt(s)
+                  taRef.current?.focus()
+                }}
+                className="h-8 px-3.5 rounded-full text-[12px] font-medium transition-colors duration-150"
+                style={{
+                  backgroundColor: 'var(--color-obs-surface-high)',
+                  color: 'var(--color-obs-text-muted)',
+                }}
+                onMouseOver={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-highest)'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+                }}
+                onMouseOut={(e) => {
+                  (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                  ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+                }}
+              >
+                {s}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+    </ObsPageShell>
+  )
+}

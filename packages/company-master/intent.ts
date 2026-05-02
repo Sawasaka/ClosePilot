@@ -1,4 +1,4 @@
-import { prisma, DepartmentType, IntentLevel } from '@closepilot/db'
+import { prisma, DepartmentType, IntentLevel } from '@bgm/db'
 
 /**
  * 企業×部門のインテントレベルを集約更新する。

@@ -47,7 +47,7 @@ async function bootstrap() {
 
   const port = Number(process.env.PORT ?? 3001)
   await fastify.listen({ port, host: '0.0.0.0' })
-  console.log(`🚀 ClosePilot API running on port ${port}`)
+  console.log(`🚀 BGM API running on port ${port}`)
 }
 
 bootstrap().catch((err) => {

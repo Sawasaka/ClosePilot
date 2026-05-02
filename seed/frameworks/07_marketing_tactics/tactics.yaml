@@ -1,0 +1,987 @@
+# ============================================================
+# マーケティング施策辞書（85施策）
+# ============================================================
+# 用途: RookieSmart CRAFT マスタデータ
+# セクション #16, #17 で「施策ライブラリ」として別枠UI表示
+# 300フレームワークのカウントには含まない
+# 更新: 2025-02
+# ============================================================
+
+meta:
+  category: マーケティング施策
+  total_tactics: 85
+  display: tactics_library
+  note: "300FWの外枠。セクション16,17で閲覧可能"
+
+tactics:
+
+  # ----------------------------------------------------------
+  # 1. 検索系（6施策）
+  # ----------------------------------------------------------
+  - id: MT-LISTING
+    name: リスティング広告
+    name_en: Search Listing Ads
+    category: 検索系
+    channel_type: online
+    purpose: "検索意図の高いユーザーに即座にリーチし短期で成果を得る"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoB, BtoC, SaaS]
+    level: beginner
+
+  - id: MT-SEO
+    name: SEO (検索エンジン最適化)
+    name_en: Search Engine Optimization
+    category: 検索系
+    channel_type: online
+    purpose: "オーガニック検索流入を中長期的に獲得し広告費を抑える"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB, BtoC, SaaS]
+    level: intermediate
+
+  - id: MT-MEO
+    name: MEO (マップ検索最適化)
+    name_en: Map Engine Optimization
+    category: 検索系
+    channel_type: online
+    purpose: "Googleマップ上での表示順位を高め来店を促進する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoC, SMB]
+    level: beginner
+
+  - id: MT-COMPARISON
+    name: 比較サイト掲載
+    name_en: Comparison Site Listing
+    category: 検索系
+    channel_type: online
+    purpose: "比較検討段階の見込客に自社製品を認知させる"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-BOXIL
+    name: SaaS比較サイト(BOXIL/ITreview等)
+    name_en: SaaS Review Site Listing
+    category: 検索系
+    channel_type: online
+    purpose: "SaaS導入検討者にレビューと口コミで信頼を醸成する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [SaaS]
+    level: beginner
+
+  - id: MT-GOOGLE-SHOPPING
+    name: Googleショッピング
+    name_en: Google Shopping Ads
+    category: 検索系
+    channel_type: online
+    purpose: "商品画像付き広告で購買意欲の高い消費者を直接獲得する"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoC]
+    level: intermediate
+
+  # ----------------------------------------------------------
+  # 2. コンテンツ系（8施策）
+  # ----------------------------------------------------------
+  - id: MT-BLOG
+    name: オウンドメディア/ブログ
+    name_en: Owned Media / Blog
+    category: コンテンツ系
+    channel_type: online
+    purpose: "専門性の高い記事で見込客を継続的に集客する"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB, BtoC, SaaS]
+    level: beginner
+
+  - id: MT-WHITEPAPER
+    name: ホワイトペーパー
+    name_en: Whitepaper
+    category: コンテンツ系
+    channel_type: online
+    purpose: "専門的な知見を提供しリード情報を獲得する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  - id: MT-EBOOK
+    name: eBook/ガイド
+    name_en: eBook / Guide
+    category: コンテンツ系
+    channel_type: online
+    purpose: "体系的なコンテンツでリード獲得と教育を同時に行う"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  - id: MT-CASE-STUDY
+    name: 導入事例
+    name_en: Case Study
+    category: コンテンツ系
+    channel_type: online
+    purpose: "既存顧客の成功体験で検討中の見込客の不安を解消する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-VIDEO
+    name: 動画コンテンツ(YouTube等)
+    name_en: Video Content
+    category: コンテンツ系
+    channel_type: online
+    purpose: "視覚的な訴求で製品理解とブランド認知を高める"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  - id: MT-PODCAST
+    name: ポッドキャスト
+    name_en: Podcast
+    category: コンテンツ系
+    channel_type: online
+    purpose: "音声メディアで業界知見を共有しファン層を形成する"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB]
+    level: intermediate
+
+  - id: MT-INFOGRAPHIC
+    name: インフォグラフィック
+    name_en: Infographic
+    category: コンテンツ系
+    channel_type: online
+    purpose: "複雑な情報を視覚化しSNS拡散とリンク獲得を狙う"
+    cost_level: low
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: beginner
+
+  - id: MT-UGC
+    name: UGC(ユーザー生成コンテンツ)
+    name_en: User Generated Content
+    category: コンテンツ系
+    channel_type: online
+    purpose: "顧客自身の投稿を活用し信頼性と拡散力を高める"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoC]
+    level: intermediate
+
+  # ----------------------------------------------------------
+  # 3. SNS系（10施策）
+  # ----------------------------------------------------------
+  - id: MT-META-ADS
+    name: Meta広告(Facebook/Instagram)
+    name_en: Meta Ads (Facebook / Instagram)
+    category: SNS系
+    channel_type: online
+    purpose: "精度の高いターゲティングで幅広い層にリーチする"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  - id: MT-LINKEDIN-ADS
+    name: LinkedIn広告
+    name_en: LinkedIn Ads
+    category: SNS系
+    channel_type: online
+    purpose: "役職・業種で絞ったBtoB意思決定者に直接訴求する"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoB, Enterprise]
+    level: intermediate
+
+  - id: MT-X-ADS
+    name: X(Twitter)広告
+    name_en: X (Twitter) Ads
+    category: SNS系
+    channel_type: online
+    purpose: "リアルタイム性の高い話題拡散で認知を一気に広げる"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  - id: MT-TIKTOK-ADS
+    name: TikTok広告
+    name_en: TikTok Ads
+    category: SNS系
+    channel_type: online
+    purpose: "短尺動画で若年層を中心にバイラル拡散を狙う"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoC]
+    level: intermediate
+
+  - id: MT-SNS-ORGANIC
+    name: SNSオーガニック運用
+    name_en: Social Media Organic
+    category: SNS系
+    channel_type: online
+    purpose: "継続的な発信でフォロワーとのエンゲージメントを構築する"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB, BtoC]
+    level: beginner
+
+  - id: MT-LINKEDIN-ORGANIC
+    name: LinkedInオーガニック
+    name_en: LinkedIn Organic
+    category: SNS系
+    channel_type: online
+    purpose: "ビジネスSNSでの発信を通じ専門家としての認知を確立する"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB]
+    level: beginner
+
+  - id: MT-YOUTUBE-ADS
+    name: YouTube広告
+    name_en: YouTube Ads
+    category: SNS系
+    channel_type: online
+    purpose: "動画広告で大規模なリーチとブランド想起を獲得する"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  - id: MT-LINE-ADS
+    name: LINE広告/公式アカウント
+    name_en: LINE Ads / Official Account
+    category: SNS系
+    channel_type: online
+    purpose: "国内最大のメッセージアプリで顧客と直接つながる"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoC, SMB]
+    level: beginner
+
+  - id: MT-INFLUENCER
+    name: インフルエンサーマーケティング
+    name_en: Influencer Marketing
+    category: SNS系
+    channel_type: hybrid
+    purpose: "影響力のある個人を通じてターゲット層の信頼を獲得する"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoC]
+    level: intermediate
+
+  - id: MT-AMBASSADOR
+    name: アンバサダープログラム
+    name_en: Ambassador Program
+    category: SNS系
+    channel_type: hybrid
+    purpose: "熱量の高いファンを公式支持者として中長期的に発信してもらう"
+    cost_level: medium
+    time_to_effect: long
+    fit: [BtoB, BtoC]
+    level: advanced
+
+  # ----------------------------------------------------------
+  # 4. ディスプレイ/リタゲ系（5施策）
+  # ----------------------------------------------------------
+  - id: MT-DISPLAY
+    name: ディスプレイ広告(GDN/YDN)
+    name_en: Display Ads (GDN / YDN)
+    category: ディスプレイ/リタゲ系
+    channel_type: online
+    purpose: "バナー広告で潜在層に視覚的にリーチし認知を拡大する"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: beginner
+
+  - id: MT-RETARGET
+    name: リターゲティング広告
+    name_en: Retargeting Ads
+    category: ディスプレイ/リタゲ系
+    channel_type: online
+    purpose: "一度訪問したユーザーに再アプローチしCVRを高める"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, BtoC, SaaS]
+    level: intermediate
+
+  - id: MT-NATIVE
+    name: ネイティブ広告
+    name_en: Native Advertising
+    category: ディスプレイ/リタゲ系
+    channel_type: online
+    purpose: "メディアの記事に自然に溶け込む形で認知と信頼を獲得する"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  - id: MT-DSP
+    name: DSP/プログラマティック広告
+    name_en: DSP / Programmatic Ads
+    category: ディスプレイ/リタゲ系
+    channel_type: online
+    purpose: "データ駆動の自動入札で最適な枠に効率的に配信する"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoB, Enterprise]
+    level: advanced
+
+  - id: MT-AFFILIATE
+    name: アフィリエイト
+    name_en: Affiliate Marketing
+    category: ディスプレイ/リタゲ系
+    channel_type: online
+    purpose: "成果報酬型で外部パートナーに集客を委託しリスクを抑える"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoC, SaaS]
+    level: intermediate
+
+  # ----------------------------------------------------------
+  # 5. メール/MA系（7施策）
+  # ----------------------------------------------------------
+  - id: MT-EMAIL
+    name: メールマーケティング
+    name_en: Email Marketing
+    category: メール/MA系
+    channel_type: online
+    purpose: "保有リストに直接アプローチし低コストで関係を維持する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-NEWSLETTER
+    name: ニュースレター
+    name_en: Newsletter
+    category: メール/MA系
+    channel_type: online
+    purpose: "定期配信で見込客との接点を維持し想起率を高める"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-MA
+    name: MA(マーケティングオートメーション)
+    name_en: Marketing Automation
+    category: メール/MA系
+    channel_type: online
+    purpose: "リード管理と施策実行を自動化し営業効率を最大化する"
+    cost_level: high
+    time_to_effect: medium
+    fit: [BtoB, SaaS, Enterprise]
+    level: advanced
+
+  - id: MT-DRIP
+    name: ドリップキャンペーン
+    name_en: Drip Campaign
+    category: メール/MA系
+    channel_type: online
+    purpose: "段階的なメール配信でリードを教育し購買意欲を醸成する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  - id: MT-LEAD-NURTURE
+    name: リードナーチャリング
+    name_en: Lead Nurturing
+    category: メール/MA系
+    channel_type: online
+    purpose: "長期的な情報提供で見込客を購買可能な状態まで育成する"
+    cost_level: medium
+    time_to_effect: long
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  - id: MT-LEAD-SCORING
+    name: リードスコアリング
+    name_en: Lead Scoring
+    category: メール/MA系
+    channel_type: online
+    purpose: "行動データを点数化し営業が注力すべきリードを可視化する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: advanced
+
+  - id: MT-SEGMENTED-EMAIL
+    name: セグメント別メール配信
+    name_en: Segmented Email Campaign
+    category: メール/MA系
+    channel_type: online
+    purpose: "属性・行動別に最適化したメールで開封率とCVRを向上させる"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  # ----------------------------------------------------------
+  # 6. オフラインアウトバウンド（8施策）
+  # ----------------------------------------------------------
+  - id: MT-TELEAPO
+    name: テレアポ/コールドコール
+    name_en: Telemarketing / Cold Call
+    category: オフラインアウトバウンド
+    channel_type: offline
+    purpose: "電話による直接アプローチで短期的に商談機会を創出する"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, SMB]
+    level: beginner
+
+  - id: MT-DM
+    name: DM(ダイレクトメール)
+    name_en: Direct Mail
+    category: オフラインアウトバウンド
+    channel_type: offline
+    purpose: "郵送物で決裁者の手元に直接届き開封率の高い訴求を行う"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: beginner
+
+  - id: MT-FORM-DM
+    name: フォームDM(問い合わせフォーム営業)
+    name_en: Contact Form Outreach
+    category: オフラインアウトバウンド
+    channel_type: online
+    purpose: "企業の問い合わせフォーム経由で低コストに新規接点を作る"
+    cost_level: low
+    time_to_effect: short
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-HANDWRITTEN
+    name: 手書きDM
+    name_en: Handwritten Direct Mail
+    category: オフラインアウトバウンド
+    channel_type: offline
+    purpose: "手書きの温かみで開封率と返信率を大幅に高める"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, Enterprise]
+    level: intermediate
+
+  - id: MT-OUTBOUND-EMAIL
+    name: アウトバウンドメール(SDR)
+    name_en: Outbound Email (SDR)
+    category: オフラインアウトバウンド
+    channel_type: online
+    purpose: "ターゲット企業にパーソナライズしたメールで商談を獲得する"
+    cost_level: low
+    time_to_effect: short
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-LINKEDIN-DM
+    name: LinkedIn DM営業
+    name_en: LinkedIn Direct Message Sales
+    category: オフラインアウトバウンド
+    channel_type: online
+    purpose: "LinkedInで決裁者に直接メッセージを送り商談機会を作る"
+    cost_level: low
+    time_to_effect: short
+    fit: [BtoB]
+    level: intermediate
+
+  - id: MT-REFERRAL-ASK
+    name: 紹介依頼(既存顧客)
+    name_en: Customer Referral Request
+    category: オフラインアウトバウンド
+    channel_type: hybrid
+    purpose: "既存顧客からの紹介で信頼度の高い見込客を獲得する"
+    cost_level: low
+    time_to_effect: short
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-DOOR-TO-DOOR
+    name: 訪問営業
+    name_en: Door-to-Door Sales
+    category: オフラインアウトバウンド
+    channel_type: offline
+    purpose: "直接訪問で対面の信頼関係を築き即時の商談につなげる"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, SMB]
+    level: beginner
+
+  # ----------------------------------------------------------
+  # 7. イベント系（8施策）
+  # ----------------------------------------------------------
+  - id: MT-WEBINAR
+    name: ウェビナー
+    name_en: Webinar
+    category: イベント系
+    channel_type: online
+    purpose: "オンラインセミナーでリードを大量に獲得し教育する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-SEMINAR
+    name: セミナー(対面)
+    name_en: In-Person Seminar
+    category: イベント系
+    channel_type: offline
+    purpose: "対面の場で深い関係を構築し質の高いリードを獲得する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB]
+    level: intermediate
+
+  - id: MT-EXHIBITION
+    name: 展示会
+    name_en: Trade Show / Exhibition
+    category: イベント系
+    channel_type: offline
+    purpose: "業界展示会でブース出展し大量の名刺と商談機会を得る"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoB, Enterprise]
+    level: intermediate
+
+  - id: MT-CONFERENCE
+    name: カンファレンス登壇
+    name_en: Conference Speaking
+    category: イベント系
+    channel_type: hybrid
+    purpose: "業界カンファレンスで登壇し専門家としての権威を確立する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: advanced
+
+  - id: MT-MEETUP
+    name: ミートアップ/コミュニティイベント
+    name_en: Meetup / Community Event
+    category: イベント系
+    channel_type: hybrid
+    purpose: "小規模な集まりで同業者やユーザーと継続的な関係を築く"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB, SaaS]
+    level: beginner
+
+  - id: MT-WORKSHOP
+    name: ワークショップ
+    name_en: Workshop
+    category: イベント系
+    channel_type: hybrid
+    purpose: "参加型の体験を通じて製品理解と信頼を深める"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB]
+    level: intermediate
+
+  - id: MT-DEMO-DAY
+    name: デモデイ/製品体験会
+    name_en: Demo Day / Product Experience
+    category: イベント系
+    channel_type: hybrid
+    purpose: "製品デモを通じて導入イメージを具体化し商談を加速する"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  - id: MT-ROUNDTABLE
+    name: ラウンドテーブル(少人数勉強会)
+    name_en: Roundtable Discussion
+    category: イベント系
+    channel_type: hybrid
+    purpose: "少人数で深い議論を行いキーパーソンとの関係を強化する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoB, Enterprise]
+    level: advanced
+
+  # ----------------------------------------------------------
+  # 8. パートナー/アライアンス系（7施策）
+  # ----------------------------------------------------------
+  - id: MT-ALLIANCE
+    name: アライアンス/協業
+    name_en: Strategic Alliance
+    category: パートナー/アライアンス系
+    channel_type: hybrid
+    purpose: "他社との提携で相互の顧客基盤とリソースを活用する"
+    cost_level: medium
+    time_to_effect: long
+    fit: [BtoB, SaaS]
+    level: advanced
+
+  - id: MT-RESELLER
+    name: リセラー/代理店
+    name_en: Reseller / Channel Partner
+    category: パートナー/アライアンス系
+    channel_type: hybrid
+    purpose: "代理店網を構築し自社だけでは届かない市場を開拓する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, Enterprise]
+    level: advanced
+
+  - id: MT-CO-MARKETING
+    name: 共同マーケティング
+    name_en: Co-Marketing
+    category: パートナー/アライアンス系
+    channel_type: hybrid
+    purpose: "パートナー企業と共同施策を実施し双方のリードを拡大する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  - id: MT-CO-SELL
+    name: 共同販売/Co-Sell
+    name_en: Co-Sell
+    category: パートナー/アライアンス系
+    channel_type: hybrid
+    purpose: "パートナーと共同で販売活動を行い大型案件を獲得する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, Enterprise]
+    level: advanced
+
+  - id: MT-INTEGRATION
+    name: プロダクト連携/API連携
+    name_en: Product Integration / API
+    category: パートナー/アライアンス系
+    channel_type: online
+    purpose: "他製品との連携で自社プロダクトの価値と粘着性を高める"
+    cost_level: high
+    time_to_effect: long
+    fit: [SaaS]
+    level: advanced
+
+  - id: MT-MARKETPLACE
+    name: マーケットプレイス掲載(AWS/Salesforce等)
+    name_en: Marketplace Listing
+    category: パートナー/アライアンス系
+    channel_type: online
+    purpose: "大手プラットフォームのマーケットプレイスで信頼と露出を獲得する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [SaaS, Enterprise]
+    level: advanced
+
+  - id: MT-OEM
+    name: OEM/ホワイトラベル
+    name_en: OEM / White Label
+    category: パートナー/アライアンス系
+    channel_type: hybrid
+    purpose: "他社ブランドでの製品提供により販路を大幅に拡大する"
+    cost_level: high
+    time_to_effect: long
+    fit: [BtoB]
+    level: advanced
+
+  # ----------------------------------------------------------
+  # 9. PR/ブランディング系（6施策）
+  # ----------------------------------------------------------
+  - id: MT-PR
+    name: プレスリリース/PR
+    name_en: Press Release / PR
+    category: PR/ブランディング系
+    channel_type: hybrid
+    purpose: "メディアを通じて広くニュースを届け認知度を向上させる"
+    cost_level: low
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: beginner
+
+  - id: MT-MEDIA
+    name: メディア掲載/取材
+    name_en: Media Coverage / Interview
+    category: PR/ブランディング系
+    channel_type: hybrid
+    purpose: "第三者メディアの記事で信頼性の高い露出を獲得する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  - id: MT-AWARD
+    name: アワード応募/受賞
+    name_en: Award Submission / Recognition
+    category: PR/ブランディング系
+    channel_type: hybrid
+    purpose: "業界賞の受賞で権威づけを行いブランド価値を高める"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB, SaaS]
+    level: intermediate
+
+  - id: MT-THOUGHT-LEADER
+    name: ソートリーダーシップ
+    name_en: Thought Leadership
+    category: PR/ブランディング系
+    channel_type: hybrid
+    purpose: "業界の先進的見解を発信し第一想起される存在になる"
+    cost_level: low
+    time_to_effect: long
+    fit: [BtoB]
+    level: advanced
+
+  - id: MT-CSR
+    name: CSR/社会貢献活動
+    name_en: CSR / Social Contribution
+    category: PR/ブランディング系
+    channel_type: hybrid
+    purpose: "社会貢献を通じて企業ブランドへの共感と信頼を醸成する"
+    cost_level: medium
+    time_to_effect: long
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  - id: MT-SPONSORSHIP
+    name: スポンサーシップ
+    name_en: Sponsorship
+    category: PR/ブランディング系
+    channel_type: hybrid
+    purpose: "イベントや団体への協賛でブランド認知と好感度を高める"
+    cost_level: high
+    time_to_effect: medium
+    fit: [BtoB, BtoC]
+    level: intermediate
+
+  # ----------------------------------------------------------
+  # 10. プロダクト主導(PLG)系（8施策）
+  # ----------------------------------------------------------
+  - id: MT-FREEMIUM
+    name: フリーミアム
+    name_en: Freemium
+    category: プロダクト主導(PLG)系
+    channel_type: online
+    purpose: "無料プランで大量ユーザーを獲得し有料転換で収益化する"
+    cost_level: high
+    time_to_effect: long
+    fit: [SaaS]
+    level: advanced
+
+  - id: MT-FREE-TRIAL
+    name: 無料トライアル
+    name_en: Free Trial
+    category: プロダクト主導(PLG)系
+    channel_type: online
+    purpose: "期間限定の無料利用で製品価値を体感させ契約につなげる"
+    cost_level: medium
+    time_to_effect: short
+    fit: [SaaS]
+    level: intermediate
+
+  - id: MT-SELF-SERVE
+    name: セルフサーブ(営業なし購入)
+    name_en: Self-Serve Purchase
+    category: プロダクト主導(PLG)系
+    channel_type: online
+    purpose: "営業介在なしでオンライン完結の購買体験を提供する"
+    cost_level: high
+    time_to_effect: medium
+    fit: [SaaS, SMB]
+    level: advanced
+
+  - id: MT-PRODUCT-TOUR
+    name: プロダクトツアー/オンボーディング
+    name_en: Product Tour / Onboarding
+    category: プロダクト主導(PLG)系
+    channel_type: online
+    purpose: "初回利用時のガイドで製品理解を促進し定着率を高める"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [SaaS]
+    level: intermediate
+
+  - id: MT-IN-APP
+    name: アプリ内アップセル/クロスセル
+    name_en: In-App Upsell / Cross-Sell
+    category: プロダクト主導(PLG)系
+    channel_type: online
+    purpose: "利用中のユーザーに最適なタイミングで上位プランを提案する"
+    cost_level: low
+    time_to_effect: short
+    fit: [SaaS]
+    level: intermediate
+
+  - id: MT-REFERRAL-PROGRAM
+    name: リファラルプログラム
+    name_en: Referral Program
+    category: プロダクト主導(PLG)系
+    channel_type: online
+    purpose: "既存ユーザーの紹介にインセンティブを付与し新規獲得する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [SaaS, BtoC]
+    level: intermediate
+
+  - id: MT-COMMUNITY
+    name: コミュニティ運営
+    name_en: Community Management
+    category: プロダクト主導(PLG)系
+    channel_type: hybrid
+    purpose: "ユーザーコミュニティを運営しエンゲージメントと定着を高める"
+    cost_level: medium
+    time_to_effect: long
+    fit: [SaaS]
+    level: advanced
+
+  - id: MT-TEMPLATE
+    name: テンプレート/マーケットプレイス
+    name_en: Template / Marketplace
+    category: プロダクト主導(PLG)系
+    channel_type: online
+    purpose: "すぐ使えるテンプレートを提供し製品の利用開始を加速する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [SaaS]
+    level: intermediate
+
+  # ----------------------------------------------------------
+  # 11. ABM系（7施策）
+  # ----------------------------------------------------------
+  - id: MT-ABM-1TO1
+    name: ABM 1:1(トップアカウント)
+    name_en: ABM 1-to-1 (Top Accounts)
+    category: ABM系
+    channel_type: hybrid
+    purpose: "最重要企業に完全個別のマーケティングで深く関与する"
+    cost_level: high
+    time_to_effect: long
+    fit: [Enterprise]
+    level: advanced
+
+  - id: MT-ABM-1TOFEW
+    name: ABM 1:Few(業界セグメント)
+    name_en: ABM 1-to-Few (Industry Segment)
+    category: ABM系
+    channel_type: hybrid
+    purpose: "業界・セグメント単位で施策をカスタマイズし効率的に攻略する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, Enterprise]
+    level: advanced
+
+  - id: MT-ABM-1TOMANY
+    name: ABM 1:Many(広域)
+    name_en: ABM 1-to-Many (Broad)
+    category: ABM系
+    channel_type: online
+    purpose: "テクノロジーを活用し多数のターゲット企業に効率的に展開する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB]
+    level: intermediate
+
+  - id: MT-INTENT-DATA
+    name: インテントデータ活用
+    name_en: Intent Data Utilization
+    category: ABM系
+    channel_type: online
+    purpose: "購買意向データを基に今まさに検討中の企業を特定する"
+    cost_level: high
+    time_to_effect: short
+    fit: [BtoB, Enterprise]
+    level: advanced
+
+  - id: MT-GIFTING
+    name: コーポレートギフティング
+    name_en: Corporate Gifting
+    category: ABM系
+    channel_type: hybrid
+    purpose: "ギフトを活用してキーパーソンとの接点を創出し関係を構築する"
+    cost_level: medium
+    time_to_effect: short
+    fit: [BtoB, Enterprise]
+    level: intermediate
+
+  - id: MT-DIRECT-MAIL-ABM
+    name: ABM向けDM(パーソナライズ)
+    name_en: ABM Personalized Direct Mail
+    category: ABM系
+    channel_type: hybrid
+    purpose: "ターゲット企業に高度にパーソナライズした郵送物を送る"
+    cost_level: medium
+    time_to_effect: short
+    fit: [Enterprise]
+    level: advanced
+
+  - id: MT-EXECUTIVE-DINNER
+    name: エグゼクティブディナー
+    name_en: Executive Dinner
+    category: ABM系
+    channel_type: offline
+    purpose: "少人数の食事会で経営層との深い信頼関係を構築する"
+    cost_level: high
+    time_to_effect: short
+    fit: [Enterprise]
+    level: advanced
+
+  # ----------------------------------------------------------
+  # 12. データ/分析系（5施策）
+  # ----------------------------------------------------------
+  - id: MT-AB-TEST
+    name: A/Bテスト
+    name_en: A/B Testing
+    category: データ/分析系
+    channel_type: online
+    purpose: "2つの施策を比較検証しデータに基づく最適解を導く"
+    cost_level: low
+    time_to_effect: short
+    fit: [SaaS, BtoC]
+    level: intermediate
+
+  - id: MT-ATTRIBUTION
+    name: アトリビューション分析
+    name_en: Attribution Analysis
+    category: データ/分析系
+    channel_type: online
+    purpose: "各チャネルの貢献度を可視化しマーケティング投資を最適化する"
+    cost_level: medium
+    time_to_effect: medium
+    fit: [BtoB, SaaS]
+    level: advanced
+
+  - id: MT-COHORT
+    name: コホート分析
+    name_en: Cohort Analysis
+    category: データ/分析系
+    channel_type: online
+    purpose: "ユーザー群の行動変化を時系列で追い施策効果を測定する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [SaaS]
+    level: advanced
+
+  - id: MT-SURVEY
+    name: アンケート/サーベイ
+    name_en: Survey
+    category: データ/分析系
+    channel_type: hybrid
+    purpose: "顧客や見込客の声を直接収集し施策改善に活かす"
+    cost_level: low
+    time_to_effect: short
+    fit: [BtoB, BtoC]
+    level: beginner
+
+  - id: MT-NPS
+    name: NPS(顧客推奨度調査)
+    name_en: Net Promoter Score
+    category: データ/分析系
+    channel_type: hybrid
+    purpose: "顧客ロイヤルティを定量化し改善アクションを導出する"
+    cost_level: low
+    time_to_effect: medium
+    fit: [SaaS, BtoB]
+    level: intermediate

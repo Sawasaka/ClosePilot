@@ -1,9 +1,9 @@
 import { Worker } from 'bullmq'
-import { redis, JOB_NAMES } from '@closepilot/queue'
-import { prisma } from '@closepilot/db'
-import { transcribeFromUrl } from '@closepilot/ai'
-import { extractMeetingFields } from '@closepilot/ai'
-import { getRecordingUrl } from '@closepilot/integrations-twilio'
+import { redis, JOB_NAMES } from '@bgm/queue'
+import { prisma } from '@bgm/db'
+import { transcribeFromUrl } from '@bgm/ai'
+import { extractMeetingFields } from '@bgm/ai'
+import { getRecordingUrl } from '@bgm/integrations-twilio'
 
 export const transcribeCallWorker = new Worker(
   'critical',

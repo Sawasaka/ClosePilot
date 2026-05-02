@@ -1,0 +1,1602 @@
+{
+  "meta": {
+    "category": "組織設計",
+    "total_frameworks": 50
+  },
+  "frameworks": [
+    {
+      "id": "F-7S",
+      "name": "McKinsey 7S",
+      "name_ja": "マッキンゼー7S",
+      "category": "全体設計・診断",
+      "purpose": "7要素の整合で組織能力を診断する",
+      "elements": [
+        {
+          "key": "Strategy",
+          "ja": "戦略"
+        },
+        {
+          "key": "Structure",
+          "ja": "組織構造"
+        },
+        {
+          "key": "Systems",
+          "ja": "システム"
+        },
+        {
+          "key": "Shared Values",
+          "ja": "共有価値観"
+        },
+        {
+          "key": "Skills",
+          "ja": "スキル"
+        },
+        {
+          "key": "Staff",
+          "ja": "人材"
+        },
+        {
+          "key": "Style",
+          "ja": "経営スタイル"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Shared Valuesを後回しにすると表面改革で終わる",
+      "combo": [
+        "F-STAR-MODEL",
+        "F-BSC"
+      ]
+    },
+    {
+      "id": "F-STAR-MODEL",
+      "name": "Galbraith Star Model",
+      "name_ja": "ギャルブレイス・スターモデル",
+      "category": "全体設計・診断",
+      "purpose": "戦略起点で5要素の整合を設計する",
+      "elements": [
+        {
+          "key": "Strategy",
+          "ja": "戦略"
+        },
+        {
+          "key": "Structure",
+          "ja": "組織構造"
+        },
+        {
+          "key": "Process",
+          "ja": "プロセス"
+        },
+        {
+          "key": "Rewards",
+          "ja": "報酬"
+        },
+        {
+          "key": "People",
+          "ja": "人材"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Rewards設計を後回しにすると行動変容が起きない",
+      "combo": [
+        "F-7S",
+        "F-RACI"
+      ]
+    },
+    {
+      "id": "F-BURKE-LITWIN",
+      "name": "Burke-Litwin Model",
+      "name_ja": "バーク・リトウィンモデル",
+      "category": "全体設計・診断",
+      "purpose": "変革要因と運用要因を分離し原因レイヤーを特定する",
+      "elements": [
+        {
+          "key": "External Environment",
+          "ja": "外部環境"
+        },
+        {
+          "key": "Transformational Factors",
+          "ja": "変革要因（リーダーシップ・文化・ミッション）"
+        },
+        {
+          "key": "Transactional Factors",
+          "ja": "運用要因（構造・制度・慣行）"
+        },
+        {
+          "key": "Individual Performance",
+          "ja": "個人パフォーマンス"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "全12要素を一度に扱おうとすると焦点がぼやける",
+      "combo": [
+        "F-KOTTER",
+        "F-7S"
+      ]
+    },
+    {
+      "id": "F-WEISBORD",
+      "name": "Weisbord Six-Box Model",
+      "name_ja": "ワイスボード6ボックス",
+      "category": "全体設計・診断",
+      "purpose": "6領域で組織の健全性を簡易診断する",
+      "elements": [
+        {
+          "key": "Purpose",
+          "ja": "目的"
+        },
+        {
+          "key": "Structure",
+          "ja": "構造"
+        },
+        {
+          "key": "Relationships",
+          "ja": "関係性"
+        },
+        {
+          "key": "Rewards",
+          "ja": "報酬"
+        },
+        {
+          "key": "Leadership",
+          "ja": "リーダーシップ"
+        },
+        {
+          "key": "Helpful Mechanisms",
+          "ja": "支援メカニズム"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "外部環境を考慮しないため別フレームと併用が必要",
+      "combo": [
+        "F-7S",
+        "F-NADLER-TUSHMAN"
+      ]
+    },
+    {
+      "id": "F-NADLER-TUSHMAN",
+      "name": "Nadler-Tushman Congruence Model",
+      "name_ja": "ナドラー・タッシュマン整合モデル",
+      "category": "全体設計・診断",
+      "purpose": "戦略×組織要素のFitを確認し不整合を特定する",
+      "elements": [
+        {
+          "key": "Input",
+          "ja": "入力（環境・資源・歴史）"
+        },
+        {
+          "key": "Strategy",
+          "ja": "戦略"
+        },
+        {
+          "key": "Work",
+          "ja": "業務"
+        },
+        {
+          "key": "People",
+          "ja": "人材"
+        },
+        {
+          "key": "Formal Organization",
+          "ja": "公式組織"
+        },
+        {
+          "key": "Informal Organization",
+          "ja": "非公式組織"
+        },
+        {
+          "key": "Output",
+          "ja": "出力（成果）"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "非公式組織の影響を過小評価しやすい",
+      "combo": [
+        "F-BURKE-LITWIN",
+        "F-LEAVITT"
+      ]
+    },
+    {
+      "id": "F-LEAVITT",
+      "name": "Leavitt's Diamond",
+      "name_ja": "レビットのダイヤモンド",
+      "category": "全体設計・診断",
+      "purpose": "4要素の相互影響を見て変更インパクトを予測する",
+      "elements": [
+        {
+          "key": "People",
+          "ja": "人"
+        },
+        {
+          "key": "Task",
+          "ja": "業務"
+        },
+        {
+          "key": "Structure",
+          "ja": "構造"
+        },
+        {
+          "key": "Technology",
+          "ja": "技術"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "1要素だけ変えても他が連動しなければ定着しない",
+      "combo": [
+        "F-7S",
+        "F-LEWIN"
+      ]
+    },
+    {
+      "id": "F-GREINER",
+      "name": "Greiner Growth Model",
+      "name_ja": "グレイナー成長モデル",
+      "category": "全体設計・診断",
+      "purpose": "成長段階ごとの危機を説明し次の課題を予見する",
+      "elements": [
+        {
+          "key": "Creativity Phase",
+          "ja": "創造性段階"
+        },
+        {
+          "key": "Direction Phase",
+          "ja": "指揮段階"
+        },
+        {
+          "key": "Delegation Phase",
+          "ja": "委譲段階"
+        },
+        {
+          "key": "Coordination Phase",
+          "ja": "調整段階"
+        },
+        {
+          "key": "Collaboration Phase",
+          "ja": "協働段階"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "段階をスキップできると思い込み変革が頓挫する",
+      "combo": [
+        "F-CONTINGENCY",
+        "F-KOTTER"
+      ]
+    },
+    {
+      "id": "F-CONTINGENCY",
+      "name": "Contingency Theory",
+      "name_ja": "コンティンジェンシー理論",
+      "category": "全体設計・診断",
+      "purpose": "環境×戦略×組織の最適設計は状況次第と判断する",
+      "elements": [
+        {
+          "key": "Environment",
+          "ja": "環境（安定/動的）"
+        },
+        {
+          "key": "Strategy",
+          "ja": "戦略"
+        },
+        {
+          "key": "Organization Design",
+          "ja": "組織設計"
+        },
+        {
+          "key": "Fit",
+          "ja": "適合度"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "万能な組織形態は存在しないことの理解が前提",
+      "combo": [
+        "F-GREINER",
+        "F-NADLER-TUSHMAN"
+      ]
+    },
+    {
+      "id": "F-FUNCTIONAL-ORG",
+      "name": "Functional Organization",
+      "name_ja": "職能別組織",
+      "category": "構造・組織形態",
+      "purpose": "専門性で効率を最大化する基本構造",
+      "elements": [
+        {
+          "key": "Specialization",
+          "ja": "専門化"
+        },
+        {
+          "key": "Hierarchy",
+          "ja": "階層"
+        },
+        {
+          "key": "Functional Units",
+          "ja": "職能部門（営業・製造・経理等）"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "部門間サイロ化で顧客価値が分断されやすい",
+      "combo": [
+        "F-DIVISIONAL-ORG",
+        "F-RACI"
+      ]
+    },
+    {
+      "id": "F-DIVISIONAL-ORG",
+      "name": "Divisional Organization",
+      "name_ja": "事業部制",
+      "category": "構造・組織形態",
+      "purpose": "市場単位で責任を明確化しP/Lを分離する",
+      "elements": [
+        {
+          "key": "Product/Market Division",
+          "ja": "製品・市場別事業部"
+        },
+        {
+          "key": "P/L Responsibility",
+          "ja": "損益責任"
+        },
+        {
+          "key": "Shared Services",
+          "ja": "共有サービス"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "事業部間で重複投資が発生しやすい",
+      "combo": [
+        "F-FUNCTIONAL-ORG",
+        "F-MATRIX-ORG"
+      ]
+    },
+    {
+      "id": "F-MATRIX-ORG",
+      "name": "Matrix Organization",
+      "name_ja": "マトリックス組織",
+      "category": "構造・組織形態",
+      "purpose": "資源共有と横断的連携で複雑な事業に対応する",
+      "elements": [
+        {
+          "key": "Functional Axis",
+          "ja": "職能軸"
+        },
+        {
+          "key": "Product/Project Axis",
+          "ja": "製品・プロジェクト軸"
+        },
+        {
+          "key": "Dual Reporting",
+          "ja": "二重報告ライン"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "二重レポートで権限衝突と意思決定遅延が頻発する",
+      "combo": [
+        "F-RACI",
+        "F-RAPID"
+      ]
+    },
+    {
+      "id": "F-NETWORK-ORG",
+      "name": "Network Organization",
+      "name_ja": "ネットワーク型組織",
+      "category": "構造・組織形態",
+      "purpose": "外部連携で俊敏性とコスト最適を両立する",
+      "elements": [
+        {
+          "key": "Core Organization",
+          "ja": "コア組織"
+        },
+        {
+          "key": "Partner Network",
+          "ja": "パートナーネットワーク"
+        },
+        {
+          "key": "Coordination Mechanism",
+          "ja": "調整メカニズム"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "外部依存度が高まりコア能力が空洞化するリスク",
+      "combo": [
+        "F-AGILE-ORG",
+        "F-TEAM-TOPOLOGIES"
+      ]
+    },
+    {
+      "id": "F-AGILE-ORG",
+      "name": "Agile Organization",
+      "name_ja": "アジャイル組織",
+      "category": "構造・組織形態",
+      "purpose": "短サイクル学習で変化に適応し続ける組織を作る",
+      "elements": [
+        {
+          "key": "Cross-functional Teams",
+          "ja": "クロスファンクショナルチーム"
+        },
+        {
+          "key": "Iterative Delivery",
+          "ja": "反復デリバリー"
+        },
+        {
+          "key": "Continuous Feedback",
+          "ja": "継続的フィードバック"
+        },
+        {
+          "key": "Empowerment",
+          "ja": "権限委譲"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "形だけアジャイルでマインドセットが旧態のまま失敗する",
+      "combo": [
+        "F-SPOTIFY-MODEL",
+        "F-OKR"
+      ]
+    },
+    {
+      "id": "F-HOLACRACY",
+      "name": "Holacracy",
+      "name_ja": "ホラクラシー",
+      "category": "構造・組織形態",
+      "purpose": "役割を細分化し憲法的ルールで自律運営する",
+      "elements": [
+        {
+          "key": "Roles (not Titles)",
+          "ja": "役割（肩書ではなく）"
+        },
+        {
+          "key": "Circles",
+          "ja": "サークル"
+        },
+        {
+          "key": "Governance Process",
+          "ja": "ガバナンスプロセス"
+        },
+        {
+          "key": "Constitution",
+          "ja": "憲法（ルールブック）"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "既存の権威文化と衝突し導入初期に大混乱になりやすい",
+      "combo": [
+        "F-TEAL",
+        "F-DELEGATION-POKER"
+      ]
+    },
+    {
+      "id": "F-TEAL",
+      "name": "Teal Organization",
+      "name_ja": "ティール組織",
+      "category": "構造・組織形態",
+      "purpose": "自律分散×進化する目的で生命体的に運営する",
+      "elements": [
+        {
+          "key": "Self-management",
+          "ja": "自主経営"
+        },
+        {
+          "key": "Wholeness",
+          "ja": "全体性"
+        },
+        {
+          "key": "Evolutionary Purpose",
+          "ja": "進化する目的"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "理念先行で運用設計が甘いと組織崩壊を招く",
+      "combo": [
+        "F-HOLACRACY",
+        "F-PSYCH-SAFETY"
+      ]
+    },
+    {
+      "id": "F-SPOTIFY-MODEL",
+      "name": "Spotify Model",
+      "name_ja": "Spotifyモデル",
+      "category": "構造・組織形態",
+      "purpose": "Squad/Tribe/Chapter/Guildで自律と整合を両立する",
+      "elements": [
+        {
+          "key": "Squad",
+          "ja": "スクワッド（小チーム）"
+        },
+        {
+          "key": "Tribe",
+          "ja": "トライブ（スクワッド集合）"
+        },
+        {
+          "key": "Chapter",
+          "ja": "チャプター（職能横断）"
+        },
+        {
+          "key": "Guild",
+          "ja": "ギルド（関心コミュニティ）"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Spotifyの文脈を無視してコピーすると機能しない",
+      "combo": [
+        "F-AGILE-ORG",
+        "F-TEAM-TOPOLOGIES"
+      ]
+    },
+    {
+      "id": "F-TEAM-TOPOLOGIES",
+      "name": "Team Topologies",
+      "name_ja": "チームトポロジー",
+      "category": "構造・組織形態",
+      "purpose": "チームタイプ×連携方式で認知負荷を最適化する",
+      "elements": [
+        {
+          "key": "Stream-aligned Team",
+          "ja": "ストリームアラインドチーム"
+        },
+        {
+          "key": "Enabling Team",
+          "ja": "イネーブリングチーム"
+        },
+        {
+          "key": "Complicated Subsystem Team",
+          "ja": "コンプリケイテッドサブシステムチーム"
+        },
+        {
+          "key": "Platform Team",
+          "ja": "プラットフォームチーム"
+        },
+        {
+          "key": "Interaction Modes",
+          "ja": "連携方式（協働/X-as-a-Service/ファシリテーション）"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "4タイプに無理に当てはめるとチーム目的がぶれる",
+      "combo": [
+        "F-SPOTIFY-MODEL",
+        "F-NETWORK-ORG"
+      ]
+    },
+    {
+      "id": "F-SAFE",
+      "name": "SAFe (Scaled Agile Framework)",
+      "name_ja": "SAFe",
+      "category": "構造・組織形態",
+      "purpose": "大規模アジャイルを標準プロセスで統制する",
+      "elements": [
+        {
+          "key": "Agile Release Train",
+          "ja": "アジャイルリリーストレイン"
+        },
+        {
+          "key": "Program Increment",
+          "ja": "プログラムインクリメント"
+        },
+        {
+          "key": "Portfolio Level",
+          "ja": "ポートフォリオレベル"
+        },
+        {
+          "key": "Lean-Agile Principles",
+          "ja": "リーン・アジャイル原則"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "プロセス重視になりアジャイル本来の俊敏性を失う",
+      "combo": [
+        "F-LESS",
+        "F-OKR"
+      ]
+    },
+    {
+      "id": "F-LESS",
+      "name": "LeSS (Large-Scale Scrum)",
+      "name_ja": "LeSS",
+      "category": "構造・組織形態",
+      "purpose": "シンプルな大規模Scrumで複雑性を抑える",
+      "elements": [
+        {
+          "key": "One Product Backlog",
+          "ja": "1プロダクトバックログ"
+        },
+        {
+          "key": "One Product Owner",
+          "ja": "1プロダクトオーナー"
+        },
+        {
+          "key": "Multiple Teams",
+          "ja": "複数チーム"
+        },
+        {
+          "key": "Sprint Alignment",
+          "ja": "スプリント同期"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "シンプルさゆえに組織的成熟度が低いと機能しない",
+      "combo": [
+        "F-SAFE",
+        "F-AGILE-ORG"
+      ]
+    },
+    {
+      "id": "F-RACI",
+      "name": "RACI Matrix",
+      "name_ja": "RACIマトリックス",
+      "category": "役割・責任・意思決定",
+      "purpose": "タスクごとにR/A/C/Iを明確化し抜け漏れを防ぐ",
+      "elements": [
+        {
+          "key": "Responsible",
+          "ja": "実行責任者"
+        },
+        {
+          "key": "Accountable",
+          "ja": "説明責任者"
+        },
+        {
+          "key": "Consulted",
+          "ja": "相談先"
+        },
+        {
+          "key": "Informed",
+          "ja": "報告先"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "Accountableが複数いると責任が曖昧になる",
+      "combo": [
+        "F-RASCI",
+        "F-MATRIX-ORG"
+      ]
+    },
+    {
+      "id": "F-RASCI",
+      "name": "RASCI Matrix",
+      "name_ja": "RASCIマトリックス",
+      "category": "役割・責任・意思決定",
+      "purpose": "RACIにSupport役を加えて支援体制を明示する",
+      "elements": [
+        {
+          "key": "Responsible",
+          "ja": "実行責任者"
+        },
+        {
+          "key": "Accountable",
+          "ja": "説明責任者"
+        },
+        {
+          "key": "Support",
+          "ja": "支援者"
+        },
+        {
+          "key": "Consulted",
+          "ja": "相談先"
+        },
+        {
+          "key": "Informed",
+          "ja": "報告先"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "SupportとConsultedの区別が曖昧になりがち",
+      "combo": [
+        "F-RACI",
+        "F-DACI"
+      ]
+    },
+    {
+      "id": "F-DACI",
+      "name": "DACI Framework",
+      "name_ja": "DACIフレームワーク",
+      "category": "役割・責任・意思決定",
+      "purpose": "意思決定プロセスの役割を4つに整理する",
+      "elements": [
+        {
+          "key": "Driver",
+          "ja": "推進者"
+        },
+        {
+          "key": "Approver",
+          "ja": "承認者"
+        },
+        {
+          "key": "Contributor",
+          "ja": "貢献者"
+        },
+        {
+          "key": "Informed",
+          "ja": "報告先"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Driverに決定権がないことを関係者が誤解しやすい",
+      "combo": [
+        "F-RAPID",
+        "F-RACI"
+      ]
+    },
+    {
+      "id": "F-RAPID",
+      "name": "RAPID Decision Model",
+      "name_ja": "RAPID意思決定モデル",
+      "category": "役割・責任・意思決定",
+      "purpose": "大組織での意思決定ボトルネックを解消する",
+      "elements": [
+        {
+          "key": "Recommend",
+          "ja": "推薦"
+        },
+        {
+          "key": "Agree",
+          "ja": "合意"
+        },
+        {
+          "key": "Perform",
+          "ja": "実行"
+        },
+        {
+          "key": "Input",
+          "ja": "インプット提供"
+        },
+        {
+          "key": "Decide",
+          "ja": "最終決定"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Agreeに拒否権を与えすぎると意思決定が膠着する",
+      "combo": [
+        "F-DACI",
+        "F-MATRIX-ORG"
+      ]
+    },
+    {
+      "id": "F-DRI",
+      "name": "DRI (Directly Responsible Individual)",
+      "name_ja": "DRI（直接責任者）",
+      "category": "役割・責任・意思決定",
+      "purpose": "最終責任者を1人に固定し意思決定速度を上げる",
+      "elements": [
+        {
+          "key": "Single Owner",
+          "ja": "単一責任者"
+        },
+        {
+          "key": "Decision Authority",
+          "ja": "意思決定権限"
+        },
+        {
+          "key": "Accountability",
+          "ja": "説明責任"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "DRIに権限が伴わないと名ばかり責任者になる",
+      "combo": [
+        "F-RACI",
+        "F-OKR"
+      ]
+    },
+    {
+      "id": "F-DELEGATION-POKER",
+      "name": "Delegation Poker",
+      "name_ja": "デリゲーションポーカー",
+      "category": "役割・責任・意思決定",
+      "purpose": "権限移譲レベルを7段階で段階的に合意する",
+      "elements": [
+        {
+          "key": "Tell",
+          "ja": "指示"
+        },
+        {
+          "key": "Sell",
+          "ja": "説得"
+        },
+        {
+          "key": "Consult",
+          "ja": "相談"
+        },
+        {
+          "key": "Agree",
+          "ja": "合意"
+        },
+        {
+          "key": "Advise",
+          "ja": "助言"
+        },
+        {
+          "key": "Inquire",
+          "ja": "確認"
+        },
+        {
+          "key": "Delegate",
+          "ja": "委任"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "全項目を一律レベルにすると実態と乖離する",
+      "combo": [
+        "F-HOLACRACY",
+        "F-1ON1"
+      ]
+    },
+    {
+      "id": "F-OKR",
+      "name": "OKR (Objectives and Key Results)",
+      "name_ja": "OKR",
+      "category": "目標・成果管理",
+      "purpose": "Objective＋Key Resultsで四半期運用し挑戦を促す",
+      "elements": [
+        {
+          "key": "Objective",
+          "ja": "目標（定性的・野心的）"
+        },
+        {
+          "key": "Key Results",
+          "ja": "主要な結果（定量的・3〜5個）"
+        },
+        {
+          "key": "Quarterly Cycle",
+          "ja": "四半期サイクル"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Key ResultsをタスクリストにするとKPI管理と変わらなくなる",
+      "combo": [
+        "F-KPI-TREE",
+        "F-1ON1"
+      ]
+    },
+    {
+      "id": "F-KPI-TREE",
+      "name": "KPI Tree",
+      "name_ja": "KPIツリー",
+      "category": "目標・成果管理",
+      "purpose": "トップ指標を現場行動レベルまで分解する",
+      "elements": [
+        {
+          "key": "Lagging Indicator",
+          "ja": "遅行指標（結果KPI）"
+        },
+        {
+          "key": "Leading Indicator",
+          "ja": "先行指標（行動KPI）"
+        },
+        {
+          "key": "Decomposition",
+          "ja": "分解ロジック"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "ツリーが深すぎると現場が指標に振り回される",
+      "combo": [
+        "F-OKR",
+        "F-BSC"
+      ]
+    },
+    {
+      "id": "F-MBO",
+      "name": "MBO (Management by Objectives)",
+      "name_ja": "目標管理制度",
+      "category": "目標・成果管理",
+      "purpose": "個人目標×評価で自律的行動を引き出す",
+      "elements": [
+        {
+          "key": "Goal Setting",
+          "ja": "目標設定"
+        },
+        {
+          "key": "Self-control",
+          "ja": "自己統制"
+        },
+        {
+          "key": "Performance Review",
+          "ja": "業績評価"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "目標が低めに設定されがちで挑戦が生まれにくい",
+      "combo": [
+        "F-OKR",
+        "F-SMART"
+      ]
+    },
+    {
+      "id": "F-BSC",
+      "name": "BSC (Balanced Scorecard)",
+      "name_ja": "バランスト・スコアカード",
+      "category": "目標・成果管理",
+      "purpose": "財務/顧客/プロセス/学習の4視点で戦略を実行する",
+      "elements": [
+        {
+          "key": "Financial Perspective",
+          "ja": "財務の視点"
+        },
+        {
+          "key": "Customer Perspective",
+          "ja": "顧客の視点"
+        },
+        {
+          "key": "Internal Process Perspective",
+          "ja": "業務プロセスの視点"
+        },
+        {
+          "key": "Learning & Growth Perspective",
+          "ja": "学習と成長の視点"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "指標が多すぎてモニタリングコストが肥大化する",
+      "combo": [
+        "F-KPI-TREE",
+        "F-HOSHIN"
+      ]
+    },
+    {
+      "id": "F-SMART",
+      "name": "SMART Goals",
+      "name_ja": "SMARTゴール",
+      "category": "目標・成果管理",
+      "purpose": "5条件で目標の質を担保する",
+      "elements": [
+        {
+          "key": "Specific",
+          "ja": "具体的"
+        },
+        {
+          "key": "Measurable",
+          "ja": "測定可能"
+        },
+        {
+          "key": "Achievable",
+          "ja": "達成可能"
+        },
+        {
+          "key": "Relevant",
+          "ja": "関連性"
+        },
+        {
+          "key": "Time-bound",
+          "ja": "期限付き"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "Achievableを重視しすぎるとストレッチ目標が消える",
+      "combo": [
+        "F-OKR",
+        "F-MBO"
+      ]
+    },
+    {
+      "id": "F-OGSM",
+      "name": "OGSM",
+      "name_ja": "OGSM",
+      "category": "目標・成果管理",
+      "purpose": "Objective→Goals→Strategies→Measuresで戦略を一枚に整理する",
+      "elements": [
+        {
+          "key": "Objective",
+          "ja": "目的（定性）"
+        },
+        {
+          "key": "Goals",
+          "ja": "目標（定量）"
+        },
+        {
+          "key": "Strategies",
+          "ja": "戦略"
+        },
+        {
+          "key": "Measures",
+          "ja": "測定指標"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "StrategiesとGoalsが混同されやすい",
+      "combo": [
+        "F-OKR",
+        "F-BSC"
+      ]
+    },
+    {
+      "id": "F-HOSHIN",
+      "name": "Hoshin Kanri",
+      "name_ja": "方針管理",
+      "category": "目標・成果管理",
+      "purpose": "重点方針を全社展開しキャッチボールで整合する",
+      "elements": [
+        {
+          "key": "Annual Policy",
+          "ja": "年度方針"
+        },
+        {
+          "key": "Catchball",
+          "ja": "キャッチボール（上下対話）"
+        },
+        {
+          "key": "Action Plans",
+          "ja": "実行計画"
+        },
+        {
+          "key": "Review",
+          "ja": "レビュー"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "トップダウンに偏るとキャッチボールが形骸化する",
+      "combo": [
+        "F-BSC",
+        "F-OGSM"
+      ]
+    },
+    {
+      "id": "F-NORTH-STAR",
+      "name": "North Star Metric",
+      "name_ja": "ノーススターメトリック",
+      "category": "目標・成果管理",
+      "purpose": "最重要指標1つで意思決定の軸を統一する",
+      "elements": [
+        {
+          "key": "North Star Metric",
+          "ja": "最重要指標"
+        },
+        {
+          "key": "Input Metrics",
+          "ja": "インプット指標群"
+        },
+        {
+          "key": "Alignment",
+          "ja": "組織整合"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "指標を頻繁に変えると組織の軸がぶれる",
+      "combo": [
+        "F-OKR",
+        "F-KPI-TREE"
+      ]
+    },
+    {
+      "id": "F-GQM",
+      "name": "GQM (Goal-Question-Metric)",
+      "name_ja": "GQM",
+      "category": "目標・成果管理",
+      "purpose": "Goal→Question→Metricで測定設計を論理的に行う",
+      "elements": [
+        {
+          "key": "Goal",
+          "ja": "目標"
+        },
+        {
+          "key": "Question",
+          "ja": "問い"
+        },
+        {
+          "key": "Metric",
+          "ja": "測定指標"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Questionが曖昧だと的外れなMetricが設定される",
+      "combo": [
+        "F-KPI-TREE",
+        "F-SMART"
+      ]
+    },
+    {
+      "id": "F-V2MOM",
+      "name": "V2MOM",
+      "name_ja": "V2MOM",
+      "category": "目標・成果管理",
+      "purpose": "Vision→Values→Methods→Obstacles→Measuresで全社整合する",
+      "elements": [
+        {
+          "key": "Vision",
+          "ja": "ビジョン"
+        },
+        {
+          "key": "Values",
+          "ja": "価値観"
+        },
+        {
+          "key": "Methods",
+          "ja": "方法"
+        },
+        {
+          "key": "Obstacles",
+          "ja": "障害"
+        },
+        {
+          "key": "Measures",
+          "ja": "測定指標"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Obstaclesの洗い出しが甘いと実行段階で頓挫する",
+      "combo": [
+        "F-OKR",
+        "F-OGSM"
+      ]
+    },
+    {
+      "id": "F-1ON1",
+      "name": "1on1 Meeting",
+      "name_ja": "1on1ミーティング",
+      "category": "育成・コミュニケーション",
+      "purpose": "継続対話で状態/目標/障害を早期発見する",
+      "elements": [
+        {
+          "key": "Regular Cadence",
+          "ja": "定期開催"
+        },
+        {
+          "key": "Agenda Ownership",
+          "ja": "部下主導のアジェンダ"
+        },
+        {
+          "key": "Active Listening",
+          "ja": "傾聴"
+        },
+        {
+          "key": "Follow-up",
+          "ja": "フォローアップ"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "上司の報告聴取の場になると信頼関係が崩れる",
+      "combo": [
+        "F-GROW",
+        "F-SBI"
+      ]
+    },
+    {
+      "id": "F-GROW",
+      "name": "GROW Model",
+      "name_ja": "GROWモデル",
+      "category": "育成・コミュニケーション",
+      "purpose": "Goal→Reality→Options→Willで自律行動を引き出す",
+      "elements": [
+        {
+          "key": "Goal",
+          "ja": "目標"
+        },
+        {
+          "key": "Reality",
+          "ja": "現状"
+        },
+        {
+          "key": "Options",
+          "ja": "選択肢"
+        },
+        {
+          "key": "Will",
+          "ja": "意志・行動計画"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Goalが曖昧なまま進むとOptionsが散漫になる",
+      "combo": [
+        "F-1ON1",
+        "F-OKR"
+      ]
+    },
+    {
+      "id": "F-EXPERIENTIAL",
+      "name": "Kolb's Experiential Learning",
+      "name_ja": "経験学習モデル（コルブ）",
+      "category": "育成・コミュニケーション",
+      "purpose": "経験→内省→概念化→試行のサイクルで学ぶ",
+      "elements": [
+        {
+          "key": "Concrete Experience",
+          "ja": "具体的経験"
+        },
+        {
+          "key": "Reflective Observation",
+          "ja": "内省的観察"
+        },
+        {
+          "key": "Abstract Conceptualization",
+          "ja": "抽象的概念化"
+        },
+        {
+          "key": "Active Experimentation",
+          "ja": "能動的実験"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "内省フェーズを飛ばすと同じ失敗を繰り返す",
+      "combo": [
+        "F-70-20-10",
+        "F-1ON1"
+      ]
+    },
+    {
+      "id": "F-70-20-10",
+      "name": "70:20:10 Model",
+      "name_ja": "70:20:10モデル",
+      "category": "育成・コミュニケーション",
+      "purpose": "経験70/他者20/研修10の比率で育成を設計する",
+      "elements": [
+        {
+          "key": "On-the-job Experience",
+          "ja": "業務経験（70%）"
+        },
+        {
+          "key": "Social Learning",
+          "ja": "他者からの学び（20%）"
+        },
+        {
+          "key": "Formal Training",
+          "ja": "研修（10%）"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "研修だけに偏ると実務能力が伸びない",
+      "combo": [
+        "F-EXPERIENTIAL",
+        "F-1ON1"
+      ]
+    },
+    {
+      "id": "F-SBI",
+      "name": "SBI Feedback Model",
+      "name_ja": "SBIフィードバックモデル",
+      "category": "育成・コミュニケーション",
+      "purpose": "Situation→Behavior→Impactで具体的にフィードバックする",
+      "elements": [
+        {
+          "key": "Situation",
+          "ja": "状況"
+        },
+        {
+          "key": "Behavior",
+          "ja": "行動"
+        },
+        {
+          "key": "Impact",
+          "ja": "影響"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Impactを主観で語ると受け手が防衛的になる",
+      "combo": [
+        "F-1ON1",
+        "F-RADICAL-CANDOR"
+      ]
+    },
+    {
+      "id": "F-PSYCH-SAFETY",
+      "name": "Psychological Safety",
+      "name_ja": "心理的安全性",
+      "category": "文化・心理",
+      "purpose": "発言/挑戦が許容される土壌をつくる",
+      "elements": [
+        {
+          "key": "Inclusion Safety",
+          "ja": "包摂の安全"
+        },
+        {
+          "key": "Learner Safety",
+          "ja": "学びの安全"
+        },
+        {
+          "key": "Contributor Safety",
+          "ja": "貢献の安全"
+        },
+        {
+          "key": "Challenger Safety",
+          "ja": "挑戦の安全"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "安全=ぬるま湯と誤解されると成果基準が下がる",
+      "combo": [
+        "F-RADICAL-CANDOR",
+        "F-TEAL"
+      ]
+    },
+    {
+      "id": "F-RADICAL-CANDOR",
+      "name": "Radical Candor",
+      "name_ja": "ラディカル・キャンダー",
+      "category": "文化・心理",
+      "purpose": "配慮×率直さの両立で成長を促進する",
+      "elements": [
+        {
+          "key": "Care Personally",
+          "ja": "個人的に配慮する"
+        },
+        {
+          "key": "Challenge Directly",
+          "ja": "率直に指摘する"
+        },
+        {
+          "key": "Obnoxious Aggression",
+          "ja": "嫌味な攻撃（避ける）"
+        },
+        {
+          "key": "Ruinous Empathy",
+          "ja": "破滅的な共感（避ける）"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "率直さだけが先行すると単なる攻撃になる",
+      "combo": [
+        "F-PSYCH-SAFETY",
+        "F-SBI"
+      ]
+    },
+    {
+      "id": "F-JOHARI",
+      "name": "Johari Window",
+      "name_ja": "ジョハリの窓",
+      "category": "文化・心理",
+      "purpose": "自己開示×フィードバックで相互理解を深める",
+      "elements": [
+        {
+          "key": "Open Area",
+          "ja": "開放の窓"
+        },
+        {
+          "key": "Blind Spot",
+          "ja": "盲点の窓"
+        },
+        {
+          "key": "Hidden Area",
+          "ja": "秘密の窓"
+        },
+        {
+          "key": "Unknown Area",
+          "ja": "未知の窓"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "無理な自己開示を強いると心理的安全性を損なう",
+      "combo": [
+        "F-PSYCH-SAFETY",
+        "F-1ON1"
+      ]
+    },
+    {
+      "id": "F-SHIKIGAKU",
+      "name": "Shikigaku (識学)",
+      "name_ja": "識学",
+      "category": "文化・心理",
+      "purpose": "役割/位置/ルールを明確化し錯覚を減らす",
+      "elements": [
+        {
+          "key": "Position",
+          "ja": "位置（立場の明確化）"
+        },
+        {
+          "key": "Result",
+          "ja": "結果（成果基準）"
+        },
+        {
+          "key": "Change",
+          "ja": "変化（行動変容）"
+        },
+        {
+          "key": "Rules",
+          "ja": "ルール（基準の明文化）"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "管理強化と受け取られると自律性が損なわれる",
+      "combo": [
+        "F-DRI",
+        "F-MBO"
+      ]
+    },
+    {
+      "id": "F-LEWIN",
+      "name": "Lewin's Change Model",
+      "name_ja": "レヴィン変革3段階モデル",
+      "category": "変革・定着",
+      "purpose": "解凍→変化→再凍結で変革を定着させる",
+      "elements": [
+        {
+          "key": "Unfreeze",
+          "ja": "解凍"
+        },
+        {
+          "key": "Change",
+          "ja": "変化"
+        },
+        {
+          "key": "Refreeze",
+          "ja": "再凍結"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "Refreezeを省くと元の状態に戻りやすい",
+      "combo": [
+        "F-KOTTER",
+        "F-ADKAR"
+      ]
+    },
+    {
+      "id": "F-KOTTER",
+      "name": "Kotter's 8-Step Change Model",
+      "name_ja": "コッター8段階変革モデル",
+      "category": "変革・定着",
+      "purpose": "危機→連合→ビジョン→短期成果で組織変革を推進する",
+      "elements": [
+        {
+          "key": "Create Urgency",
+          "ja": "危機意識を高める"
+        },
+        {
+          "key": "Form Coalition",
+          "ja": "変革推進連合を築く"
+        },
+        {
+          "key": "Create Vision",
+          "ja": "ビジョンと戦略を生み出す"
+        },
+        {
+          "key": "Communicate Vision",
+          "ja": "ビジョンを周知する"
+        },
+        {
+          "key": "Empower Action",
+          "ja": "行動を促す障害を取り除く"
+        },
+        {
+          "key": "Generate Short-term Wins",
+          "ja": "短期的成果を実現する"
+        },
+        {
+          "key": "Consolidate Gains",
+          "ja": "成果を活かしてさらに変革を進める"
+        },
+        {
+          "key": "Anchor in Culture",
+          "ja": "新しい方法を文化に定着させる"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "短期成果を焦って見せかけの勝利で終わる",
+      "combo": [
+        "F-LEWIN",
+        "F-ADKAR"
+      ]
+    },
+    {
+      "id": "F-ADKAR",
+      "name": "ADKAR Model",
+      "name_ja": "ADKARモデル",
+      "category": "変革・定着",
+      "purpose": "個人単位でAwareness→Reinforcementまで変革を管理する",
+      "elements": [
+        {
+          "key": "Awareness",
+          "ja": "認識"
+        },
+        {
+          "key": "Desire",
+          "ja": "欲求"
+        },
+        {
+          "key": "Knowledge",
+          "ja": "知識"
+        },
+        {
+          "key": "Ability",
+          "ja": "能力"
+        },
+        {
+          "key": "Reinforcement",
+          "ja": "強化"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "組織施策だけでなく個人の感情面も扱う必要がある",
+      "combo": [
+        "F-KOTTER",
+        "F-BRIDGES"
+      ]
+    },
+    {
+      "id": "F-BRIDGES",
+      "name": "Bridges Transition Model",
+      "name_ja": "ブリッジズ・トランジションモデル",
+      "category": "変革・定着",
+      "purpose": "終焉→ニュートラルゾーン→新たな始まりで感情面を管理する",
+      "elements": [
+        {
+          "key": "Ending",
+          "ja": "終焉（手放す）"
+        },
+        {
+          "key": "Neutral Zone",
+          "ja": "ニュートラルゾーン（混乱期）"
+        },
+        {
+          "key": "New Beginning",
+          "ja": "新たな始まり"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "ニュートラルゾーンの不安に耐えられず旧に戻る",
+      "combo": [
+        "F-ADKAR",
+        "F-KUBLER-ROSS"
+      ]
+    },
+    {
+      "id": "F-KUBLER-ROSS",
+      "name": "Kübler-Ross Change Curve",
+      "name_ja": "キューブラー＝ロス変化曲線",
+      "category": "変革・定着",
+      "purpose": "否認→怒り→取引→抑うつ→受容で感情変遷を理解する",
+      "elements": [
+        {
+          "key": "Denial",
+          "ja": "否認"
+        },
+        {
+          "key": "Anger",
+          "ja": "怒り"
+        },
+        {
+          "key": "Bargaining",
+          "ja": "取引"
+        },
+        {
+          "key": "Depression",
+          "ja": "抑うつ"
+        },
+        {
+          "key": "Acceptance",
+          "ja": "受容"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "段階は直線的でなく行き来することを前提に使う",
+      "combo": [
+        "F-BRIDGES",
+        "F-SATIR"
+      ]
+    },
+    {
+      "id": "F-SATIR",
+      "name": "Satir Change Model",
+      "name_ja": "サティア変革モデル",
+      "category": "変革・定着",
+      "purpose": "混乱を前提に受け入れ統合して新常態へ導く",
+      "elements": [
+        {
+          "key": "Late Status Quo",
+          "ja": "旧常態"
+        },
+        {
+          "key": "Foreign Element",
+          "ja": "異質な要素"
+        },
+        {
+          "key": "Chaos",
+          "ja": "混乱"
+        },
+        {
+          "key": "Transforming Idea",
+          "ja": "変容のアイデア"
+        },
+        {
+          "key": "Integration",
+          "ja": "統合"
+        },
+        {
+          "key": "New Status Quo",
+          "ja": "新常態"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "混乱期に成果を急ぐとチームが疲弊する",
+      "combo": [
+        "F-KUBLER-ROSS",
+        "F-PSYCH-SAFETY"
+      ]
+    }
+  ]
+}

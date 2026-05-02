@@ -2,24 +2,24 @@
 
 ## import-from-abm.ts
 
-abm-tool（Supabase）で構築済みの企業マスター・インテントデータを closepilot（Prisma/PostgreSQL）へ移行するスクリプト。
+abm-tool（Supabase）で構築済みの企業マスター・インテントデータを bgm（Prisma/PostgreSQL）へ移行するスクリプト。
 
 ### 前提
 
-1. **closepilot側のDBが準備済み**（DATABASE_URL が本番DBに向いている）
+1. **bgm側のDBが準備済み**（DATABASE_URL が本番DBに向いている）
 2. **Prismaマイグレーション完了**（`pnpm db:push` or `pnpm db:migrate` でスキーマ適用済み）
 3. **abm-tool の Supabase credentials** を入手済み
 
 ### セットアップ
 
-`closepilot/.env.local` に以下を追加:
+`bgm/.env.local` に以下を追加:
 
 ```bash
 # 移行元（abm-tool）
 ABM_SUPABASE_URL="https://xxxxxxxxxx.supabase.co"
 ABM_SUPABASE_SERVICE_KEY="eyJhbGci..."   # service_role key（anon keyではない）
 
-# 移行先（closepilot）
+# 移行先（bgm）
 DATABASE_URL="postgresql://..."
 ```
 
@@ -36,7 +36,7 @@ cd packages/db && pnpm install
 DBへの書き込みは行わず、件数だけ確認:
 
 ```bash
-pnpm --filter @closepilot/db import:abm:dry
+pnpm --filter @bgm/db import:abm:dry
 ```
 
 #### ② 件数制限付き（本番移行前のテスト）
@@ -48,12 +48,12 @@ cd packages/db && tsx scripts/import-from-abm.ts --limit=100
 
 #### ③ 本番実行（全データ移行）
 ```bash
-pnpm --filter @closepilot/db import:abm
+pnpm --filter @bgm/db import:abm
 ```
 
 ### 移行される内容
 
-| abm-tool（Supabase） | closepilot（Prisma） | 想定件数 |
+| abm-tool（Supabase） | bgm（Prisma） | 想定件数 |
 |---|---|---|
 | industries | Industry | 25 |
 | service_tags | ServiceTag | 20+ |
@@ -80,8 +80,8 @@ DELETE FROM "Department";
 
 ### 移行されないもの（意図的に除外）
 
-- `approach_statuses` / `approach_logs` — closepilot側で `Deal` / `Activity` / `Task` が同等機能を提供
-- `organizations` / `organization_members` — closepilot側で `Organization` / `User` として管理
+- `approach_statuses` / `approach_logs` — bgm側で `Deal` / `Activity` / `Task` が同等機能を提供
+- `organizations` / `organization_members` — bgm側で `Organization` / `User` として管理
 - `office_locations` (JSONB) — `Office` テーブルに正規化済み
 
 ### トラブルシューティング

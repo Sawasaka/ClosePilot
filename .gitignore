@@ -12,6 +12,9 @@ dist
 .env.local
 .env.*.local
 
+# MCP secrets (Stitch API key 等)
+.mcp.json
+
 # OS
 .DS_Store
 

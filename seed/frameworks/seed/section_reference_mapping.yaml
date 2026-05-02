@@ -1,0 +1,349 @@
+# ============================================================
+# セクション × 参照事例 マッピング（シードデータ）
+# ============================================================
+# 用途: Rookie Craft — 各セクションで表示する「参照事例」（ヒント）
+# 各セクションに3事例を紐付け、回答のヒントとして活用
+# 各事例は2-3セクションに出現（異なる学びの文脈で活用）
+# ============================================================
+
+mappings:
+
+  # ──────────────────────────────────────────────────────────
+  # A. 事業の核
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-01
+    section_name: 事業目的・ビジョン
+    references:
+      - case_id: CASE-AMAZON
+        relevance: "Day 1思想とリーダーシップ原則 — 長期ビジョンの設計例"
+      - case_id: CASE-DISNEY-ROLE
+        relevance: "ミッション起点の事業設計 — ビジョンが行動を駆動する例"
+      - case_id: CASE-THERANOS
+        relevance: "ビジョン先行の罠 — 実行力なきビジョンの反面教師"
+
+  - section_id: SEC-02
+    section_name: 事業概要・コンセプト
+    references:
+      - case_id: CASE-NETFLIX
+        relevance: "DVD→ストリーミング — ビジネスモデル転換のコンセプト再設計"
+      - case_id: CASE-RECRUIT
+        relevance: "新規事業量産モデル — 事業コンセプトを素早く形にする仕組み"
+      - case_id: CASE-CYBERAGENT
+        relevance: "事業ピボットの連鎖 — コンセプトの柔軟な再定義"
+
+  # ──────────────────────────────────────────────────────────
+  # B. 顧客理解
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-03
+    section_name: ターゲット定義
+    references:
+      - case_id: CASE-STRIPE
+        relevance: "開発者ファースト — 明確なターゲット絞り込みで急成長"
+      - case_id: CASE-SHOPIFY
+        relevance: "SMBに特化 — 大企業ではなく中小を狙う戦略"
+      - case_id: CASE-HUBSPOT
+        relevance: "インバウンド対象企業の定義 — ICP設計の好例"
+
+  - section_id: SEC-04
+    section_name: ペルソナ・意思決定構造
+    references:
+      - case_id: CASE-STARBUCKS
+        relevance: "体験を求めるペルソナ — 機能ではなく感情的ジョブに応える"
+      - case_id: CASE-AIRBNB
+        relevance: "ホスト/ゲスト両面のペルソナ — 二面市場の意思決定構造"
+      - case_id: CASE-MERCARI
+        relevance: "売り手/買い手の心理 — CtoC市場の意思決定パターン"
+
+  - section_id: SEC-05
+    section_name: 顧客課題
+    references:
+      - case_id: CASE-SLACK
+        relevance: "メール過多の課題 — 顧客自身が言語化できていない痛みの発見"
+      - case_id: CASE-AIRBNB
+        relevance: "旅行の信頼性 — 見知らぬ人の家に泊まる不安の解決"
+      - case_id: CASE-KODAK
+        relevance: "顧客ニーズの変化 — 写真の本質的ジョブを見逃した例"
+
+  # ──────────────────────────────────────────────────────────
+  # C. 市場環境
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-06
+    section_name: 市場規模
+    references:
+      - case_id: CASE-ZOOM
+        relevance: "パンデミックで市場が爆発的拡大 — 外部要因による市場変動"
+      - case_id: CASE-MERCARI
+        relevance: "CtoC市場の創造 — 存在しなかった市場の開拓"
+      - case_id: CASE-WEWORK
+        relevance: "市場規模の過大評価 — TAMの見誤りによる崩壊"
+
+  - section_id: SEC-07
+    section_name: 市場トレンド・外部環境
+    references:
+      - case_id: CASE-KODAK
+        relevance: "デジタルシフトの波 — 技術トレンドを読みながら動けなかった"
+      - case_id: CASE-NOKIA
+        relevance: "スマートフォン時代の到来 — プラットフォームシフトの見落とし"
+      - case_id: CASE-ZOOM
+        relevance: "パンデミック — 予測不能な外部環境変化への対応"
+
+  - section_id: SEC-08
+    section_name: 競合マッピング
+    references:
+      - case_id: CASE-NOKIA
+        relevance: "Apple iPhoneとの競合構造 — ハードからソフトへの競争軸変化"
+      - case_id: CASE-LEGO
+        relevance: "多角化での競合見誤り — ゲーム・テーマパークとの競合"
+      - case_id: CASE-UNIQLO
+        relevance: "SPA vs 従来アパレル — 業界構造を変える競合戦略"
+
+  - section_id: SEC-09
+    section_name: 競合比較・参入障壁
+    references:
+      - case_id: CASE-APPLE
+        relevance: "エコシステムという参入障壁 — 模倣困難な競争優位"
+      - case_id: CASE-TESLA
+        relevance: "新規参入者の障壁突破 — 既存業界の壁をどう越えたか"
+      - case_id: CASE-KODAK
+        relevance: "技術は参入障壁にならない — 実行力こそが壁になる"
+
+  # ──────────────────────────────────────────────────────────
+  # D. 戦略設計
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-10
+    section_name: ポジショニング
+    references:
+      - case_id: CASE-TESLA
+        relevance: "DTC × プレミアムEV — 既存自動車業界と異なるポジション"
+      - case_id: CASE-UNIQLO
+        relevance: "高品質×低価格 — 従来の二者択一を覆すポジション"
+      - case_id: CASE-SPOTIFY
+        relevance: "音楽ストリーミングの新ポジション — 所有から体験へ"
+
+  - section_id: SEC-11
+    section_name: 差別化・勝ち筋
+    references:
+      - case_id: CASE-APPLE
+        relevance: "エコシステム差別化 — ハード×ソフト×サービスの統合"
+      - case_id: CASE-SPOTIFY
+        relevance: "Squadモデル — 組織構造自体を差別化の源泉に"
+      - case_id: CASE-LEGO
+        relevance: "コア回帰で差別化復活 — 多角化失敗から本質に戻る"
+
+  - section_id: SEC-12
+    section_name: 価値提案
+    references:
+      - case_id: CASE-STARBUCKS
+        relevance: "体験価値の設計 — コーヒーではなく『第三の場所』を売る"
+      - case_id: CASE-STRIPE
+        relevance: "開発者向けの明確なVP — 7行のコードで決済導入"
+      - case_id: CASE-SHOPIFY
+        relevance: "SMBへのプラットフォーム価値 — 誰でもECが始められる"
+
+  # ──────────────────────────────────────────────────────────
+  # E. プロダクト・収益
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-13
+    section_name: プロダクト / サービス設計
+    references:
+      - case_id: CASE-SLACK
+        relevance: "PLGプロダクト設計 — 使うだけで広がるプロダクト"
+      - case_id: CASE-APPLE
+        relevance: "エコシステム×プロダクト — 単品ではなく体験を設計"
+      - case_id: CASE-AI-SALES-FAILURE
+        relevance: "技術先行のプロダクト失敗 — ユーザー不在の設計の反面教師"
+
+  - section_id: SEC-14
+    section_name: 価格設計
+    references:
+      - case_id: CASE-ADOBE
+        relevance: "買い切り→サブスクの価格転換 — 顧客と収益の両立"
+      - case_id: CASE-UNIQLO
+        relevance: "高品質×低価格 — SPAによるコスト構造での価格戦略"
+      - case_id: CASE-NETFLIX
+        relevance: "段階的プラン設計 — ベーシック/スタンダード/プレミアム"
+
+  - section_id: SEC-15
+    section_name: 収益モデル
+    references:
+      - case_id: CASE-SALESFORCE
+        relevance: "SaaS収益モデルの先駆者 — サブスクリプション＋アップセル"
+      - case_id: CASE-NETFLIX
+        relevance: "サブスクリプション — コンテンツ投資と会員収益の循環"
+      - case_id: CASE-SHOPIFY
+        relevance: "プラットフォーム収益 — 取引手数料＋SaaSの二重構造"
+
+  # ──────────────────────────────────────────────────────────
+  # F. マーケティング
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-16
+    section_name: チャネル戦略
+    references:
+      - case_id: CASE-TESLA
+        relevance: "DTC直販チャネル — ディーラーを排除した直接販売"
+      - case_id: CASE-HUBSPOT
+        relevance: "インバウンドチャネル — コンテンツで顧客を引き寄せる"
+      - case_id: CASE-NOTION
+        relevance: "コミュニティチャネル — ユーザー同士が広げる仕組み"
+
+  - section_id: SEC-17
+    section_name: マーケティング施策プラン
+    references:
+      - case_id: CASE-HUBSPOT
+        relevance: "インバウンドマーケティング — コンテンツ+SEO+MAの統合施策"
+      - case_id: CASE-NOTION
+        relevance: "テンプレート共有の施策 — ユーザーが施策の担い手になる"
+      - case_id: CASE-SLACK
+        relevance: "PLGマーケティング — プロダクト体験自体が最大の施策"
+
+  # ──────────────────────────────────────────────────────────
+  # G. 営業設計
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-18
+    section_name: 営業戦略
+    references:
+      - case_id: CASE-KEYENCE
+        relevance: "高収益直販営業 — 高い営業利益率を支える戦略設計"
+      - case_id: CASE-SALESFORCE
+        relevance: "SaaS営業の型 — IS/FS/CSの分業モデル"
+      - case_id: CASE-UBER
+        relevance: "成長至上の営業拡大 — スケール優先の功罪"
+
+  - section_id: SEC-19
+    section_name: 営業プロセス設計
+    references:
+      - case_id: CASE-TOYOTA-LEAN
+        relevance: "プロセス改善の王道 — カイゼンとTPS"
+      - case_id: CASE-SALESFORCE
+        relevance: "SaaS営業プロセス — ステージ管理と移行条件"
+      - case_id: CASE-ADOBE
+        relevance: "サブスク転換に伴う営業プロセスの再設計"
+
+  - section_id: SEC-20
+    section_name: 営業ツール・提案書設計
+    references:
+      - case_id: CASE-KEYENCE
+        relevance: "営業ツール整備 — 高収益を支える提案の仕組み"
+      - case_id: CASE-ADOBE
+        relevance: "価値ベースの提案 — 機能説明からROI訴求へ"
+      - case_id: CASE-RECRUIT
+        relevance: "事業提案の型 — 再現性のある提案フォーマット"
+
+  - section_id: SEC-21
+    section_name: トークスクリプト設計
+    references:
+      - case_id: CASE-KEYENCE
+        relevance: "直販営業のスクリプト — 顧客課題起点のヒアリング設計"
+      - case_id: CASE-STARBUCKS
+        relevance: "接客コミュニケーション — 体験価値を伝えるトーク"
+      - case_id: CASE-ZOOM
+        relevance: "急成長期の営業コミュニケーション — シンプルな価値訴求"
+
+  # ──────────────────────────────────────────────────────────
+  # H. カスタマーサクセス
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-22
+    section_name: CS戦略設計
+    references:
+      - case_id: CASE-SALESFORCE
+        relevance: "CS概念の創造者 — カスタマーサクセスを事業に組み込んだ先駆者"
+      - case_id: CASE-DISNEY-ROLE
+        relevance: "ゲスト体験＝CS — テーマパーク体験の設計思想"
+      - case_id: CASE-ADOBE
+        relevance: "サブスク転換後のCS — 解約防止と活用促進の設計"
+
+  - section_id: SEC-23
+    section_name: CS指標・データ分析
+    references:
+      - case_id: CASE-NETFLIX
+        relevance: "データドリブンCS — 視聴データによる解約予測と施策"
+      - case_id: CASE-SPOTIFY
+        relevance: "利用データの活用 — パーソナライズでエンゲージメント向上"
+      - case_id: CASE-MERCARI
+        relevance: "CtoC取引データの分析 — 不正防止と満足度の両立"
+
+  # ──────────────────────────────────────────────────────────
+  # I. 組織・実行体制
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-24
+    section_name: 組織設計
+    references:
+      - case_id: CASE-SPOTIFY
+        relevance: "Squadモデル — 自律型チームによるアジャイル組織設計"
+      - case_id: CASE-TOYOTA-LEAN
+        relevance: "現場主義の組織文化 — 改善が自走する仕組み"
+      - case_id: CASE-RECRUIT
+        relevance: "新規事業を生む組織 — Ring制度と起業家文化"
+
+  - section_id: SEC-25
+    section_name: 人員計画・採用戦略
+    references:
+      - case_id: CASE-AMAZON
+        relevance: "Leadership Principlesによる採用 — 文化フィットの体系化"
+      - case_id: CASE-MICROSOFT
+        relevance: "Growth Mindset採用 — 文化変革に合わせた人材転換"
+      - case_id: CASE-CYBERAGENT
+        relevance: "若手抜擢の人事戦略 — ピボットを支える人材登用"
+
+  - section_id: SEC-26
+    section_name: マネジメント手法
+    references:
+      - case_id: CASE-AMAZON
+        relevance: "リーダーシップ原則 — 14のPrincipleで率いる"
+      - case_id: CASE-MICROSOFT
+        relevance: "サティア・ナデラの文化変革 — Growth Mindset経営"
+      - case_id: CASE-UBER
+        relevance: "成長至上主義のマネジメント — カルチャー崩壊の反面教師"
+
+  - section_id: SEC-27
+    section_name: 評価・インセンティブ設計
+    references:
+      - case_id: CASE-KEYENCE
+        relevance: "高収益連動のインセンティブ — 年収と生産性の好循環"
+      - case_id: CASE-AMAZON
+        relevance: "LP評価 — リーダーシップ原則に基づく評価体系"
+      - case_id: CASE-TOYOTA-LEAN
+        relevance: "カイゼン評価 — プロセス改善に対する評価の仕組み"
+
+  # ──────────────────────────────────────────────────────────
+  # J. 管理・総括
+  # ──────────────────────────────────────────────────────────
+
+  - section_id: SEC-28
+    section_name: KPI・管理体制
+    references:
+      - case_id: CASE-TOYOTA-LEAN
+        relevance: "プロセスKPIの王道 — 結果指標とプロセス指標の両立"
+      - case_id: CASE-SALESFORCE
+        relevance: "SaaS KPIの型 — MRR, ARR, Churn, NRR"
+      - case_id: CASE-KEYENCE
+        relevance: "高収益企業のKPI — 付加価値率と営業利益率の管理"
+
+  - section_id: SEC-29
+    section_name: リスク分析・撤退ライン
+    references:
+      - case_id: CASE-WEWORK
+        relevance: "バリュエーション崩壊 — 成長の前提が崩れた時"
+      - case_id: CASE-THERANOS
+        relevance: "ビジョン先行のリスク — 実体なき事業の末路"
+      - case_id: CASE-UBER
+        relevance: "成長至上主義の代償 — 撤退判断の遅れと組織崩壊"
+
+  - section_id: SEC-30
+    section_name: 実行ロードマップ
+    references:
+      - case_id: CASE-RECRUIT
+        relevance: "新規事業の量産ロードマップ — 短期検証→拡大のサイクル"
+      - case_id: CASE-CYBERAGENT
+        relevance: "ピボットの連鎖 — タイミングを見極めた方向転換"
+      - case_id: CASE-AI-SALES-FAILURE
+        relevance: "AI導入の実行失敗 — ロードマップ不在の反面教師"

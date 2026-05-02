@@ -1,5 +1,5 @@
 {
-  "name": "@closepilot/integrations-google",
+  "name": "@bgm/integrations-google",
   "version": "0.0.1",
   "private": true,
   "main": "./index.ts",

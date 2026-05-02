@@ -1,4 +1,4 @@
-import { prisma } from '@closepilot/db'
+import { prisma } from '@bgm/db'
 import type { inferAsyncReturnType } from '@trpc/server'
 import type { FastifyRequest } from 'fastify'
 

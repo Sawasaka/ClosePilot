@@ -1,5 +1,5 @@
 {
-  "name": "@closepilot/api",
+  "name": "@bgm/api",
   "version": "0.0.1",
   "private": true,
   "scripts": {
@@ -9,10 +9,10 @@
     "type-check": "tsc --noEmit"
   },
   "dependencies": {
-    "@closepilot/db": "workspace:*",
-    "@closepilot/types": "workspace:*",
-    "@closepilot/ai": "workspace:*",
-    "@closepilot/queue": "workspace:*",
+    "@bgm/db": "workspace:*",
+    "@bgm/types": "workspace:*",
+    "@bgm/ai": "workspace:*",
+    "@bgm/queue": "workspace:*",
     "@trpc/server": "^11.1.2",
     "fastify": "^5.3.3",
     "@fastify/cors": "^10.0.2",
@@ -20,9 +20,9 @@
     "zod": "^3.24.2",
     "superjson": "^2.2.2",
     "dotenv": "^16.4.7",
-    "@closepilot/integrations-twilio": "workspace:*",
-    "@closepilot/integrations-slack": "workspace:*",
-    "@closepilot/integrations-google": "workspace:*"
+    "@bgm/integrations-twilio": "workspace:*",
+    "@bgm/integrations-slack": "workspace:*",
+    "@bgm/integrations-google": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "^22.15.2",

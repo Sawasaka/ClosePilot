@@ -1,8 +1,7 @@
 @import "tailwindcss";
 
 @theme {
-  /* ===== Intent Force — FF8 RPG Design System ===== */
-
+  /* ===== Legacy（互換性維持・段階移行用） ===== */
   --color-cp-bg:        #0a0a18;
   --color-cp-surface:   #101028;
   --color-cp-surface-2: #181838;
@@ -24,7 +23,80 @@
   --color-rank-mid: #FFDD44;
   --color-rank-low: #88BBFF;
 
-  --font-sans: 'DM Sans', -apple-system, 'Helvetica Neue', 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  /* ===== Liquid Obsidian — Cinematic Depth Design System =====
+     参照: bgm/docs/DESIGN.md
+     ・No-Line Rule: 1px border禁止、背景色シフトで境界
+     ・4層 surface（lowest→container→high→highest）でネスト深度
+     ・Glassmorphism 用の highest + backdrop-blur
+     ・primary gradient（#abc7ff → #0071e3）がシグネチャ
+  */
+
+  /* Surfaces（深度 4 段） */
+  --color-obs-surface-lowest:  #0e0e10;   /* 最深（背景の谷） */
+  --color-obs-surface:         #131315;   /* ベースキャンバス */
+  --color-obs-surface-low:     #1b1b1d;   /* 大きめコンテンツブロック */
+  --color-obs-surface-high:    #242426;   /* カード・コンテナ */
+  --color-obs-surface-highest: #353437;   /* フローティング・モーダル */
+
+  /* Text（on-surface） */
+  --color-obs-text:        #e4e2e4;
+  --color-obs-text-muted:  #8f8c90;
+  --color-obs-text-subtle: #5d5a5f;
+
+  /* Primary（chromatic） */
+  --color-obs-primary:           #abc7ff;
+  --color-obs-primary-container: #0071e3;
+  --color-obs-on-primary:        #fcfbff;
+  --color-obs-primary-dim:       #6b8bd0;
+
+  /* Secondary & Accents */
+  --color-obs-secondary-container: #2a2b30;
+  --color-obs-on-secondary:        #c7c5c9;
+
+  /* Outline（Ghost Border 用 — 透明度10-15%で使う） */
+  --color-obs-outline:         #6d6a6f;
+  --color-obs-outline-variant: #414753;
+
+  /* Status（シグナル用、抑制系） */
+  --color-obs-hot:    #ff6b6b;
+  --color-obs-middle: #ffb86b;
+  --color-obs-low:    #7ec6ff;
+
+  /* Fonts */
+  --font-display: 'Plus Jakarta Sans', -apple-system, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  --font-body:    'Inter', -apple-system, 'Hiragino Sans', 'Yu Gothic UI', sans-serif;
+  --font-sans: var(--font-body);
+
+  /* Radius（xl for cards, md for nested） */
+  --radius-obs-sm:  0.375rem;
+  --radius-obs-md:  0.75rem;
+  --radius-obs-lg:  1rem;
+  --radius-obs-xl:  1.5rem;
+  --radius-obs-2xl: 2rem;
+
+  /* Motion — Liquid ease */
+  --ease-liquid: cubic-bezier(0.4, 0, 0.2, 1);
+
+  /* Layout — サイドバー幅（折りたたみ時に 0 になる） */
+  --bgm-sidebar-w: 244px;
+
+  /* ===== Front Office (Photon Drift) — Marketing site palette =====
+     公開LP（/）と認証後のサービス本体（/dashboard 配下）で共通利用。
+     既存の obs-* と重複する色は同値で別名エイリアスとして提供する。 */
+  --color-void:        #0a0a0c;
+  --color-obsidian:    #131315;
+  --color-pitch:       #1b1b1d;
+  --color-dusk:        #242426;
+  --color-shimmer:     #353437;
+
+  --color-aurora:      #abc7ff;
+  --color-photon:      #0071e3;
+  --color-mint:        #8dffc9;
+  --color-lilac:       #c8b9ff;
+  --color-amber:       #ffcf4a;
+  --color-coral:       #ff8dcf;
+  --color-cyan:        #7ec6ff;
+  --color-agentlilac:  #d3a5ff;
 }
 
 html {
@@ -35,20 +107,32 @@ html {
   font-feature-settings: 'kern' 1, 'liga' 1;
 }
 
+/* サイドバー折りたたみ時のレイアウト調整 */
+html[data-sidebar-collapsed='true'] {
+  --bgm-sidebar-w: 0px;
+}
+
 body {
   margin: 0;
   padding: 0;
-  background-color: #0a0a18;
-  color: #EEEEFF;
+  background-color: #131315;
+  color: #e4e2e4;
   letter-spacing: -0.008em;
 }
 
 * { box-sizing: border-box; }
 *:focus { outline: none; }
+
+/* キーボードフォーカス用の控えめなアウトライン。テキスト系入力は自前のスタイルで表現するため非表示。 */
 *:focus-visible {
-  outline: 2px solid #88BBFF;
+  outline: 1px solid rgba(171,199,255,0.45);
   outline-offset: 2px;
   border-radius: 4px;
+}
+input:focus-visible,
+textarea:focus-visible,
+[contenteditable='true']:focus-visible {
+  outline: none;
 }
 
 /* FF-style scrollbar */
@@ -62,3 +146,237 @@ body {
 ::-webkit-scrollbar-thumb:hover {
   background: linear-gradient(180deg, #5588CC, #3366CC);
 }
+
+/* ==========================================================================
+   Stitch Obsidian ユーティリティ
+   Stitch生成の「Luminescent Intelligence / Obsidian Nebula」から抽出。
+   Liquid Obsidian の公式ユーティリティとして採用。
+   ========================================================================== */
+
+/* ドット格子背景（primary-container の青を薄くグリッド状に撒く） */
+.stitch-dots {
+  background-image: radial-gradient(rgba(0, 113, 227, 0.15) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Glass panel — 半透明 surface-highest + blur */
+.stitch-glass {
+  background-color: rgba(53, 52, 55, 0.6);
+  -webkit-backdrop-filter: blur(20px);
+  backdrop-filter: blur(20px);
+}
+
+/* Glow border — 青いアウターグロー＋極薄のゴーストライン */
+.stitch-glow-border {
+  box-shadow:
+    0 0 15px rgba(0, 113, 227, 0.1),
+    inset 0 0 0 1px rgba(171, 199, 255, 0.12);
+}
+
+/* Scroll container — 横スクロールのカスタムスクロールバー（細め） */
+.stitch-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+.stitch-scroll::-webkit-scrollbar-track { background: rgba(65, 71, 83, 0.05); }
+.stitch-scroll::-webkit-scrollbar-thumb {
+  background: rgba(0, 113, 227, 0.3);
+  border-radius: 10px;
+}
+.stitch-scroll::-webkit-scrollbar-thumb:hover { background: rgba(0, 113, 227, 0.5); }
+
+/* タイトルテキストグラデ（white → primary） */
+.stitch-title-gradient {
+  background: linear-gradient(135deg, #fcfbff 0%, var(--color-obs-primary) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Mythic Tier のシマー（ゲージ最高位）*/
+@keyframes gauge-shimmer {
+  0%   { transform: translateX(-120%); opacity: 0; }
+  40%  { opacity: 0.8; }
+  60%  { opacity: 0.8; }
+  100% { transform: translateX(120%); opacity: 0; }
+}
+
+/* ホバーポップオーバー用のフェードイン */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translate(-50%, -4px); }
+  to   { opacity: 1; transform: translate(-50%, 0); }
+}
+
+/* ==========================================================================
+   Front Office (Photon Drift) — Landing page utilities & animations
+   public LP (/) でのみ使用。components/landing/ 配下の TSX が参照する。
+   ========================================================================== */
+
+/* gradient text helpers */
+.fo-gradient-text {
+  background: linear-gradient(120deg, #ffffff 0%, #abc7ff 45%, #0071e3 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+.fo-gradient-text-soft {
+  background: linear-gradient(120deg, #ffffff 0%, #c8b9ff 60%, #abc7ff 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* aurora ribbon */
+@keyframes fo-aurora-drift {
+  0%   { transform: translate3d(-10%, -5%, 0) rotate(8deg); opacity: 0.5; }
+  50%  { transform: translate3d(10%, 5%, 0) rotate(8deg);   opacity: 0.9; }
+  100% { transform: translate3d(-10%, -5%, 0) rotate(8deg); opacity: 0.5; }
+}
+.fo-aurora-ribbon {
+  position: absolute; inset: -20% -10%; pointer-events: none;
+  background: linear-gradient(100deg, transparent 0%, rgba(171,199,255,0.10) 30%, rgba(0,113,227,0.14) 50%, rgba(200,185,255,0.08) 70%, transparent 100%);
+  filter: blur(40px);
+  animation: fo-aurora-drift 14s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+/* particle drift */
+@keyframes fo-drift {
+  0%   { transform: translate3d(0, 0, 0); }
+  50%  { transform: translate3d(8px, -12px, 0); }
+  100% { transform: translate3d(0, 0, 0); }
+}
+.fo-drift { animation: fo-drift 9s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+/* orb pulse */
+@keyframes fo-orb-pulse {
+  0%, 100% { transform: translateY(0) scale(1); filter: brightness(1); }
+  50%      { transform: translateY(-6px) scale(1.04); filter: brightness(1.25); }
+}
+.fo-orb-drift { animation: fo-orb-pulse 7s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+@keyframes fo-orb-active {
+  0%, 100% { transform: scale(1); box-shadow: 0 0 24px var(--orb-color), 0 0 60px var(--orb-color); }
+  50%      { transform: scale(1.15); box-shadow: 0 0 40px var(--orb-color), 0 0 100px var(--orb-color); }
+}
+.fo-orb-active { animation: fo-orb-active 1.4s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+/* cursor blink */
+@keyframes fo-blink {
+  0%, 49%   { opacity: 1; }
+  50%, 100% { opacity: 0; }
+}
+.fo-cursor-blink {
+  display: inline-block;
+  width: 2px;
+  height: 1.05em;
+  background: #abc7ff;
+  vertical-align: -0.15em;
+  animation: fo-blink 1.06s steps(1) infinite;
+  margin-left: 2px;
+}
+
+/* shimmer hover for chips */
+@keyframes fo-chip-shimmer {
+  0%   { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+.fo-chip-shimmer:hover {
+  background-image: linear-gradient(90deg, transparent 0%, rgba(171,199,255,0.18) 50%, transparent 100%);
+  background-size: 200% 100%;
+  animation: fo-chip-shimmer 1.6s linear infinite;
+}
+
+/* glass surfaces */
+.fo-glass {
+  background: rgba(53, 52, 55, 0.55);
+  backdrop-filter: blur(28px) saturate(140%);
+  -webkit-backdrop-filter: blur(28px) saturate(140%);
+}
+.fo-glass-strong {
+  background: rgba(27, 27, 29, 0.72);
+  backdrop-filter: blur(32px) saturate(140%);
+  -webkit-backdrop-filter: blur(32px) saturate(140%);
+}
+.fo-glass-rim {
+  box-shadow:
+    inset 1px 1px 0 rgba(171, 199, 255, 0.10),
+    inset -1px -1px 0 rgba(0, 0, 0, 0.25);
+}
+
+/* line pulse for db constellation */
+@keyframes fo-line-pulse {
+  0%, 100% { opacity: 0.10; }
+  50%      { opacity: 0.35; }
+}
+.fo-line-pulse { animation: fo-line-pulse 6s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+/* word stagger entry */
+@keyframes fo-word-in {
+  from { opacity: 0; transform: translateY(14px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.fo-word-in { animation: fo-word-in 600ms cubic-bezier(0.4, 0, 0.2, 1) both; }
+
+/* halo around input */
+@keyframes fo-halo {
+  0%, 100% { opacity: 0.6; }
+  50%      { opacity: 1; }
+}
+.fo-halo { animation: fo-halo 5s cubic-bezier(0.4, 0, 0.2, 1) infinite; }
+
+/* tilted glass */
+.fo-tilt-1400  { transform: perspective(1400px) rotateX(6deg) rotateY(-4deg); }
+
+/* hover lift */
+.fo-lift {
+  transition:
+    transform 400ms cubic-bezier(0.4, 0, 0.2, 1),
+    background-color 400ms cubic-bezier(0.4, 0, 0.2, 1),
+    box-shadow 400ms cubic-bezier(0.4, 0, 0.2, 1);
+}
+.fo-lift:hover { transform: translateY(-2px); box-shadow: inset 0 0 80px rgba(171, 199, 255, 0.06); }
+
+/* thin scrollbar */
+.fo-thin-scroll::-webkit-scrollbar { width: 6px; height: 6px; }
+.fo-thin-scroll::-webkit-scrollbar-thumb { background: rgba(171, 199, 255, 0.18); border-radius: 999px; }
+.fo-thin-scroll::-webkit-scrollbar-track { background: transparent; }
+
+/* recharts text */
+.fo-recharts .recharts-text {
+  fill: #c7c5c9 !important;
+  font-family: Inter, sans-serif;
+  font-size: 12px;
+}
+.fo-recharts .recharts-cartesian-axis-line,
+.fo-recharts .recharts-cartesian-axis-tick-line {
+  stroke: rgba(171, 199, 255, 0.12) !important;
+}
+
+/* sheen for agent orbs */
+@keyframes fo-spin-sheen {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* reduced motion */
+@media (prefers-reduced-motion: reduce) {
+  .fo-aurora-ribbon,
+  .fo-drift,
+  .fo-orb-drift,
+  .fo-orb-active,
+  .fo-line-pulse,
+  .fo-halo,
+  .fo-word-in,
+  .fo-cursor-blink {
+    animation: none !important;
+  }
+}
+
+/* サイドバーのチャット履歴用スクロールバー（細め・サブトル）*/
+.bgm-chat-scroll::-webkit-scrollbar { width: 6px; }
+.bgm-chat-scroll::-webkit-scrollbar-track { background: transparent; }
+.bgm-chat-scroll::-webkit-scrollbar-thumb {
+  background: rgba(143, 140, 144, 0.18);
+  border-radius: 10px;
+}
+.bgm-chat-scroll:hover::-webkit-scrollbar-thumb { background: rgba(143, 140, 144, 0.32); }
+.bgm-chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(171, 199, 255, 0.45); }
+/* Firefox */
+.bgm-chat-scroll { scrollbar-width: thin; scrollbar-color: rgba(143,140,144,0.22) transparent; }

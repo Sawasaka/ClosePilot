@@ -1,0 +1,417 @@
+'use client'
+
+import { useState, useRef, DragEvent } from 'react'
+import {
+  GripVertical,
+  Plus,
+} from 'lucide-react'
+import {
+  ObsPageShell,
+  ObsHero,
+  ObsCard,
+  ObsChip,
+  ObsButton,
+} from '@/components/obsidian'
+
+// ─── Types ─────────────────────────────────────────────────────────────────────
+
+type IntentSignal = 'Hot' | 'Middle' | 'Low'
+type StageKey =
+  | 'IS'
+  | 'MEETING_PLANNED'
+  | 'MEETING_DONE'
+  | 'PROJECT_PLANNED'
+  | 'MULTI_MEETING'
+  | 'POC'
+  | 'DECISION_MAKER_OK'
+  | 'CLOSED_WON'
+  | 'NURTURING'
+  | 'LOST_DEAL'
+  | 'CHURN'
+  | 'LOST'
+
+interface Deal {
+  id: string
+  name: string
+  company: string
+  contact: string
+  amount: number
+  intent: IntentSignal
+  owner: string
+  stage: StageKey
+  order: number
+}
+
+// ─── Mock Data ─────────────────────────────────────────────────────────────────
+
+const INITIAL_DEALS: Deal[] = [
+  { id: 'd1',  name: 'CRM導入プロジェクト',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 1200000, intent: 'Hot',    owner: '田中太郎', stage: 'IS',               order: 0 },
+  { id: 'd2',  name: 'MA連携提案',                company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 480000,  intent: 'Low',    owner: '佐藤次郎', stage: 'IS',               order: 1 },
+  { id: 'd3',  name: 'SFA刷新案件',               company: '合同会社フューチャー',    contact: '山本 佳子',  amount: 2400000, intent: 'Hot',    owner: '鈴木花子', stage: 'MEETING_DONE',     order: 0 },
+  { id: 'd4',  name: 'コンサルティング契約',       company: '株式会社グロース',        contact: '中村 理恵',  amount: 900000,  intent: 'Middle', owner: '佐藤次郎', stage: 'MEETING_DONE',     order: 1 },
+  { id: 'd5',  name: 'DX推進パッケージ',          company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3600000, intent: 'Hot',    owner: '田中太郎', stage: 'PROJECT_PLANNED',  order: 0 },
+  { id: 'd6',  name: 'セールスオートメーション導入', company: '有限会社サクセス',       contact: '小林 健太',  amount: 1800000, intent: 'Middle', owner: '鈴木花子', stage: 'POC',              order: 0 },
+  { id: 'd7',  name: 'ライトプラン契約',           company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 720000,  intent: 'Low',    owner: '田中太郎', stage: 'DECISION_MAKER_OK', order: 0 },
+  { id: 'd8',  name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 4800000, intent: 'Hot',    owner: '田中太郎', stage: 'CLOSED_WON',       order: 0 },
+  { id: 'd9',  name: 'スタータープラン再提案',     company: '株式会社スタート',        contact: '吉田 千春',  amount: 600000,  intent: 'Low',    owner: '佐藤次郎', stage: 'NURTURING',        order: 0 },
+  { id: 'd10', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1500000, intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',        order: 0 },
+  { id: 'd11', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960000,  intent: 'Middle', owner: '田中太郎', stage: 'CHURN',            order: 0 },
+  { id: 'd12', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2100000, intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',             order: 0 },
+]
+
+// ─── Stage Config ──────────────────────────────────────────────────────────────
+
+type StageTone = 'low' | 'primary' | 'middle' | 'hot' | 'neutral'
+
+interface StageConfig {
+  key: StageKey
+  label: string
+  desc: string
+  tone: StageTone
+}
+
+// ステージのトーンは Obsidian パレットに統一。
+// low (青系) = 商談以前 / primary (主色) = 進行中 / middle (黄系) = 進捗良 / hot (赤系) = 失注 / neutral = 終了
+const STAGES: StageConfig[] = [
+  { key: 'IS',                label: 'IS',              desc: '未商談の企業へアプローチ',             tone: 'low' },
+  { key: 'NURTURING',         label: 'ナーチャリング',  desc: '再アプローチで商談獲得を目指す',       tone: 'low' },
+  { key: 'MEETING_PLANNED',   label: '商談予定',        desc: '初回商談がスケジュール済みの案件',     tone: 'primary' },
+  { key: 'MEETING_DONE',      label: '商談済み',        desc: '初回商談が完了した案件',               tone: 'primary' },
+  { key: 'PROJECT_PLANNED',   label: 'PJ化予定あり',    desc: '具体的なプロジェクト化が見込める案件', tone: 'primary' },
+  { key: 'MULTI_MEETING',     label: '複数商談済み',    desc: '2回以上の商談を実施済みの案件',        tone: 'primary' },
+  { key: 'POC',               label: 'POC実施中',       desc: '検証・トライアルを実施中の案件',       tone: 'middle' },
+  { key: 'LOST_DEAL',         label: '失注',            desc: '商談後に受注に至らなかった案件',       tone: 'hot' },
+  { key: 'CLOSED_WON',        label: '受注',            desc: '契約締結が完了した案件',               tone: 'middle' },
+  { key: 'CHURN',             label: 'チャーン',        desc: '契約後に解約となった案件',             tone: 'hot' },
+  { key: 'LOST',              label: 'ロスト',          desc: '追客を完全に終了した案件',             tone: 'neutral' },
+]
+
+// ─── Style Maps ────────────────────────────────────────────────────────────────
+
+// 確度: 高(Hot) / 中(Middle) / 低(Low) → ObsChip tone
+const INTENT_TO_TONE: Record<IntentSignal, 'hot' | 'middle' | 'low'> = {
+  Hot: 'hot',
+  Middle: 'middle',
+  Low: 'low',
+}
+
+const INTENT_LABEL: Record<IntentSignal, string> = {
+  Hot: '高',
+  Middle: '中',
+  Low: '低',
+}
+
+// 担当者 → Obsidian パレットカラー
+const OWNER_COLORS: Record<string, string> = {
+  '田中太郎': 'var(--color-obs-primary)',
+  '鈴木花子': 'var(--color-obs-middle)',
+  '佐藤次郎': 'var(--color-obs-low)',
+}
+
+// ステージのトーン → 強調色（ドロップインジケータ等）
+function toneToAccent(tone: StageTone): string {
+  if (tone === 'hot') return 'var(--color-obs-hot)'
+  if (tone === 'middle') return 'var(--color-obs-middle)'
+  if (tone === 'low') return 'var(--color-obs-low)'
+  if (tone === 'primary') return 'var(--color-obs-primary)'
+  return 'var(--color-obs-text-subtle)'
+}
+
+// ─── Main Page ─────────────────────────────────────────────────────────────────
+
+const OWNERS = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
+
+export default function PipelinePage() {
+  const [deals, setDeals] = useState<Deal[]>(INITIAL_DEALS)
+  const [ownerFilter, setOwnerFilter] = useState('全員')
+  const [dragOverStage, setDragOverStage] = useState<StageKey | null>(null)
+  // ドロップ挿入位置のインデックス（そのカードの前に挿入）。-1 = 末尾
+  const [dropIndex, setDropIndex] = useState<number>(-1)
+  const dragDealId = useRef<string | null>(null)
+
+  function onCardDragStart(e: DragEvent<HTMLDivElement>, dealId: string) {
+    dragDealId.current = dealId
+    e.dataTransfer.effectAllowed = 'move'
+    e.dataTransfer.setData('text/plain', dealId)
+    requestAnimationFrame(() => {
+      (e.target as HTMLElement).style.opacity = '0.4'
+    })
+  }
+
+  function onCardDragEnd(e: DragEvent<HTMLDivElement>) {
+    (e.target as HTMLElement).style.opacity = '1'
+    dragDealId.current = null
+    setDragOverStage(null)
+    setDropIndex(-1)
+  }
+
+  // カード上をホバーした時、マウスのY座標でカードの上半分か下半分かを判定
+  function onCardDragOver(e: DragEvent<HTMLDivElement>, stageKey: StageKey, cardIndex: number) {
+    e.preventDefault()
+    e.stopPropagation()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverStage(stageKey)
+
+    const rect = e.currentTarget.getBoundingClientRect()
+    const midY = rect.top + rect.height / 2
+    if (e.clientY < midY) {
+      setDropIndex(cardIndex)
+    } else {
+      setDropIndex(cardIndex + 1)
+    }
+  }
+
+  function onColumnDragOver(e: DragEvent<HTMLDivElement>, stageKey: StageKey) {
+    e.preventDefault()
+    e.dataTransfer.dropEffect = 'move'
+    setDragOverStage(stageKey)
+    // カラムの空白エリアにドラッグ → 末尾に追加
+    setDropIndex(-1)
+  }
+
+  function onColumnDragLeave(stageKey: StageKey) {
+    setDragOverStage(prev => {
+      if (prev === stageKey) {
+        setDropIndex(-1)
+        return null
+      }
+      return prev
+    })
+  }
+
+  function onDrop(e: DragEvent<HTMLDivElement>, targetStage: StageKey) {
+    e.preventDefault()
+    e.stopPropagation()
+    const dealId = dragDealId.current || e.dataTransfer.getData('text/plain')
+    if (!dealId) return
+
+    setDeals(prev => {
+      const movingDeal = prev.find(d => d.id === dealId)
+      if (!movingDeal) return prev
+
+      // 対象ステージのカードを順序通りに取得（移動するカード自身を除く）
+      const stageDeals = prev
+        .filter(d => d.stage === targetStage && d.id !== dealId)
+        .sort((a, b) => a.order - b.order)
+
+      // 挿入位置を決定
+      const insertAt = dropIndex === -1 ? stageDeals.length : Math.min(dropIndex, stageDeals.length)
+
+      // 挿入
+      stageDeals.splice(insertAt, 0, { ...movingDeal, stage: targetStage })
+
+      // order を振り直す
+      const reordered = new Map<string, { stage: StageKey; order: number }>()
+      stageDeals.forEach((d, i) => reordered.set(d.id, { stage: targetStage, order: i }))
+
+      // 元のステージからも移動元を除外して order を振り直す
+      if (movingDeal.stage !== targetStage) {
+        const srcDeals = prev
+          .filter(d => d.stage === movingDeal.stage && d.id !== dealId)
+          .sort((a, b) => a.order - b.order)
+        srcDeals.forEach((d, i) => reordered.set(d.id, { stage: d.stage, order: i }))
+      }
+
+      return prev.map(d => {
+        const update = reordered.get(d.id)
+        if (update) return { ...d, stage: update.stage, order: update.order }
+        return d
+      })
+    })
+
+    dragDealId.current = null
+    setDragOverStage(null)
+    setDropIndex(-1)
+  }
+
+  // Group deals by stage (sorted by order)
+  const dealsByStage = STAGES.reduce<Record<StageKey, Deal[]>>((acc, s) => {
+    acc[s.key] = deals
+      .filter(d => d.stage === s.key)
+      .sort((a, b) => a.order - b.order)
+    return acc
+  }, {} as Record<StageKey, Deal[]>)
+
+  return (
+    <ObsPageShell>
+      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
+        <ObsHero
+          eyebrow="Pipeline"
+          title="パイプライン"
+          caption={`進行中・完了まで含めた案件 ${deals.length} 件。ドラッグ&ドロップで段階を移動できます。`}
+          action={
+            <div className="flex items-center gap-2">
+              <ObsChip tone="primary">{deals.length} 件</ObsChip>
+              <ObsButton variant="primary" size="md">
+                <Plus size={14} className="inline mr-1.5" strokeWidth={2.5} />
+                取引を追加
+              </ObsButton>
+            </div>
+          }
+        />
+
+        {/* ── Filter Bar ── */}
+        <div className="mb-4">
+          <ObsCard depth="low" padding="sm" radius="lg">
+            <div className="flex items-center gap-1 flex-wrap">
+              {OWNERS.map(o => {
+                const active = ownerFilter === o
+                return (
+                  <ObsButton
+                    key={o}
+                    variant={active ? 'primary' : 'ghost'}
+                    size="sm"
+                    onClick={() => setOwnerFilter(o)}
+                  >
+                    {o}
+                  </ObsButton>
+                )
+              })}
+            </div>
+          </ObsCard>
+        </div>
+
+        {/* ── Kanban Board ── */}
+        <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
+          <div className="flex gap-3" style={{ minWidth: 'max-content' }}>
+            {STAGES.map(stage => {
+              const stageDeals = dealsByStage[stage.key]
+              const isOver = dragOverStage === stage.key
+              const accent = toneToAccent(stage.tone)
+              return (
+                <div
+                  key={stage.key}
+                  className="flex flex-col w-[240px] shrink-0"
+                  onDragOver={e => onColumnDragOver(e, stage.key)}
+                  onDragLeave={() => onColumnDragLeave(stage.key)}
+                  onDrop={e => onDrop(e, stage.key)}
+                >
+                  {/* Column Header */}
+                  <div className="mb-3">
+                    <ObsCard
+                      depth={isOver ? 'highest' : 'high'}
+                      padding="sm"
+                      radius="lg"
+                    >
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <div
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{ backgroundColor: accent }}
+                          />
+                          <span
+                            className="text-[13px] font-semibold tracking-[-0.01em]"
+                            style={{ color: 'var(--color-obs-text)' }}
+                          >
+                            {stage.label}
+                          </span>
+                        </div>
+                        <ObsChip tone={stage.tone === 'neutral' ? 'neutral' : stage.tone}>
+                          {stageDeals.length}
+                        </ObsChip>
+                      </div>
+                      <p
+                        className="text-[10px] mt-1.5 leading-tight"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        {stage.desc}
+                      </p>
+                    </ObsCard>
+                  </div>
+
+                  {/* Drop zone + Cards */}
+                  <div
+                    className="flex flex-col gap-2 flex-1 rounded-[var(--radius-obs-md)] p-1 -m-1 transition-colors duration-150"
+                    style={{
+                      backgroundColor: isOver ? 'var(--color-obs-surface-low)' : 'transparent',
+                      minHeight: 60,
+                    }}
+                  >
+                    {stageDeals.map((deal, cardIdx) => {
+                      const ownerColor = OWNER_COLORS[deal.owner] ?? 'var(--color-obs-text-subtle)'
+                      const dimmed = ownerFilter !== '全員' && deal.owner !== ownerFilter
+                      const showDropBefore = isOver && dropIndex === cardIdx && dragDealId.current !== deal.id
+                      const showDropAfter = isOver && dropIndex === cardIdx + 1 && cardIdx === stageDeals.length - 1 && dragDealId.current !== deal.id
+                      return (
+                        <div key={deal.id}>
+                          {/* Drop indicator line - before */}
+                          {showDropBefore && (
+                            <div className="flex items-center gap-1 py-0.5 mb-1">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
+                              <div className="flex-1 h-[2px] rounded-full" style={{ backgroundColor: accent }} />
+                            </div>
+                          )}
+                          <div
+                            draggable
+                            onDragStart={e => onCardDragStart(e, deal.id)}
+                            onDragEnd={onCardDragEnd}
+                            onDragOver={e => onCardDragOver(e, stage.key, cardIdx)}
+                            className="cursor-grab active:cursor-grabbing select-none transition-all duration-150 hover:-translate-y-0.5"
+                            style={{
+                              opacity: dimmed ? 0.35 : 1,
+                              pointerEvents: dimmed ? 'none' : 'auto',
+                              transitionTimingFunction: 'var(--ease-liquid)',
+                            }}
+                          >
+                            <ObsCard depth="high" padding="sm" radius="lg">
+                              {/* Handle + Intent (確度) */}
+                              <div className="flex items-start justify-between mb-2">
+                                <GripVertical size={13} style={{ color: 'var(--color-obs-text-subtle)' }} className="mt-0.5 -ml-0.5 shrink-0" />
+                                <ObsChip tone={INTENT_TO_TONE[deal.intent]}>
+                                  {INTENT_LABEL[deal.intent]}
+                                </ObsChip>
+                              </div>
+                              <p
+                                className="text-[13px] font-semibold leading-snug mb-3 truncate"
+                                style={{ color: 'var(--color-obs-text)' }}
+                              >
+                                {deal.name}
+                              </p>
+                              <div className="flex items-center gap-1.5">
+                                <div
+                                  className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+                                  style={{ backgroundColor: ownerColor }}
+                                >
+                                  <span
+                                    className="text-[9px] font-bold"
+                                    style={{ color: 'var(--color-obs-on-primary)' }}
+                                  >
+                                    {deal.owner[0]}
+                                  </span>
+                                </div>
+                                <span
+                                  className="text-[12px] font-medium"
+                                  style={{ color: 'var(--color-obs-text-muted)' }}
+                                >
+                                  {deal.owner}
+                                </span>
+                              </div>
+                            </ObsCard>
+                          </div>
+                          {/* Drop indicator line - after last card */}
+                          {showDropAfter && (
+                            <div className="flex items-center gap-1 py-0.5 mt-1">
+                              <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
+                              <div className="flex-1 h-[2px] rounded-full" style={{ backgroundColor: accent }} />
+                            </div>
+                          )}
+                        </div>
+                      )
+                    })}
+                    {/* 空のカラムへのドロップ時の末尾インジケーター */}
+                    {isOver && stageDeals.length === 0 && (
+                      <div className="flex items-center gap-1 py-0.5">
+                        <div className="w-2 h-2 rounded-full" style={{ backgroundColor: accent }} />
+                        <div className="flex-1 h-[2px] rounded-full" style={{ backgroundColor: accent }} />
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )
+            })}
+          </div>
+        </div>
+      </div>
+    </ObsPageShell>
+  )
+}

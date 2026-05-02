@@ -13,7 +13,7 @@
  *   pnpm enrich:companies --stale-days=30    # 30日以上更新されていない企業
  *
  * 前提環境変数:
- *   DATABASE_URL          … closepilot本番DB
+ *   DATABASE_URL          … bgm本番DB
  *   ANTHROPIC_API_KEY     … Claude Haiku 4.5用
  *   SERPER_API_KEY        … Web検索
  *   JINA_API_KEY          … Webページ本文抽出（オプション、無料枠あり）

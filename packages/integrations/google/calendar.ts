@@ -23,7 +23,7 @@ export async function createCalendarEvent(
       conferenceData: params.addMeet
         ? {
             createRequest: {
-              requestId: `closepilot-${Date.now()}`,
+              requestId: `bgm-${Date.now()}`,
               conferenceSolutionKey: { type: 'hangoutsMeet' },
             },
           }

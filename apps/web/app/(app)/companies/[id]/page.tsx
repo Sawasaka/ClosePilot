@@ -1,4 +1,4 @@
-import { prisma } from '@closepilot/db'
+import { prisma } from '@bgm/db'
 import CompanyDetailClient from './CompanyDetailClient'
 
 // SSR：リクエスト時にサーバー側でデータ取得 → HTMLと一緒に返す（HubSpot風の瞬時表示）

@@ -2,12 +2,12 @@
 
 import { motion } from 'framer-motion'
 import { CheckCircle2, Circle, ArrowRight } from 'lucide-react'
-
-const FF = {
-  card: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-  border: '1px solid #2244AA',
-  shadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)',
-}
+import {
+  ObsCard,
+  ObsHero,
+  ObsPageShell,
+  ObsSectionHeader,
+} from '@/components/obsidian'
 
 const STAGES = [
   { label: '新人', done: true },
@@ -27,72 +27,174 @@ const MILESTONES = [
 
 export default function RoadmapPage() {
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-[21px] font-bold text-[#EEEEFF] tracking-[0.01em]">ロードマップ</h1>
-        <p className="text-[13px] text-[#AABBDD] mt-0.5">キャリアパスとマイルストーン</p>
-      </div>
+    <ObsPageShell>
+      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
+        <ObsHero
+          eyebrow="Career Roadmap"
+          title="ロードマップ"
+          caption="キャリアパスとマイルストーン"
+        />
 
-      {/* Career Stage Timeline */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-        className="rounded-[8px] p-5" style={{ background: FF.card, border: FF.border, boxShadow: FF.shadow }}>
-        <h3 className="text-[13px] font-bold text-[#EEEEFF] mb-5 tracking-[0.02em]">キャリアステージ</h3>
-        <div className="flex items-center gap-0">
-          {STAGES.map((stage, i) => (
-            <div key={stage.label} className="flex items-center flex-1">
-              <div className="flex flex-col items-center flex-1">
-                <div className="w-10 h-10 rounded-full flex items-center justify-center mb-2"
-                  style={{
-                    background: stage.done ? 'linear-gradient(135deg, #2244AA, #4488FF)' : stage.current ? 'linear-gradient(135deg, #FFDD44, #FF8844)' : 'rgba(34,68,170,0.15)',
-                    border: stage.current ? '2px solid #FFDD44' : stage.done ? '2px solid #4488FF' : '2px solid rgba(34,68,170,0.3)',
-                    boxShadow: stage.current ? '0 0 16px rgba(255,221,68,0.4)' : stage.done ? '0 0 8px rgba(68,136,255,0.3)' : 'none',
-                  }}>
-                  {stage.done ? <CheckCircle2 size={16} className="text-white" /> : <span className="text-[11px] font-bold" style={{ color: stage.current ? '#1a1a2e' : '#4466AA' }}>{i + 1}</span>}
+        {/* ── Career Stage Timeline ── */}
+        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}>
+          <ObsCard depth="high" padding="lg" radius="xl">
+            <ObsSectionHeader title="キャリアステージ" />
+            <div className="flex items-center gap-0">
+              {STAGES.map((stage, i) => (
+                <div key={stage.label} className="flex items-center flex-1">
+                  <div className="flex flex-col items-center flex-1">
+                    <div
+                      className="w-11 h-11 rounded-full flex items-center justify-center mb-2.5"
+                      style={{
+                        background: stage.done
+                          ? 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
+                          : stage.current
+                            ? 'linear-gradient(135deg, var(--color-obs-middle) 0%, var(--color-obs-hot) 100%)'
+                            : 'var(--color-obs-surface-high)',
+                      }}
+                    >
+                      {stage.done ? (
+                        <CheckCircle2 size={18} style={{ color: 'var(--color-obs-on-primary)' }} />
+                      ) : (
+                        <span
+                          className="text-[12px] font-semibold"
+                          style={{
+                            color: stage.current
+                              ? 'var(--color-obs-on-primary)'
+                              : 'var(--color-obs-text-subtle)',
+                          }}
+                        >
+                          {i + 1}
+                        </span>
+                      )}
+                    </div>
+                    <span
+                      className="text-[11.5px] font-semibold text-center"
+                      style={{
+                        color: stage.current
+                          ? 'var(--color-obs-middle)'
+                          : stage.done
+                            ? 'var(--color-obs-primary)'
+                            : 'var(--color-obs-text-subtle)',
+                      }}
+                    >
+                      {stage.label}
+                    </span>
+                  </div>
+                  {i < STAGES.length - 1 && (
+                    <div
+                      className="w-8 h-0.5 -mt-6 shrink-0 rounded-full"
+                      style={{
+                        backgroundColor: stage.done
+                          ? 'var(--color-obs-primary)'
+                          : 'var(--color-obs-surface-high)',
+                      }}
+                    />
+                  )}
                 </div>
-                <span className="text-[11px] font-semibold text-center" style={{ color: stage.current ? '#FFDD44' : stage.done ? '#88BBFF' : '#4466AA' }}>{stage.label}</span>
-              </div>
-              {i < STAGES.length - 1 && (
-                <div className="w-8 h-0.5 -mt-5 shrink-0" style={{ background: stage.done ? '#4488FF' : 'rgba(34,68,170,0.2)' }} />
-              )}
+              ))}
             </div>
-          ))}
-        </div>
-      </motion.div>
+          </ObsCard>
+        </motion.div>
 
-      {/* Next Milestone */}
-      {(() => {
-        const next = MILESTONES.find(m => m.status === 'active')
-        if (!next) return null
-        return (
-          <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }}
-            className="rounded-[8px] p-5 relative overflow-hidden" style={{ background: 'linear-gradient(135deg, rgba(255,221,68,0.08), rgba(255,136,68,0.05))', border: '1px solid rgba(255,221,68,0.2)', boxShadow: '0 0 20px rgba(255,221,68,0.08)' }}>
-            <p className="text-[10px] font-bold text-[#FF8844] uppercase tracking-[0.1em] mb-1">NEXT MILESTONE</p>
-            <p className="text-[16px] font-bold text-[#FFDD44]">{next.title}</p>
-            <p className="text-[13px] text-[#CC8833] mt-1">{next.condition}</p>
-          </motion.div>
-        )
-      })()}
-
-      {/* Milestones List */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
-        className="rounded-[8px] p-5" style={{ background: FF.card, border: FF.border, boxShadow: FF.shadow }}>
-        <h3 className="text-[13px] font-bold text-[#EEEEFF] mb-4 tracking-[0.02em]">マイルストーン一覧</h3>
-        <div className="space-y-0">
-          {MILESTONES.map((ms, i) => (
-            <motion.div key={ms.title} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.15 + i * 0.04 }}
-              className="flex items-center gap-3 py-3" style={{ borderBottom: i < MILESTONES.length - 1 ? '1px solid rgba(34,68,170,0.15)' : 'none', opacity: ms.status === 'locked' ? 0.5 : 1 }}>
-              {ms.status === 'done' ? <CheckCircle2 size={16} style={{ color: '#44FF88' }} className="shrink-0" />
-                : ms.status === 'active' ? <ArrowRight size={16} style={{ color: '#FFDD44' }} className="shrink-0" />
-                : <Circle size={16} style={{ color: '#2244AA' }} className="shrink-0" />}
-              <div className="flex-1">
-                <p className="text-[13px] font-semibold" style={{ color: ms.status === 'done' ? '#44FF88' : ms.status === 'active' ? '#FFDD44' : '#4466AA' }}>{ms.title}</p>
-                <p className="text-[11px] text-[#AABBDD] mt-0.5">{ms.condition}</p>
-              </div>
-              {ms.date && <span className="text-[11px] text-[#99AACC] tabular-nums shrink-0">{ms.date}</span>}
+        {/* ── Next Milestone ── */}
+        {(() => {
+          const next = MILESTONES.find(m => m.status === 'active')
+          if (!next) return null
+          return (
+            <motion.div
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.08 }}
+              className="mt-6"
+            >
+              <ObsCard depth="high" padding="lg" radius="xl" className="relative overflow-hidden">
+                <div
+                  className="absolute -top-10 -right-10 w-40 h-40 rounded-full pointer-events-none"
+                  style={{
+                    background:
+                      'radial-gradient(circle, var(--color-obs-middle) 0%, transparent 70%)',
+                    opacity: 0.15,
+                  }}
+                />
+                <p
+                  className="text-[11px] font-semibold uppercase tracking-[0.12em] mb-1.5"
+                  style={{ color: 'var(--color-obs-middle)' }}
+                >
+                  NEXT MILESTONE
+                </p>
+                <p
+                  className="font-[family-name:var(--font-display)] text-[20px] font-bold tracking-[-0.02em]"
+                  style={{ color: 'var(--color-obs-text)' }}
+                >
+                  {next.title}
+                </p>
+                <p className="text-[13px] mt-1.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  {next.condition}
+                </p>
+              </ObsCard>
             </motion.div>
-          ))}
-        </div>
-      </motion.div>
-    </div>
+          )
+        })()}
+
+        {/* ── Milestones List ── */}
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.12 }}
+          className="mt-6"
+        >
+          <ObsCard depth="high" padding="lg" radius="xl">
+            <ObsSectionHeader title="マイルストーン一覧" />
+            <div className="space-y-0">
+              {MILESTONES.map((ms, i) => (
+                <motion.div
+                  key={ms.title}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.15 + i * 0.04 }}
+                  className="flex items-center gap-3 py-3.5"
+                  style={{ opacity: ms.status === 'locked' ? 0.5 : 1 }}
+                >
+                  {ms.status === 'done' ? (
+                    <CheckCircle2 size={17} style={{ color: 'var(--color-obs-low)' }} className="shrink-0" />
+                  ) : ms.status === 'active' ? (
+                    <ArrowRight size={17} style={{ color: 'var(--color-obs-middle)' }} className="shrink-0" />
+                  ) : (
+                    <Circle size={17} style={{ color: 'var(--color-obs-text-subtle)' }} className="shrink-0" />
+                  )}
+                  <div className="flex-1">
+                    <p
+                      className="text-[13.5px] font-semibold"
+                      style={{
+                        color:
+                          ms.status === 'done'
+                            ? 'var(--color-obs-low)'
+                            : ms.status === 'active'
+                              ? 'var(--color-obs-middle)'
+                              : 'var(--color-obs-text-subtle)',
+                      }}
+                    >
+                      {ms.title}
+                    </p>
+                    <p className="text-[11.5px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                      {ms.condition}
+                    </p>
+                  </div>
+                  {ms.date && (
+                    <span
+                      className="text-[11.5px] tabular-nums shrink-0"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      {ms.date}
+                    </span>
+                  )}
+                </motion.div>
+              ))}
+            </div>
+          </ObsCard>
+        </motion.div>
+      </div>
+    </ObsPageShell>
   )
 }

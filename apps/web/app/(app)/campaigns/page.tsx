@@ -2,26 +2,35 @@
 
 import { motion } from 'framer-motion'
 import { Send } from 'lucide-react'
+import { ObsPageShell, ObsHero, ObsCard } from '@/components/obsidian'
 
 export default function CampaignsPage() {
   return (
-    <div className="space-y-5">
-      <div>
-        <h1 className="text-[21px] font-bold text-[#EEEEFF] tracking-[0.01em]">配信管理</h1>
-        <p className="text-[13px] text-[#AABBDD] mt-0.5">メールテンプレート・配信履歴を管理</p>
-      </div>
+    <ObsPageShell>
+      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
+        {/* ── Hero ── */}
+        <ObsHero
+          eyebrow="Campaigns"
+          title="配信管理"
+          caption="メールテンプレート・配信履歴を管理"
+        />
 
-      <motion.div
-        initial={{ opacity: 0, y: 8 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ duration: 0.3 }}
-        className="rounded-[8px] p-8 text-center"
-        style={{ background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)', border: '1px solid #2244AA', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
-      >
-        <Send size={32} className="mx-auto mb-3" style={{ color: '#3355AA' }} />
-        <p className="text-[15px] font-semibold text-[#EEEEFF]">配信管理機能は準備中です</p>
-        <p className="text-[13px] text-[#AABBDD] mt-1">メールテンプレートの作成・配信履歴の確認ができるようになります</p>
-      </motion.div>
-    </div>
+        <motion.div
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.3 }}
+        >
+          <ObsCard depth="low" padding="lg" radius="xl" className="text-center">
+            <Send size={32} className="mx-auto mb-3" style={{ color: 'var(--color-obs-text-subtle)' }} />
+            <p className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+              配信管理機能は準備中です
+            </p>
+            <p className="text-[13px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+              メールテンプレートの作成・配信履歴の確認ができるようになります
+            </p>
+          </ObsCard>
+        </motion.div>
+      </div>
+    </ObsPageShell>
   )
 }

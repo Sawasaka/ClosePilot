@@ -4,13 +4,21 @@ import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useRouter } from 'next/navigation'
 import { Phone, Mail, Briefcase, ChevronRight, User, Building2, Pencil, X, Check, RotateCcw, AlertCircle, Calendar, CalendarClock, CheckSquare } from 'lucide-react'
+import {
+  ObsPageShell,
+  ObsHero,
+  ObsCard,
+  ObsChip,
+  ObsButton,
+  ObsInput,
+} from '@/components/obsidian'
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
 const REPS = [
-  { id: 'u1', name: '田中太郎', color: '#0071E3' },
-  { id: 'u2', name: '鈴木花子', color: '#34C759' },
-  { id: 'u3', name: '佐藤次郎', color: '#FF9F0A' },
+  { id: 'u1', name: '田中太郎', color: 'var(--color-obs-primary)' },
+  { id: 'u2', name: '鈴木花子', color: 'var(--color-obs-middle)' },
+  { id: 'u3', name: '佐藤次郎', color: 'var(--color-obs-low)' },
 ]
 
 type TaskCategory = 'contact' | 'deal'
@@ -28,13 +36,13 @@ const INITIAL_OVERDUE: Task[] = [
   { id: 'o4', type: 'other', company: '株式会社テクノリード', person: '',           rank: 'A', urgent: true,  owner: 'u1', category: 'deal', linkTo: '/deals/d1', memo: '契約書送付漏れ', dueAt: '2026-03-23', remindAt: '', completed: false },
 ]
 
-type RankBadgeStyle = { gradient: string; glow: string; color: string }
-const RANK_BADGE_STYLES: Record<string, RankBadgeStyle> = {
-  A: { gradient: 'linear-gradient(135deg, #FF6B35 0%, #FF3B30 55%, #CC1A00 100%)', glow: '0 2px 8px rgba(255,59,48,0.5)',   color: '#fff' },
-  B: { gradient: 'linear-gradient(135deg, #FFE040 0%, #FFD60A 55%, #FF9F0A 100%)', glow: '0 2px 7px rgba(255,214,10,0.5)',  color: '#7B4000' },
-  C: { gradient: 'linear-gradient(135deg, #5AC8FA 0%, #32ADE6 55%, #0071E3 100%)', glow: '0 2px 6px rgba(50,173,230,0.45)', color: '#fff' },
+// ランク → ObsChip tone (A=hot, B=middle, C=low)
+function rankToTone(rank: string): 'hot' | 'middle' | 'low' | 'neutral' {
+  if (rank === 'A') return 'hot'
+  if (rank === 'B') return 'middle'
+  if (rank === 'C') return 'low'
+  return 'neutral'
 }
-const DEFAULT_RANK_BADGE: RankBadgeStyle = { gradient: 'rgba(34,68,170,0.2)', glow: 'none', color: '#CCDDF0' }
 
 // コンタクトのNext Actionと完全連動した5種類
 const TYPE_OPTIONS: { key: string; label: string }[] = [
@@ -45,47 +53,15 @@ const TYPE_OPTIONS: { key: string; label: string }[] = [
   { key: 'followup', label: 'フォロー' },
 ]
 
-interface TaskTypeGameStyle {
-  gradient: string
-  glow: string
-  color: string
-  borderColor: string
-  textShadow: string
+// タスク種別 → アイコン
+const TASK_TYPE_ICON: Record<string, React.ElementType> = {
+  call: Phone,
+  email: Mail,
+  meeting: Briefcase,
+  wait: Briefcase,
+  followup: Briefcase,
+  other: Briefcase,
 }
-
-const TASK_TYPE_GAME_STYLES: Record<string, TaskTypeGameStyle> = {
-  email: {
-    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
-    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(50,20,100,0.6)',
-  },
-  call: {
-    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
-    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(0,40,90,0.6)',
-  },
-  meeting: {
-    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
-    glow: '0 0 14px rgba(52,199,89,0.85), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#053D24', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-  },
-  wait: {
-    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
-    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-    color: '#5B2E00', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-  },
-  followup: {
-    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
-    glow: '0 0 14px rgba(236,72,153,0.85), 0 0 5px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(110,15,60,0.6)',
-  },
-  other: {
-    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
-    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#2C2C2E', borderColor: 'rgba(255,255,255,0.35)', textShadow: 'none',
-  },
-}
-const CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
 
 function formatDueDate(d: string): string {
   if (!d) return ''
@@ -95,136 +71,114 @@ function formatDueDate(d: string): string {
 
 // ─── Task Row ────────────────────────────────────────────────────────────────
 
-// ─── タスク種別ごとの派手なアイコンスタイル ──────────────────────────────────
-
-interface TaskTypeStyle {
-  Icon: React.ElementType
-  gradient: string
-  glow: string
-}
-
-const TASK_TYPE_STYLES: Record<string, TaskTypeStyle> = {
-  call: {
-    Icon: Phone,
-    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
-    glow: '0 0 16px rgba(50,173,230,0.85), 0 0 6px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-  },
-  email: {
-    Icon: Mail,
-    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
-    glow: '0 0 16px rgba(139,92,246,0.85), 0 0 6px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-  },
-  meeting: {
-    Icon: Briefcase,
-    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
-    glow: '0 0 16px rgba(52,199,89,0.85), 0 0 6px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-  },
-  wait: {
-    Icon: Briefcase,
-    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
-    glow: '0 0 16px rgba(255,159,10,0.85), 0 0 6px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-  },
-  followup: {
-    Icon: Briefcase,
-    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
-    glow: '0 0 16px rgba(236,72,153,0.85), 0 0 6px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-  },
-  other: {
-    Icon: Briefcase,
-    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
-    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
-  },
-}
-
-const COMPLETED_TASK_STYLE: TaskTypeStyle = {
-  Icon: Check,
-  gradient: 'linear-gradient(135deg, #4A5568 0%, #2D3748 100%)',
-  glow: '0 0 8px rgba(52,199,89,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
-}
-
 function TaskRow({ task, isLast, onComplete, onRestore, onEdit }: {
   task: Task; isLast: boolean
   onComplete: (id: string) => void; onRestore: (id: string) => void; onEdit: (task: Task) => void
 }) {
   const router = useRouter()
-  const rank = RANK_BADGE_STYLES[task.rank] ?? DEFAULT_RANK_BADGE
-  const taskStyle = task.completed ? COMPLETED_TASK_STYLE : (TASK_TYPE_STYLES[task.type] ?? TASK_TYPE_STYLES.other!)
-  const TypeIcon = taskStyle.Icon
+  const TypeIcon = TASK_TYPE_ICON[task.type] ?? Briefcase
   const daysOverdue = Math.max(0, Math.floor((new Date('2026-03-28').getTime() - new Date(task.dueAt).getTime()) / 86400000))
 
   return (
     <div
       onClick={() => !task.completed && router.push(task.linkTo)}
-      className={`flex items-center gap-3 px-5 py-3 transition-colors ${task.completed ? '' : 'hover:bg-[rgba(136,187,255,0.04)] cursor-pointer'}`}
-      style={{ borderBottom: isLast ? 'none' : '1px solid rgba(34,68,170,0.2)' }}
+      className={`flex items-center gap-3 px-5 py-3 transition-colors ${task.completed ? '' : 'cursor-pointer'}`}
+      style={{
+        backgroundColor: 'transparent',
+        transitionTimingFunction: 'var(--ease-liquid)',
+        ...(isLast ? {} : { boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface-low)' }),
+      }}
+      onMouseOver={(e) => {
+        if (!task.completed) (e.currentTarget as HTMLDivElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+      }}
+      onMouseOut={(e) => {
+        (e.currentTarget as HTMLDivElement).style.backgroundColor = 'transparent'
+      }}
     >
       <div
         className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
         style={{
-          background: taskStyle.gradient,
-          boxShadow: taskStyle.glow,
-          border: '1.5px solid rgba(255,255,255,0.4)',
+          backgroundColor: task.completed ? 'var(--color-obs-surface-high)' : 'var(--color-obs-surface-highest)',
           opacity: task.completed ? 0.55 : 1,
         }}
       >
-        <TypeIcon
-          size={15}
-          style={{ color: '#FFFFFF', filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' }}
-          strokeWidth={2.5}
-        />
+        {task.completed ? (
+          <Check size={15} style={{ color: 'var(--color-obs-text-muted)' }} strokeWidth={2.5} />
+        ) : (
+          <TypeIcon size={15} style={{ color: 'var(--color-obs-primary)' }} strokeWidth={2.2} />
+        )}
       </div>
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">
           {task.completed && (
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#34C759] bg-[rgba(52,199,89,0.1)] px-1.5 py-0.5 rounded-[4px] shrink-0">
+            <ObsChip tone="low" className="shrink-0">
               <Check size={9} strokeWidth={3} />完了
-            </span>
+            </ObsChip>
           )}
-          <span className="text-[13px] font-medium truncate"
-            style={{ color: task.completed ? '#4466AA' : '#EEEEFF', textDecoration: task.completed ? 'line-through' : 'none' }}>
+          <span
+            className="text-[13px] font-medium truncate"
+            style={{
+              color: task.completed ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-text)',
+              textDecoration: task.completed ? 'line-through' : 'none',
+            }}
+          >
             {task.person || task.company}
           </span>
           {!task.completed && (
-            <span className="inline-flex items-center justify-center rounded-[4px] text-[10px] font-bold shrink-0"
-              style={{ width: 18, height: 18, background: rank.gradient, boxShadow: rank.glow, color: rank.color }}>
+            <ObsChip tone={rankToTone(task.rank)} className="shrink-0">
               {task.rank}
-            </span>
+            </ObsChip>
           )}
         </div>
-        <p className="text-[12px] mt-0.5" style={{ color: task.completed ? '#4466AA' : '#7788AA' }}>{task.company}</p>
+        <p
+          className="text-[12px] mt-0.5"
+          style={{ color: task.completed ? 'var(--color-obs-text-subtle)' : 'var(--color-obs-text-muted)' }}
+        >
+          {task.company}
+          {task.memo && <span className="ml-1.5"> · {task.memo}</span>}
+        </p>
       </div>
 
       {/* 期日 + 超過日数（右寄り） */}
       {!task.completed && task.dueAt && (
         <div className="flex items-center gap-2 shrink-0">
-          <span className="inline-flex items-center gap-1 text-[11px] font-bold text-[#FF3B30] bg-[rgba(255,59,48,0.14)] px-2.5 py-1 rounded-[6px] tabular-nums"
-            style={{ border: '1px solid rgba(255,59,48,0.35)', boxShadow: '0 0 8px rgba(255,59,48,0.2)' }}>
+          <ObsChip tone="hot" className="tabular-nums">
             <Calendar size={10} strokeWidth={2.5} />
             {formatDueDate(task.dueAt)}
-          </span>
-          <span className="text-[10px] font-bold text-[#FF3B30] bg-[rgba(255,59,48,0.10)] px-1.5 py-0.5 rounded-[4px] shrink-0 whitespace-nowrap"
-            style={{ border: '1px solid rgba(255,59,48,0.25)' }}>
+          </ObsChip>
+          <ObsChip tone="hot" className="whitespace-nowrap">
             {daysOverdue}日超過
-          </span>
+          </ObsChip>
         </div>
       )}
 
       {task.completed ? (
-        <button onClick={e => { e.stopPropagation(); onRestore(task.id) }}
-          className="shrink-0 h-[26px] px-2.5 flex items-center gap-1 text-[11px] font-medium text-[#CCDDF0] rounded-[6px] hover:bg-[rgba(136,187,255,0.06)] transition-colors">
-          <RotateCcw size={11} />戻す
-        </button>
+        <ObsButton
+          variant="ghost"
+          size="sm"
+          onClick={() => onRestore(task.id)}
+          className="shrink-0"
+        >
+          <RotateCcw size={11} className="mr-1 inline" />
+          戻す
+        </ObsButton>
       ) : (
         <div className="flex items-center gap-2 shrink-0">
-          <button onClick={e => { e.stopPropagation(); onEdit(task) }}
-            className="h-[26px] px-2.5 flex items-center gap-1 text-[11px] font-medium text-[#CCDDF0] rounded-[6px] hover:bg-[rgba(136,187,255,0.06)] transition-colors">
-            <Pencil size={11} />編集
-          </button>
-          <button onClick={e => { e.stopPropagation(); onComplete(task.id) }}
-            className="h-[26px] px-2.5 text-[11px] font-semibold text-[#34C759] rounded-[6px] hover:bg-[rgba(52,199,89,0.1)] transition-colors"
-            style={{ border: '1px solid rgba(52,199,89,0.3)' }}>
+          <ObsButton
+            variant="ghost"
+            size="sm"
+            onClick={() => onEdit(task)}
+          >
+            <Pencil size={11} className="mr-1 inline" />
+            編集
+          </ObsButton>
+          <ObsButton
+            variant="primary"
+            size="sm"
+            onClick={() => onComplete(task.id)}
+          >
             完了
-          </button>
+          </ObsButton>
         </div>
       )}
     </div>
@@ -232,7 +186,6 @@ function TaskRow({ task, isLast, onComplete, onRestore, onEdit }: {
 }
 
 // ─── Edit Task Modal ─────────────────────────────────────────────────────────
-// コンタクトのNext Actionと完全に連動した編集UI
 
 function EditTaskModal({ task, onClose, onSave }: { task: Task; onClose: () => void; onSave: (t: Task) => void }) {
   const [type, setType] = useState(task.type)
@@ -245,91 +198,78 @@ function EditTaskModal({ task, onClose, onSave }: { task: Task; onClose: () => v
     <motion.div className="fixed inset-0 z-50 flex items-center justify-center p-4" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
       <motion.div
-        className="relative w-full max-w-[460px] rounded-[14px] overflow-hidden"
+        className="relative w-full max-w-[460px] rounded-[var(--radius-obs-xl)] overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-          border: '1px solid #2244AA',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 32px rgba(85,119,221,0.2), inset 0 1px 0 rgba(136,187,255,0.08)',
+          backgroundColor: 'var(--color-obs-surface-highest)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
         }}
         initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 8 }}
         transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
         onClick={e => e.stopPropagation()}>
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(34,68,170,0.3)' }}>
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface-low)' }}
+        >
           <div className="flex items-center gap-2">
-            <CalendarClock size={14} style={{ color: '#88BBFF' }} />
-            <h2 className="text-[16px] font-bold text-[#EEEEFF]">
+            <CalendarClock size={14} style={{ color: 'var(--color-obs-primary)' }} />
+            <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-obs-text)' }}>
               {isContactLinked ? 'ネクストアクション編集' : 'タスク編集'}
             </h2>
             {isContactLinked && (
-              <span
-                className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[9px] font-bold whitespace-nowrap"
-                style={{
-                  background: 'linear-gradient(135deg, rgba(136,187,255,0.18) 0%, rgba(85,119,221,0.12) 100%)',
-                  color: '#88BBFF',
-                  border: '1px solid rgba(136,187,255,0.35)',
-                  boxShadow: '0 0 8px rgba(136,187,255,0.2)',
-                }}
-                title="このタスクはコンタクトのネクストアクションと連動しています"
-              >
+              <ObsChip tone="primary">
                 <CheckSquare size={9} />
                 コンタクト連動
-              </span>
+              </ObsChip>
             )}
           </div>
-          <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(136,187,255,0.08)] transition-colors">
-            <X size={16} className="text-[#CCDDF0]" />
+          <button
+            onClick={onClose}
+            className="p-1 rounded-full transition-colors hover:bg-[var(--color-obs-surface-high)]"
+          >
+            <X size={16} style={{ color: 'var(--color-obs-text-muted)' }} />
           </button>
         </div>
 
         <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
           {/* 紐付け先 */}
-          <div
-            className="rounded-[8px] px-3 py-2.5 flex items-center gap-2"
-            style={{
-              background: 'rgba(16,16,40,0.6)',
-              border: '1px solid rgba(34,68,170,0.4)',
-            }}
-          >
-            <User size={12} className="text-[#88BBFF] shrink-0" />
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] font-bold text-[#88BBFF] uppercase tracking-[0.04em]">紐付け先</p>
-              <p className="text-[12px] font-medium text-[#EEEEFF] truncate">
-                {task.person ? `${task.person} · ` : ''}{task.company}
-              </p>
+          <ObsCard depth="low" padding="sm" radius="md">
+            <div className="flex items-center gap-2">
+              <User size={12} style={{ color: 'var(--color-obs-primary)' }} className="shrink-0" />
+              <div className="flex-1 min-w-0">
+                <p
+                  className="text-[10px] font-bold uppercase tracking-[0.08em]"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                >
+                  紐付け先
+                </p>
+                <p className="text-[12px] font-medium truncate" style={{ color: 'var(--color-obs-text)' }}>
+                  {task.person ? `${task.person} · ` : ''}{task.company}
+                </p>
+              </div>
             </div>
-          </div>
+          </ObsCard>
 
           {/* 種別 */}
           <div>
-            <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 flex items-center gap-1">
+            <label
+              className="text-[11px] font-bold uppercase tracking-[0.08em] mb-2 flex items-center gap-1"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
               種別
-              <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
             </label>
             <div className="flex flex-wrap gap-1.5">
               {TYPE_OPTIONS.map(opt => {
-                const s = TASK_TYPE_GAME_STYLES[opt.key]!
                 const active = type === opt.key
                 return (
-                  <button
+                  <ObsButton
                     key={opt.key}
-                    type="button"
+                    variant={active ? 'primary' : 'ghost'}
+                    size="sm"
                     onClick={() => setType(opt.key)}
-                    className="px-3 h-[32px] rounded-full text-[11px] font-bold transition-all"
-                    style={active ? {
-                      background: s.gradient,
-                      boxShadow: s.glow,
-                      color: s.color,
-                      border: `1px solid ${s.borderColor}`,
-                      textShadow: s.textShadow,
-                    } : {
-                      background: 'rgba(16,16,40,0.8)',
-                      border: '1px solid #2244AA',
-                      color: '#7799CC',
-                    }}
                   >
                     {opt.label}
-                  </button>
+                  </ObsButton>
                 )
               })}
             </div>
@@ -337,16 +277,17 @@ function EditTaskModal({ task, onClose, onSave }: { task: Task; onClose: () => v
 
           {/* 実施予定日 */}
           <div>
-            <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 flex items-center justify-between">
-              <span className="flex items-center gap-1">
-                実施予定日
-                <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
-              </span>
+            <label
+              className="text-[11px] font-bold uppercase tracking-[0.08em] mb-2 flex items-center justify-between"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              <span>実施予定日</span>
               {dueAt && (
                 <button
                   type="button"
                   onClick={() => setDueAt('')}
-                  className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#99AACC] hover:text-[#FF8A82] transition-colors normal-case tracking-normal"
+                  className="inline-flex items-center gap-0.5 text-[10px] font-bold normal-case tracking-normal transition-colors"
+                  style={{ color: 'var(--color-obs-text-muted)' }}
                   title="日付をクリア"
                 >
                   <X size={10} />
@@ -354,85 +295,49 @@ function EditTaskModal({ task, onClose, onSave }: { task: Task; onClose: () => v
                 </button>
               )}
             </label>
-            <div
-              className="relative rounded-[8px] transition-all"
-              style={{
-                background: 'rgba(16,16,40,0.8)',
-                border: '1px dashed rgba(136,187,255,0.4)',
-              }}
-            >
-              <input
-                type="date"
-                value={dueAt}
-                onChange={e => setDueAt(e.target.value)}
-                className="w-full h-[36px] px-3 pr-9 text-[13px] font-medium text-[#EEEEFF] outline-none bg-transparent cursor-pointer"
-                style={{ colorScheme: 'dark' }}
-                onFocus={e => {
-                  e.currentTarget.parentElement!.style.border = '1px solid #5577DD'
-                  e.currentTarget.parentElement!.style.boxShadow = '0 0 0 3px rgba(85,119,221,0.2)'
-                }}
-                onBlur={e => {
-                  e.currentTarget.parentElement!.style.border = '1px dashed rgba(136,187,255,0.4)'
-                  e.currentTarget.parentElement!.style.boxShadow = 'none'
-                }}
-              />
-              <Pencil
-                size={11}
-                className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                style={{ color: '#7799CC' }}
-              />
-            </div>
+            <ObsInput
+              type="date"
+              value={dueAt}
+              onChange={e => setDueAt(e.target.value)}
+              style={{ colorScheme: 'dark' }}
+            />
           </div>
 
           {/* メモ */}
           <div>
-            <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 flex items-center gap-1">
+            <label
+              className="text-[11px] font-bold uppercase tracking-[0.08em] mb-2 flex items-center gap-1"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
               メモ
-              <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
             </label>
             <textarea
               value={memo}
               onChange={e => setMemo(e.target.value)}
               placeholder="次回アクションに関するメモを入力..."
               rows={3}
-              className="w-full px-3 py-2 text-[12px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none rounded-[8px] resize-none transition-all"
+              className="w-full px-4 py-2 text-[13px] outline-none rounded-[var(--radius-obs-md)] resize-none transition-all focus:ring-2 focus:ring-[var(--color-obs-primary)]/40"
               style={{
-                background: 'rgba(16,16,40,0.8)',
-                border: '1px dashed rgba(136,187,255,0.4)',
-              }}
-              onFocus={e => {
-                e.currentTarget.style.border = '1px solid #5577DD'
-                e.currentTarget.style.boxShadow = '0 0 0 3px rgba(85,119,221,0.2)'
-              }}
-              onBlur={e => {
-                e.currentTarget.style.border = '1px dashed rgba(136,187,255,0.4)'
-                e.currentTarget.style.boxShadow = 'none'
+                backgroundColor: 'var(--color-obs-surface-lowest)',
+                color: 'var(--color-obs-text)',
+                boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
               }}
             />
           </div>
         </div>
 
         {/* Footer */}
-        <div className="flex justify-end gap-2 px-5 py-4" style={{ borderTop: '1px solid rgba(34,68,170,0.3)' }}>
-          <button
-            type="button"
-            onClick={onClose}
-            className="h-[36px] px-4 text-[13px] font-medium text-[#CCDDF0] rounded-[8px] hover:bg-[rgba(136,187,255,0.06)] transition-colors"
-          >
-            キャンセル
-          </button>
-          <button
-            type="button"
+        <div
+          className="flex justify-end gap-2 px-5 py-4"
+          style={{ boxShadow: 'inset 0 1px 0 0 var(--color-obs-surface-low)' }}
+        >
+          <ObsButton variant="ghost" onClick={onClose}>キャンセル</ObsButton>
+          <ObsButton
+            variant="primary"
             onClick={() => { onSave({ ...task, type, memo, dueAt }); onClose() }}
-            className="h-[36px] px-5 text-[13px] font-bold text-white rounded-[8px] transition-all hover:brightness-110"
-            style={{
-              background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
-              border: '1px solid #3355CC',
-              boxShadow: '0 2px 8px rgba(34,68,170,0.5), inset 0 1px 0 rgba(200,220,255,0.2)',
-            }}
           >
             保存
-          </button>
+          </ObsButton>
         </div>
       </motion.div>
     </motion.div>
@@ -449,9 +354,14 @@ function CategoryGroup({ label, icon: Icon, tasks, onComplete, onRestore, onEdit
   return (
     <div>
       <div className="flex items-center gap-1.5 px-5 pt-3 pb-1.5">
-        <Icon size={11} style={{ color: '#99AACC' }} />
-        <span className="text-[10px] font-semibold text-[#99AACC] uppercase tracking-[0.06em]">{label}</span>
-        <span className="text-[10px] text-[#99AACC]">{tasks.length}</span>
+        <Icon size={11} style={{ color: 'var(--color-obs-text-subtle)' }} />
+        <span
+          className="text-[10px] font-semibold uppercase tracking-[0.08em]"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
+        >
+          {label}
+        </span>
+        <span className="text-[10px]" style={{ color: 'var(--color-obs-text-subtle)' }}>{tasks.length}</span>
       </div>
       {tasks.map((task, i) => (
         <TaskRow key={task.id} task={task} isLast={i === tasks.length - 1} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
@@ -474,56 +384,86 @@ function RepSection({ rep, tasks, completedTasks, index, onComplete, onRestore, 
   return (
     <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.28, delay: index * 0.06, ease: [0.16, 1, 0.3, 1] }}
-      className="bg-[#0c1028] rounded-[8px] overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
-      <button onClick={() => setOpen(!open)}
-        className="w-full flex items-center gap-3 px-5 py-3.5 hover:bg-[rgba(136,187,255,0.04)] transition-colors"
-        style={{ borderBottom: open ? '1px solid #2244AA' : 'none' }}>
-        <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0" style={{ background: rep.color, boxShadow: `0 0 12px ${rep.color}aa, 0 0 4px ${rep.color}, inset 0 1px 0 rgba(255,255,255,0.4)`, border: "1px solid rgba(255,255,255,0.3)" }}>
-          {rep.name[0]}
-        </div>
-        <span className="text-[14px] font-semibold text-[#EEEEFF]">{rep.name}</span>
-        <span className="text-[12px] tabular-nums font-medium" style={{ color: rep.color }}>{tasks.length + completedTasks.length}件</span>
-        {completedTasks.length > 0 && <span className="text-[11px] text-[#34C759]">({completedTasks.length}完了)</span>}
-        <motion.div className="ml-auto" animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.15 }}>
-          <ChevronRight size={14} style={{ color: '#99AACC' }} />
-        </motion.div>
-      </button>
-
-      <AnimatePresence>
-        {open && (
-          <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
-            <CategoryGroup label="コンタクト" icon={User} tasks={contactTasks} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
-            {contactTasks.length > 0 && dealTasks.length > 0 && <div className="mx-5 h-px" style={{ background: 'rgba(136,187,255,0.06)' }} />}
-            <CategoryGroup label="取引" icon={Building2} tasks={dealTasks} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
-
-            {completedTasks.length > 0 && (
-              <>
-                <div className="mx-5 h-px mt-1" style={{ background: 'rgba(136,187,255,0.06)' }} />
-                <button onClick={e => { e.stopPropagation(); setCompletedOpen(!completedOpen) }}
-                  className="w-full flex items-center gap-2 px-5 py-3 hover:bg-[rgba(136,187,255,0.04)] transition-colors">
-                  <Check size={12} style={{ color: '#34C759' }} />
-                  <span className="text-[12px] font-medium text-[#CCDDF0]">完了一覧</span>
-                  <span className="text-[11px] tabular-nums text-[#34C759]">{completedTasks.length}</span>
-                  <motion.div className="ml-auto" animate={{ rotate: completedOpen ? 90 : 0 }} transition={{ duration: 0.12 }}>
-                    <ChevronRight size={11} style={{ color: '#99AACC' }} />
-                  </motion.div>
-                </button>
-                <AnimatePresence>
-                  {completedOpen && (
-                    <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
-                      transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
-                      {completedTasks.map((task, i) => (
-                        <TaskRow key={task.id} task={task} isLast={i === completedTasks.length - 1} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
-                      ))}
-                    </motion.div>
-                  )}
-                </AnimatePresence>
-              </>
-            )}
+    >
+      <ObsCard depth="low" padding="none" radius="xl">
+        <button
+          onClick={() => setOpen(!open)}
+          className="w-full flex items-center gap-3 px-5 py-3.5 transition-colors"
+          style={{
+            transitionTimingFunction: 'var(--ease-liquid)',
+            ...(open ? { boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)' } : {}),
+          }}
+          onMouseOver={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+          }}
+          onMouseOut={(e) => {
+            (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+          }}
+        >
+          <div
+            className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-[11px] font-bold shrink-0"
+            style={{ backgroundColor: rep.color, color: 'var(--color-obs-on-primary)' }}
+          >
+            {rep.name[0]}
+          </div>
+          <span className="text-[14px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>{rep.name}</span>
+          <span className="text-[12px] tabular-nums font-medium" style={{ color: 'var(--color-obs-text-muted)' }}>
+            {tasks.length + completedTasks.length}件
+          </span>
+          {completedTasks.length > 0 && (
+            <ObsChip tone="low">完了 {completedTasks.length}</ObsChip>
+          )}
+          <motion.div className="ml-auto" animate={{ rotate: open ? 90 : 0 }} transition={{ duration: 0.15 }}>
+            <ChevronRight size={14} style={{ color: 'var(--color-obs-text-subtle)' }} />
           </motion.div>
-        )}
-      </AnimatePresence>
+        </button>
+
+        <AnimatePresence>
+          {open && (
+            <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
+              <CategoryGroup label="コンタクト" icon={User} tasks={contactTasks} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
+              {contactTasks.length > 0 && dealTasks.length > 0 && (
+                <div className="mx-5 h-px" style={{ backgroundColor: 'var(--color-obs-surface)' }} />
+              )}
+              <CategoryGroup label="取引" icon={Building2} tasks={dealTasks} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
+
+              {completedTasks.length > 0 && (
+                <>
+                  <div className="mx-5 h-px mt-1" style={{ backgroundColor: 'var(--color-obs-surface)' }} />
+                  <button
+                    onClick={e => { e.stopPropagation(); setCompletedOpen(!completedOpen) }}
+                    className="w-full flex items-center gap-2 px-5 py-3 transition-colors"
+                    onMouseOver={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                    }}
+                    onMouseOut={(e) => {
+                      (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                    }}
+                  >
+                    <Check size={12} style={{ color: 'var(--color-obs-low)' }} />
+                    <span className="text-[12px] font-medium" style={{ color: 'var(--color-obs-text-muted)' }}>完了一覧</span>
+                    <span className="text-[11px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>{completedTasks.length}</span>
+                    <motion.div className="ml-auto" animate={{ rotate: completedOpen ? 90 : 0 }} transition={{ duration: 0.12 }}>
+                      <ChevronRight size={11} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                    </motion.div>
+                  </button>
+                  <AnimatePresence>
+                    {completedOpen && (
+                      <motion.div initial={{ height: 0, opacity: 0 }} animate={{ height: 'auto', opacity: 1 }} exit={{ height: 0, opacity: 0 }}
+                        transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }} className="overflow-hidden">
+                        {completedTasks.map((task, i) => (
+                          <TaskRow key={task.id} task={task} isLast={i === completedTasks.length - 1} onComplete={onComplete} onRestore={onRestore} onEdit={onEdit} />
+                        ))}
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </ObsCard>
     </motion.div>
   )
 }
@@ -542,36 +482,58 @@ export default function OverduePage() {
   function handleSave(updated: Task) { setTasks(prev => prev.map(t => t.id === updated.id ? updated : t)) }
 
   return (
-    <div className="space-y-4">
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
-        <div className="flex items-center gap-2.5">
-          <AlertCircle size={20} style={{ color: '#FF3B30' }} />
-          <h2 className="text-[21px] font-semibold text-[#FF8A82] tracking-[-0.03em]">タスク漏れ</h2>
-          {activeTasks.length > 0 && (
-            <span className="text-[12px] font-semibold text-white bg-[#FF3B30] px-2 py-0.5 rounded-full">{activeTasks.length}件</span>
+    <ObsPageShell>
+      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
+        <ObsHero
+          eyebrow="Overdue"
+          title="タスク漏れ"
+          caption={`期限を過ぎているタスク ${activeTasks.length} 件。優先的に対応しましょう。`}
+          action={
+            <div className="flex items-center gap-2">
+              <AlertCircle size={18} style={{ color: 'var(--color-obs-hot)' }} />
+              {activeTasks.length > 0 && <ObsChip tone="hot">{activeTasks.length} 件</ObsChip>}
+            </div>
+          }
+        />
+
+        <div className="space-y-4">
+          {REPS.map((rep, i) => {
+            const repActive = activeTasks.filter(t => t.owner === rep.id)
+            const repCompleted = completedTasks.filter(t => t.owner === rep.id)
+            if (repActive.length === 0 && repCompleted.length === 0) return null
+            return (
+              <RepSection
+                key={rep.id}
+                rep={rep}
+                tasks={repActive}
+                completedTasks={repCompleted}
+                index={i}
+                onComplete={handleComplete}
+                onRestore={handleRestore}
+                onEdit={setEditingTask}
+              />
+            )
+          })}
+
+          {activeTasks.length === 0 && completedTasks.length === 0 && (
+            <ObsCard depth="low" padding="lg">
+              <div className="flex flex-col items-center justify-center gap-2 py-8">
+                <Check size={28} style={{ color: 'var(--color-obs-low)' }} />
+                <p className="text-[15px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                  タスク漏れなし
+                </p>
+                <p className="text-[13px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  期限超過のタスクはありません
+                </p>
+              </div>
+            </ObsCard>
           )}
         </div>
-      </motion.div>
 
-      {REPS.map((rep, i) => {
-        const repActive = activeTasks.filter(t => t.owner === rep.id)
-        const repCompleted = completedTasks.filter(t => t.owner === rep.id)
-        if (repActive.length === 0 && repCompleted.length === 0) return null
-        return <RepSection key={rep.id} rep={rep} tasks={repActive} completedTasks={repCompleted} index={i}
-          onComplete={handleComplete} onRestore={handleRestore} onEdit={setEditingTask} />
-      })}
-
-      {activeTasks.length === 0 && completedTasks.length === 0 && (
-        <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-center py-12 bg-[#0c1028] rounded-[8px]" style={{ boxShadow: CARD_SHADOW }}>
-          <Check size={28} style={{ color: '#34C759' }} className="mx-auto mb-2" />
-          <p className="text-[15px] font-semibold text-[#EEEEFF]">タスク漏れなし</p>
-          <p className="text-[13px] text-[#CCDDF0] mt-0.5">期限超過のタスクはありません</p>
-        </motion.div>
-      )}
-
-      <AnimatePresence>
-        {editingTask && <EditTaskModal task={editingTask} onClose={() => setEditingTask(null)} onSave={handleSave} />}
-      </AnimatePresence>
-    </div>
+        <AnimatePresence>
+          {editingTask && <EditTaskModal task={editingTask} onClose={() => setEditingTask(null)} onSave={handleSave} />}
+        </AnimatePresence>
+      </div>
+    </ObsPageShell>
   )
 }

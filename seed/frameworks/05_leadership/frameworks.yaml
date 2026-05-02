@@ -1,0 +1,572 @@
+# ============================================================
+# リーダーシップ・マネジメント フレームワーク辞書（28選）
+# ============================================================
+# 用途: RookieSmart CRAFT マスタデータ
+# 更新: 2025-02
+# ============================================================
+
+meta:
+  category: リーダーシップ・マネジメント
+  total_frameworks: 28
+
+frameworks:
+
+  # ── A. リーダーシップスタイル (4) ──────────────────────────
+
+  - id: F-SL
+    name: Situational Leadership
+    name_ja: 状況対応型リーダーシップ
+    category: リーダーシップスタイル
+    origin: "Hersey & Blanchard"
+    purpose: "部下の成熟度に応じてS1指示→S2説得→S3参加→S4委任を切り替える"
+    elements:
+      - key: S1-Telling
+        ja: 指示型
+      - key: S2-Selling
+        ja: 説得型
+      - key: S3-Participating
+        ja: 参加型
+      - key: S4-Delegating
+        ja: 委任型
+    level: intermediate
+    pitfall: "成熟度の見極めを誤ると過干渉／放任になる"
+    combo: [F-SKILL-WILL, F-GROW-LEAD]
+
+  - id: F-TRANSFORMATIONAL
+    name: Transformational / Transactional Leadership
+    name_ja: 変革型／取引型リーダーシップ
+    category: リーダーシップスタイル
+    origin: "Burns / Bass"
+    purpose: "ビジョンで鼓舞する変革型と成果交換で動かす取引型を使い分ける"
+    elements:
+      - key: Idealized Influence
+        ja: 理想化された影響
+      - key: Inspirational Motivation
+        ja: 鼓舞する動機づけ
+      - key: Intellectual Stimulation
+        ja: 知的刺激
+      - key: Individualized Consideration
+        ja: 個別配慮
+      - key: Contingent Reward
+        ja: 条件付き報酬（取引型）
+    level: intermediate
+    pitfall: "変革型に偏ると日常オペレーションが疎かになる"
+    combo: [F-EQ-STYLES, F-SERVANT]
+
+  - id: F-SERVANT
+    name: Servant Leadership
+    name_ja: サーバントリーダーシップ
+    category: リーダーシップスタイル
+    origin: "Robert K. Greenleaf"
+    purpose: "リーダーはまず奉仕者であり、メンバーの成長支援を最優先にする"
+    elements:
+      - key: Listening
+        ja: 傾聴
+      - key: Empathy
+        ja: 共感
+      - key: Healing
+        ja: 癒し
+      - key: Awareness
+        ja: 気づき
+      - key: Persuasion
+        ja: 説得
+      - key: Stewardship
+        ja: 執事役
+      - key: Commitment to Growth
+        ja: 成長へのコミット
+      - key: Building Community
+        ja: コミュニティ構築
+    level: intermediate
+    pitfall: "奉仕に徹しすぎると意思決定が遅れる"
+    combo: [F-PSYCH-SAFETY-LEAD, F-SDT]
+
+  - id: F-EQ-STYLES
+    name: EQ & 6 Leadership Styles
+    name_ja: EQと6つのリーダーシップスタイル
+    category: リーダーシップスタイル
+    origin: "Daniel Goleman"
+    purpose: "感情的知性を基盤に強権/ビジョン/関係/民主/ペース/コーチの6型を使い分ける"
+    elements:
+      - key: Coercive
+        ja: 強権型
+      - key: Visionary
+        ja: ビジョン型
+      - key: Affiliative
+        ja: 関係重視型
+      - key: Democratic
+        ja: 民主型
+      - key: Pacesetting
+        ja: ペースセッター型
+      - key: Coaching
+        ja: コーチ型
+    level: advanced
+    pitfall: "強権型・ペース型の多用は心理的安全性を破壊する"
+    combo: [F-SL, F-PSYCH-SAFETY-LEAD]
+
+  # ── B. コーチング・育成 (4) ──────────────────────────────
+
+  - id: F-GROW-LEAD
+    name: GROW Model
+    name_ja: GROWモデル
+    category: コーチング・育成
+    origin: "John Whitmore"
+    purpose: "Goal→Reality→Options→Willの問いで本人から行動を引き出すコーチング"
+    elements:
+      - key: Goal
+        ja: 目標
+      - key: Reality
+        ja: 現状
+      - key: Options
+        ja: 選択肢
+      - key: Will
+        ja: 意志・行動計画
+    level: intermediate
+    pitfall: "Goalを飛ばしていきなりRealityに入ると愚痴大会になる"
+    combo: [F-SBI-LEAD, F-1ON1-LEAD]
+
+  - id: F-70-20-10-LEAD
+    name: 70:20:10 Model
+    name_ja: 70:20:10モデル
+    category: コーチング・育成
+    origin: "Lombardo & Eichinger"
+    purpose: "経験70%・他者から20%・研修10%の比率で育成施策を設計する"
+    elements:
+      - key: "70% Experience"
+        ja: 経験学習
+      - key: "20% Social"
+        ja: 他者からの学び
+      - key: "10% Formal"
+        ja: 研修・座学
+    level: beginner
+    pitfall: "比率を厳密に適用しすぎず、バランスの指針として使う"
+    combo: [F-SKILL-WILL, F-OKR-LEAD]
+
+  - id: F-SKILL-WILL
+    name: Skill-Will Matrix
+    name_ja: スキル・ウィルマトリクス
+    category: コーチング・育成
+    origin: "Max Landsberg"
+    purpose: "スキル×意欲の4象限で指示/支援/動機づけ/委任のアプローチを選ぶ"
+    elements:
+      - key: Guide (Low Skill / High Will)
+        ja: 支援する
+      - key: Direct (Low Skill / Low Will)
+        ja: 指示する
+      - key: Delegate (High Skill / High Will)
+        ja: 委任する
+      - key: Excite (High Skill / Low Will)
+        ja: 動機づける
+    level: intermediate
+    pitfall: "意欲は変動するため、定期的に再評価が必要"
+    combo: [F-SL, F-SDT]
+
+  - id: F-1ON1-LEAD
+    name: 1on1 Meeting Framework
+    name_ja: 1on1定例フレームワーク
+    category: コーチング・育成
+    origin: "Andy Grove (High Output Management)"
+    purpose: "障害除去・成長支援・関係構築のための定期的な対話枠を運用する"
+    elements:
+      - key: Agenda Setting
+        ja: アジェンダ設定（部下主導）
+      - key: Obstacle Removal
+        ja: 障害の除去
+      - key: Growth Discussion
+        ja: 成長の対話
+      - key: Relationship Building
+        ja: 関係構築
+    level: beginner
+    pitfall: "上司の業務報告の場にせず、部下が主役の場にする"
+    combo: [F-GROW-LEAD, F-SBI-LEAD]
+
+  # ── C. フィードバック・コミュニケーション (4) ────────────
+
+  - id: F-SBI-LEAD
+    name: SBI Feedback Model
+    name_ja: SBIフィードバックモデル
+    category: フィードバック・コミュニケーション
+    origin: "Center for Creative Leadership (CCL)"
+    purpose: "状況→行動→影響の事実ベースで感情を排したフィードバックを行う"
+    elements:
+      - key: Situation
+        ja: 状況
+      - key: Behavior
+        ja: 行動
+      - key: Impact
+        ja: 影響
+    level: intermediate
+    pitfall: "Impactを主観で語ると説教になる。客観的事実に留める"
+    combo: [F-RADICAL-CANDOR-LEAD, F-1ON1-LEAD]
+
+  - id: F-DESC
+    name: DESC Script
+    name_ja: DESCスクリプト
+    category: フィードバック・コミュニケーション
+    origin: "Sharon & Gordon Bower"
+    purpose: "Describe→Express→Specify→Consequencesでアサーティブに要求を伝える"
+    elements:
+      - key: Describe
+        ja: 事実を描写する
+      - key: Express
+        ja: 感情・影響を伝える
+      - key: Specify
+        ja: 具体的に要望を述べる
+      - key: Consequences
+        ja: 結果を共有する
+    level: intermediate
+    pitfall: "Consequencesを脅しにせず、ポジティブな帰結も提示する"
+    combo: [F-SBI-LEAD, F-NVC]
+
+  - id: F-RADICAL-CANDOR-LEAD
+    name: Radical Candor
+    name_ja: ラディカル・キャンダー
+    category: フィードバック・コミュニケーション
+    origin: "Kim Scott"
+    purpose: "Care Personally × Challenge Directlyの2軸で率直かつ思いやりあるFBを行う"
+    elements:
+      - key: Radical Candor
+        ja: 徹底的な率直さ（高関心×高挑戦）
+      - key: Ruinous Empathy
+        ja: 破滅的共感（高関心×低挑戦）
+      - key: Obnoxious Aggression
+        ja: 不快な攻撃（低関心×高挑戦）
+      - key: Manipulative Insincerity
+        ja: 操作的不誠実（低関心×低挑戦）
+    level: intermediate
+    pitfall: "率直さを免罪符に無配慮な発言をしない"
+    combo: [F-SBI-LEAD, F-PSYCH-SAFETY-LEAD]
+
+  - id: F-NVC
+    name: Nonviolent Communication
+    name_ja: 非暴力コミュニケーション (NVC)
+    category: フィードバック・コミュニケーション
+    origin: "Marshall B. Rosenberg"
+    purpose: "観察→感情→ニーズ→依頼の4段階で対立を共感的に解消する"
+    elements:
+      - key: Observation
+        ja: 観察（事実）
+      - key: Feeling
+        ja: 感情
+      - key: Need
+        ja: ニーズ
+      - key: Request
+        ja: 依頼
+    level: intermediate
+    pitfall: "観察と評価を混同しない。感情とニーズを正確に言語化する"
+    combo: [F-DESC, F-RADICAL-CANDOR-LEAD]
+
+  # ── D. モチベーション・エンゲージメント (3) ──────────────
+
+  - id: F-SDT
+    name: Self-Determination Theory
+    name_ja: 自己決定理論
+    category: モチベーション・エンゲージメント
+    origin: "Deci & Ryan"
+    purpose: "自律性・有能感・関係性の3欲求を満たし内発的動機を高める"
+    elements:
+      - key: Autonomy
+        ja: 自律性
+      - key: Competence
+        ja: 有能感
+      - key: Relatedness
+        ja: 関係性
+    level: intermediate
+    pitfall: "外発的報酬の過度な使用が内発的動機を損なう（アンダーマイニング効果）"
+    combo: [F-TWO-FACTOR, F-SERVANT]
+
+  - id: F-TWO-FACTOR
+    name: Herzberg Two-Factor Theory
+    name_ja: ハーズバーグの二要因理論
+    category: モチベーション・エンゲージメント
+    origin: "Frederick Herzberg"
+    purpose: "衛生要因で不満を消し、動機づけ要因で満足と意欲を高める"
+    elements:
+      - key: Hygiene Factors
+        ja: 衛生要因（給与・環境・人間関係）
+      - key: Motivators
+        ja: 動機づけ要因（達成・承認・成長）
+    level: intermediate
+    pitfall: "衛生要因の改善だけでは動機づけにならない。両面を設計する"
+    combo: [F-SDT, F-EXPECTANCY]
+
+  - id: F-EXPECTANCY
+    name: Vroom Expectancy Theory
+    name_ja: ブルームの期待理論
+    category: モチベーション・エンゲージメント
+    origin: "Victor Vroom"
+    purpose: "努力→成果（期待）×成果→報酬（道具性）×報酬の魅力（誘意性）で動機を設計する"
+    elements:
+      - key: Expectancy
+        ja: 期待（努力→成果）
+      - key: Instrumentality
+        ja: 道具性（成果→報酬）
+      - key: Valence
+        ja: 誘意性（報酬の魅力）
+    level: intermediate
+    pitfall: "3要素のうち1つでもゼロだとモチベーションがゼロになる"
+    combo: [F-TWO-FACTOR, F-OKR-LEAD]
+
+  # ── E. チーム・文化 (5) ──────────────────────────────────
+
+  - id: F-5-DYSFUNCTIONS
+    name: 5 Dysfunctions of a Team
+    name_ja: チームの5つの機能不全
+    category: チーム・文化
+    origin: "Patrick Lencioni"
+    purpose: "信頼欠如→衝突回避→コミット不足→責任回避→結果軽視のピラミッドを解消する"
+    elements:
+      - key: Absence of Trust
+        ja: 信頼の欠如
+      - key: Fear of Conflict
+        ja: 衝突への恐れ
+      - key: Lack of Commitment
+        ja: コミットメント不足
+      - key: Avoidance of Accountability
+        ja: 責任回避
+      - key: Inattention to Results
+        ja: 結果への無関心
+    level: intermediate
+    pitfall: "下層の機能不全を放置したまま上層を直そうとしても効果がない"
+    combo: [F-PSYCH-SAFETY-LEAD, F-TUCKMAN]
+
+  - id: F-PSYCH-SAFETY-LEAD
+    name: Psychological Safety
+    name_ja: 心理的安全性
+    category: チーム・文化
+    origin: "Amy Edmondson"
+    purpose: "安心して発言・質問・失敗を共有できるチームの土台をつくる"
+    elements:
+      - key: Inclusion Safety
+        ja: 受容の安全
+      - key: Learner Safety
+        ja: 学習の安全
+      - key: Contributor Safety
+        ja: 貢献の安全
+      - key: Challenger Safety
+        ja: 挑戦の安全
+    level: intermediate
+    pitfall: "心理的安全性＝ぬるま湯ではない。高い基準と両立させる"
+    combo: [F-5-DYSFUNCTIONS, F-RADICAL-CANDOR-LEAD]
+
+  - id: F-SCARF
+    name: SCARF Model
+    name_ja: SCARFモデル
+    category: チーム・文化
+    origin: "David Rock"
+    purpose: "Status/Certainty/Autonomy/Relatedness/Fairnessの脅威反応を回避しエンゲージメントを高める"
+    elements:
+      - key: Status
+        ja: 地位
+      - key: Certainty
+        ja: 確実性
+      - key: Autonomy
+        ja: 自律性
+      - key: Relatedness
+        ja: 関係性
+      - key: Fairness
+        ja: 公平性
+    level: intermediate
+    pitfall: "脅威反応は無意識に起こるため、事前の設計が重要"
+    combo: [F-SDT, F-PSYCH-SAFETY-LEAD]
+
+  - id: F-TUCKMAN
+    name: Tuckman Model
+    name_ja: タックマンモデル
+    category: チーム・文化
+    origin: "Bruce Tuckman"
+    purpose: "Forming→Storming→Norming→Performing→Adjourningでチーム発達段階を理解する"
+    elements:
+      - key: Forming
+        ja: 形成期
+      - key: Storming
+        ja: 混乱期
+      - key: Norming
+        ja: 統一期
+      - key: Performing
+        ja: 機能期
+      - key: Adjourning
+        ja: 散会期
+    level: beginner
+    pitfall: "Storming期を避けると表面的な合意に留まりPerformingに到達しない"
+    combo: [F-5-DYSFUNCTIONS, F-PSYCH-SAFETY-LEAD]
+
+  - id: F-MGMT30
+    name: Management 3.0
+    name_ja: マネジメント3.0
+    category: チーム・文化
+    origin: "Jurgen Appelo"
+    purpose: "組織を複雑適応系と捉え、チーム自律・実験・継続改善で設計する"
+    elements:
+      - key: Energize People
+        ja: 人を活性化する
+      - key: Empower Teams
+        ja: チームに権限委譲する
+      - key: Align Constraints
+        ja: 制約を揃える
+      - key: Develop Competence
+        ja: 能力を開発する
+      - key: Grow Structure
+        ja: 構造を育てる
+      - key: Improve Everything
+        ja: すべてを改善する
+    level: advanced
+    pitfall: "ツール（Moving Motivators等）だけ導入してもマインドセットが伴わなければ形骸化する"
+    combo: [F-SDT, F-TUCKMAN]
+
+  # ── F. 役割・意思決定 (3) ────────────────────────────────
+
+  - id: F-RACI-LEAD
+    name: RACI Matrix
+    name_ja: RACIマトリクス
+    category: 役割・意思決定
+    origin: "プロジェクトマネジメント共通手法"
+    purpose: "Responsible/Accountable/Consulted/Informedで役割と責任を明確化する"
+    elements:
+      - key: Responsible
+        ja: 実行責任者
+      - key: Accountable
+        ja: 説明責任者
+      - key: Consulted
+        ja: 相談先
+      - key: Informed
+        ja: 報告先
+    level: beginner
+    pitfall: "AccountableとResponsibleの区別が曖昧になりやすい。Aは1名に絞る"
+    combo: [F-RAPID-LEAD, F-DACI-LEAD]
+
+  - id: F-RAPID-LEAD
+    name: RAPID Decision Framework
+    name_ja: RAPIDフレームワーク
+    category: 役割・意思決定
+    origin: "Bain & Company"
+    purpose: "Recommend/Agree/Perform/Input/Decideで意思決定の役割を明確にする"
+    elements:
+      - key: Recommend
+        ja: 提案する
+      - key: Agree
+        ja: 合意する
+      - key: Perform
+        ja: 実行する
+      - key: Input
+        ja: 助言する
+      - key: Decide
+        ja: 決定する
+    level: intermediate
+    pitfall: "Decideの権限者が不明確だと合意形成が永遠に終わらない"
+    combo: [F-RACI-LEAD, F-DACI-LEAD]
+
+  - id: F-DACI-LEAD
+    name: DACI Framework
+    name_ja: DACIフレームワーク
+    category: 役割・意思決定
+    origin: "Intuit / Atlassian"
+    purpose: "Driver/Approver/Contributor/Informedで意思決定プロセスを加速する"
+    elements:
+      - key: Driver
+        ja: 推進者
+      - key: Approver
+        ja: 承認者
+      - key: Contributor
+        ja: 貢献者
+      - key: Informed
+        ja: 情報共有先
+    level: intermediate
+    pitfall: "Driverに権限がないまま推進させると形骸化する"
+    combo: [F-RACI-LEAD, F-RAPID-LEAD]
+
+  # ── G. 目標・パフォーマンス管理 (5) ─────────────────────
+
+  - id: F-OKR-LEAD
+    name: OKR (Objectives & Key Results)
+    name_ja: OKR
+    category: 目標・パフォーマンス管理
+    origin: "Andy Grove / John Doerr"
+    purpose: "定性Objective＋定量Key Resultsで四半期ごとに挑戦的目標を運用する"
+    elements:
+      - key: Objective
+        ja: 目標（定性・挑戦的）
+      - key: Key Results
+        ja: 主要成果指標（定量・測定可能）
+      - key: Quarterly Cadence
+        ja: 四半期サイクル
+    level: intermediate
+    pitfall: "達成率100%が続くなら目標が保守的すぎる。60-70%が健全"
+    combo: [F-MBO-LEAD, F-HOSHIN-LEAD]
+
+  - id: F-MBO-LEAD
+    name: MBO (Management by Objectives)
+    name_ja: 目標管理制度
+    category: 目標・パフォーマンス管理
+    origin: "Peter Drucker"
+    purpose: "個人目標を組織目標と紐づけて明確化し、評価・育成に接続する"
+    elements:
+      - key: Goal Setting
+        ja: 目標設定
+      - key: Action Planning
+        ja: 行動計画
+      - key: Self-Control
+        ja: 自己統制
+      - key: Periodic Review
+        ja: 定期レビュー
+    level: intermediate
+    pitfall: "目標が硬直化しやすい。環境変化に応じた修正プロセスを組み込む"
+    combo: [F-OKR-LEAD, F-BSC-LEAD]
+
+  - id: F-BSC-LEAD
+    name: Balanced Scorecard
+    name_ja: バランスト・スコアカード
+    category: 目標・パフォーマンス管理
+    origin: "Kaplan & Norton"
+    purpose: "財務/顧客/業務プロセス/学習と成長の4視点で戦略を多面的に管理する"
+    elements:
+      - key: Financial
+        ja: 財務の視点
+      - key: Customer
+        ja: 顧客の視点
+      - key: Internal Process
+        ja: 業務プロセスの視点
+      - key: Learning & Growth
+        ja: 学習と成長の視点
+    level: advanced
+    pitfall: "KPIを増やしすぎると管理コストが膨張する。重要指標に絞る"
+    combo: [F-OKR-LEAD, F-HOSHIN-LEAD]
+
+  - id: F-HOSHIN-LEAD
+    name: Hoshin Kanri
+    name_ja: 方針管理
+    category: 目標・パフォーマンス管理
+    origin: "日本発（トヨタ・ブリヂストン等）"
+    purpose: "長期ビジョン→年次方針→現場施策へキャッチボールで整合性を担保する"
+    elements:
+      - key: Long-term Vision
+        ja: 長期ビジョン
+      - key: Annual Hoshin
+        ja: 年次方針
+      - key: Catchball
+        ja: キャッチボール（上下対話）
+      - key: Implementation
+        ja: 現場展開
+      - key: Review (PDCA)
+        ja: 振り返り
+    level: intermediate
+    pitfall: "トップダウンの押し付けになるとキャッチボールが機能しない"
+    combo: [F-OKR-LEAD, F-BSC-LEAD]
+
+  - id: F-OGSM-LEAD
+    name: OGSM
+    name_ja: OGSM
+    category: 目標・パフォーマンス管理
+    origin: "P&G / Mars 等"
+    purpose: "Objective→Goals→Strategies→Measuresの1枚で戦略を簡潔に可視化する"
+    elements:
+      - key: Objective
+        ja: 目的（定性）
+      - key: Goals
+        ja: ゴール（定量）
+      - key: Strategies
+        ja: 戦略
+      - key: Measures
+        ja: 測定指標
+    level: intermediate
+    pitfall: "1ページに収まらない場合は粒度が細かすぎる"
+    combo: [F-OKR-LEAD, F-BSC-LEAD]

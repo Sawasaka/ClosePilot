@@ -23,7 +23,7 @@ try {
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  transpilePackages: ['@closepilot/db', '@closepilot/types'],
+  transpilePackages: ['@bgm/db', '@bgm/types'],
   images: {
     remotePatterns: [
       { protocol: 'https', hostname: 'lh3.googleusercontent.com' },

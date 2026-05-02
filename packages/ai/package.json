@@ -1,5 +1,5 @@
 {
-  "name": "@closepilot/ai",
+  "name": "@bgm/ai",
   "version": "0.0.1",
   "private": true,
   "main": "./index.ts",

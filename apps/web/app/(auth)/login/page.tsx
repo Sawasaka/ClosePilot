@@ -21,7 +21,7 @@ export default function LoginPage() {
           </div>
           <div className="flex flex-col">
             <span className="text-xl font-semibold text-[#111827] tracking-[-0.03em] leading-tight">
-              Intent Force
+              BGM
             </span>
             <span className="text-[10px] text-[#9CA3AF] tracking-[0.02em]">
               for First-Party CRM
@@ -35,7 +35,7 @@ export default function LoginPage() {
             ログイン
           </h1>
           <p className="text-sm text-[#6B7280] mb-6">
-            Intent Forceにアクセスするには<br />Googleアカウントでログインしてください
+            BGMにアクセスするには<br />Googleアカウントでログインしてください
           </p>
 
           <Button
@@ -66,7 +66,7 @@ export default function LoginPage() {
         </div>
 
         <p className="mt-5 text-center text-xs text-[#9CA3AF]">
-          © 2026 Intent Force. All rights reserved.
+          © 2026 BGM. All rights reserved.
         </p>
       </motion.div>
     </div>

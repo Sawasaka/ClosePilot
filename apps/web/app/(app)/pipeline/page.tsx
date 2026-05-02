@@ -1,30 +1,39 @@
 'use client'
 
-import { useState, useRef, DragEvent } from 'react'
+import { useMemo, useState, useRef, useEffect, DragEvent } from 'react'
 import {
-  GripVertical,
   Plus,
+  Calendar,
+  Star,
+  FlaskConical,
+  X,
+  Check,
+  HelpCircle,
+  ArrowRight,
+  ChevronDown,
+  Pencil,
 } from 'lucide-react'
+import { ObsPageShell } from '@/components/obsidian'
 
-// ─── Types ─────────────────────────────────────────────────────────────────────
+// ─── Types ────────────────────────────────────────────────────────────────────
 
 type IntentSignal = 'Hot' | 'Middle' | 'Low'
 type StageKey =
   | 'IS'
+  | 'NURTURING'
   | 'MEETING_PLANNED'
   | 'MEETING_DONE'
   | 'PROJECT_PLANNED'
   | 'MULTI_MEETING'
   | 'POC'
-  | 'DECISION_MAKER_OK'
-  | 'CLOSED_WON'
-  | 'NURTURING'
   | 'LOST_DEAL'
+  | 'CLOSED_WON'
   | 'CHURN'
   | 'LOST'
 
 interface Deal {
   id: string
+  code: string
   name: string
   company: string
   contact: string
@@ -33,421 +42,920 @@ interface Deal {
   owner: string
   stage: StageKey
   order: number
+  probability?: number
+  dueDate?: string
+  lastContact?: string
+  priorityPhase?: string
+  createdAt: string         // YYYY-MM-DD
+  emailCount: number        // 相手とのメール往復数（受信返信含む）
+  meetingCount: number      // 実施済み商談回数
+  nextAction?: string       // Next Step: 次の一手（取引先マスタでフリーテキスト入力）
+  nextActionDate?: string   // Next Step 実施予定日
+  status?: string           // Status: 現在の進行状態（取引先マスタでフリーテキスト入力）
 }
 
-// ─── Mock Data ─────────────────────────────────────────────────────────────────
+// ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const INITIAL_DEALS: Deal[] = [
-  { id: 'd1',  name: 'CRM導入プロジェクト',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 1200000, intent: 'Hot',    owner: '田中太郎', stage: 'IS',               order: 0 },
-  { id: 'd2',  name: 'MA連携提案',                company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 480000,  intent: 'Low',    owner: '佐藤次郎', stage: 'IS',               order: 1 },
-  { id: 'd3',  name: 'SFA刷新案件',               company: '合同会社フューチャー',    contact: '山本 佳子',  amount: 2400000, intent: 'Hot',    owner: '鈴木花子', stage: 'MEETING_DONE',     order: 0 },
-  { id: 'd4',  name: 'コンサルティング契約',       company: '株式会社グロース',        contact: '中村 理恵',  amount: 900000,  intent: 'Middle', owner: '佐藤次郎', stage: 'MEETING_DONE',     order: 1 },
-  { id: 'd5',  name: 'DX推進パッケージ',          company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3600000, intent: 'Hot',    owner: '田中太郎', stage: 'PROJECT_PLANNED',  order: 0 },
-  { id: 'd6',  name: 'セールスオートメーション導入', company: '有限会社サクセス',       contact: '小林 健太',  amount: 1800000, intent: 'Middle', owner: '鈴木花子', stage: 'POC',              order: 0 },
-  { id: 'd7',  name: 'ライトプラン契約',           company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 720000,  intent: 'Low',    owner: '田中太郎', stage: 'DECISION_MAKER_OK', order: 0 },
-  { id: 'd8',  name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 4800000, intent: 'Hot',    owner: '田中太郎', stage: 'CLOSED_WON',       order: 0 },
-  { id: 'd9',  name: 'スタータープラン再提案',     company: '株式会社スタート',        contact: '吉田 千春',  amount: 600000,  intent: 'Low',    owner: '佐藤次郎', stage: 'NURTURING',        order: 0 },
-  { id: 'd10', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1500000, intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',        order: 0 },
-  { id: 'd11', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960000,  intent: 'Middle', owner: '田中太郎', stage: 'CHURN',            order: 0 },
-  { id: 'd12', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2100000, intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',             order: 0 },
+  { id: 'd1',  code: 'BGM-0842', name: 'グローバルERP統合計画',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 12_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'IS',              order: 0, probability: 35, dueDate: '14 Oct', createdAt: '2026-04-02', emailCount: 2,  meetingCount: 0, status: 'アポ獲得待ち', nextAction: '初回コール', nextActionDate: '4/22' },
+  { id: 'd2',  code: 'BGM-1209', name: 'マーケティングHub連携',       company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 2_100_000,  intent: 'Low',    owner: '佐藤次郎', stage: 'IS',              order: 1, probability: 15, dueDate: '21 Oct', createdAt: '2026-04-08', emailCount: 1,  meetingCount: 0, status: '期日超過(2日)', nextAction: '資料送付', nextActionDate: '4/20' },
+  { id: 'd3',  code: 'BGM-0992', name: '次世代CRM導入検討',           company: '合同会社フューチャー',    contact: '山本 佳子',  amount: 8_900_000,  intent: 'Hot',    owner: '鈴木花子', stage: 'NURTURING',       order: 0, probability: 48, lastContact: '2h ago', createdAt: '2026-03-14', emailCount: 6,  meetingCount: 1, status: 'PoC検討中 / 次回商談設定', nextAction: '再アプローチ', nextActionDate: '4/24' },
+  { id: 'd4',  code: 'BGM-1104', name: 'SFA刷新案件 - A社',          company: '有限会社サクセス',        contact: '小林 健太',  amount: 5_200_000,  intent: 'Middle', owner: '鈴木花子', stage: 'MEETING_PLANNED', order: 0, probability: 52, dueDate: '28 Oct', createdAt: '2026-03-22', emailCount: 4,  meetingCount: 0, status: '初回商談前', nextAction: '商談実施', nextActionDate: '4/28' },
+  { id: 'd5',  code: 'BGM-1066', name: '物流最適化システム提案',      company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3_600_000,  intent: 'Middle', owner: '田中太郎', stage: 'MEETING_DONE',    order: 0, probability: 60, createdAt: '2026-03-10', emailCount: 8,  meetingCount: 1, status: '提案書レビュー待ち(先方CTO)', nextAction: '提案書レビュー', nextActionDate: '4/23' },
+  { id: 'd6',  code: 'BGM-1122', name: '基幹システムクラウド移行',    company: '株式会社グロース',        contact: '中村 理恵',  amount: 18_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'PROJECT_PLANNED', order: 0, probability: 92, priorityPhase: 'PRIORITY Q4', createdAt: '2026-02-18', emailCount: 22, meetingCount: 3, status: '決裁者MTG調整中', nextAction: '決裁者MTG', nextActionDate: '4/25' },
+  { id: 'd7',  code: 'BGM-0901', name: 'AI解析エンジン検証',          company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 6_800_000,  intent: 'Hot',    owner: '田中太郎', stage: 'POC',             order: 0, probability: 70, priorityPhase: 'Phase: Model Validation', createdAt: '2026-02-01', emailCount: 35, meetingCount: 5, status: 'PoC進行中 (週次定例)', nextAction: 'POC中間報告', nextActionDate: '4/26' },
+  { id: 'd8',  code: 'BGM-0718', name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 48_000_000, intent: 'Hot',    owner: '田中太郎', stage: 'CLOSED_WON',      order: 0, probability: 100, createdAt: '2025-12-12', emailCount: 58, meetingCount: 12, status: '契約完了 / オンボ開始', nextAction: 'オンボーディング', nextActionDate: '5/1' },
+  { id: 'd9',  code: 'BGM-1301', name: 'スタータープラン再提案',     company: '株式会社スタート',        contact: '吉田 千春',  amount: 600_000,    intent: 'Low',    owner: '佐藤次郎', stage: 'NURTURING',       order: 1, probability: 10, lastContact: '5d ago', createdAt: '2026-03-28', emailCount: 3,  meetingCount: 0, status: '長期ナーチャ(月次配信)', nextAction: 'ナーチャリングメール', nextActionDate: '5/3' },
+  { id: 'd10', code: 'BGM-0821', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1_500_000,  intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',       order: 0, createdAt: '2026-01-20', emailCount: 11, meetingCount: 2 },
+  { id: 'd11', code: 'BGM-0633', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960_000,    intent: 'Middle', owner: '田中太郎', stage: 'CHURN',           order: 0, createdAt: '2025-10-05', emailCount: 40, meetingCount: 4 },
+  { id: 'd12', code: 'BGM-0299', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2_100_000,  intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',            order: 0, createdAt: '2026-01-08', emailCount: 14, meetingCount: 2 },
 ]
 
-// ─── Stage Config ──────────────────────────────────────────────────────────────
+// ─── Stages ────────────────────────────────────────────────────────────────────
 
-interface StageConfig {
-  key: StageKey
-  label: string
-  desc: string
-  color: string
-  headerBg: string
-  dotColor: string
-}
+// ゲームのプログレス風：冷→温→熱→最終の順で色変化
+// トーンは Liquid Obsidian の primary/ middle/ hot を基軸に、phase間で相違がつくように調整
+type StageColor = { accent: string; bg: string; glow: string; text: string }
 
-const STAGES: StageConfig[] = [
-  { key: 'IS',                label: 'IS',              desc: '未商談の企業へアプローチ',                                       color: '#5AC8FA', headerBg: 'rgba(50,173,230,0.22)',  dotColor: '#5AC8FA' },
-  { key: 'NURTURING',         label: 'ナーチャリング',  desc: '再アプローチで商談獲得を目指す', color: '#EC4899', headerBg: 'rgba(236,72,153,0.22)',  dotColor: '#F9A8D4' },
-  { key: 'MEETING_PLANNED',   label: '商談予定',        desc: '初回商談がスケジュール済みの案件',                               color: '#0EA5E9', headerBg: 'rgba(14,165,233,0.22)',  dotColor: '#38BDF8' },
-  { key: 'MEETING_DONE',      label: '商談済み',        desc: '初回商談が完了した案件',                                         color: '#3B82F6', headerBg: 'rgba(59,130,246,0.22)',  dotColor: '#60A5FA' },
-  { key: 'PROJECT_PLANNED',   label: 'PJ化予定あり',    desc: '具体的なプロジェクト化が見込める案件',                           color: '#8B5CF6', headerBg: 'rgba(139,92,246,0.22)',  dotColor: '#A78BFA' },
-  { key: 'MULTI_MEETING',     label: '複数商談済み',    desc: '2回以上の商談を実施済みの案件',                                  color: '#A855F7', headerBg: 'rgba(168,85,247,0.22)',  dotColor: '#C084FC' },
-  { key: 'POC',               label: 'POC実施中',       desc: '検証・トライアルを実施中の案件',                                 color: '#D946EF', headerBg: 'rgba(217,70,239,0.22)',  dotColor: '#E879F9' },
-  { key: 'LOST_DEAL',         label: '失注',            desc: '商談後に受注に至らなかった案件',                                 color: '#FF3B30', headerBg: 'rgba(255,59,48,0.18)',   dotColor: '#FF6B62' },
-  { key: 'CLOSED_WON',        label: '受注',            desc: '契約締結が完了した案件',                                         color: '#34C759', headerBg: 'rgba(52,199,89,0.22)',   dotColor: '#6EE7B7' },
-  { key: 'CHURN',             label: 'チャーン',        desc: '契約後に解約となった案件',                                       color: '#FF8A82', headerBg: 'rgba(255,138,130,0.16)', dotColor: '#FF3B30' },
-  { key: 'LOST',              label: 'ロスト',          desc: '追客を完全に終了した案件',                                       color: '#94A3B8', headerBg: 'rgba(148,163,184,0.14)', dotColor: '#94A3B8' },
+// ゲージと同じ RPG レアリティ階段でプログレス
+// COMMON → RARE → EPIC → LEGENDARY → MYTHIC を8段階に展開（中間はブリッジ色）
+const STAGES: { key: StageKey; label: string; desc: string; color: StageColor }[] = [
+  // Tier1: Common（シルバー） — 出発点
+  { key: 'IS',               label: 'IS',             desc: '未商談の企業へアプローチ',
+    color: { accent: '#7e90b0', bg: 'rgba(126,144,176,0.14)', glow: 'rgba(126,144,176,0.45)', text: '#aab8d1' } },
+  // Tier1→2 ブリッジ（シルバーグリーン）
+  { key: 'NURTURING',        label: 'ナーチャリング', desc: '再アプローチで商談獲得を目指す',
+    color: { accent: '#6fb895', bg: 'rgba(111,184,149,0.14)', glow: 'rgba(111,184,149,0.5)',  text: '#8edbb3' } },
+  // Tier2: Rare（エメラルドグリーン）
+  { key: 'MEETING_PLANNED',  label: '商談予定',       desc: '初回商談がスケジュール済み',
+    color: { accent: '#4ad98a', bg: 'rgba(74,217,138,0.14)',  glow: 'rgba(74,217,138,0.55)',  text: '#6ef7a5' } },
+  // Tier2→3 ブリッジ（エメラルド→シアン）
+  { key: 'MEETING_DONE',     label: '商談済み',       desc: '初回商談が完了した案件',
+    color: { accent: '#5bc7d9', bg: 'rgba(91,199,217,0.14)',  glow: 'rgba(91,199,217,0.55)',  text: '#7de0ee' } },
+  // Tier3: Epic（ブリリアントブルー）
+  { key: 'PROJECT_PLANNED',  label: 'PJ化予定あり',   desc: '具体的なプロジェクト化が見込める',
+    color: { accent: '#4a9eff', bg: 'rgba(74,158,255,0.14)',  glow: 'rgba(74,158,255,0.6)',   text: '#8dc0ff' } },
+  // Tier3→4 ブリッジ（ブルーパープル）
+  { key: 'MULTI_MEETING',    label: '複数商談済み',   desc: '2回以上の商談を実施済み',
+    color: { accent: '#8a7bdf', bg: 'rgba(138,123,223,0.14)', glow: 'rgba(138,123,223,0.55)', text: '#a698f0' } },
+  // Tier4: Legendary（ネオンパープル）
+  { key: 'POC',              label: 'POC',            desc: '検証・トライアルを実施中',
+    color: { accent: '#c07cff', bg: 'rgba(192,124,255,0.14)', glow: 'rgba(192,124,255,0.6)',  text: '#d9a3ff' } },
+  // Tier5: Mythic（フレイムゴールド） — 勝利の到達点
+  { key: 'CLOSED_WON',       label: '受注',           desc: '契約締結が完了した案件',
+    color: { accent: '#ffb347', bg: 'rgba(255,179,71,0.16)',  glow: 'rgba(255,179,71,0.75)',  text: '#ffd37a' } },
+  // 失注・チャーン系（赤） — ネガティブは別階層
+  { key: 'LOST_DEAL',        label: '失注',           desc: '商談後に受注に至らなかった案件',
+    color: { accent: '#ff6b6b', bg: 'rgba(255,107,107,0.12)', glow: 'rgba(255,107,107,0.4)',  text: '#ff8a8a' } },
+  { key: 'CHURN',            label: 'チャーン',       desc: '契約後に解約となった案件',
+    color: { accent: '#ff4e6a', bg: 'rgba(255,78,106,0.12)',  glow: 'rgba(255,78,106,0.4)',   text: '#ff8a8a' } },
+  { key: 'LOST',             label: 'ロスト',         desc: '追客を完全に終了した案件',
+    color: { accent: '#6d6a6f', bg: 'rgba(109,106,111,0.15)', glow: 'rgba(109,106,111,0.3)',  text: '#8f8c90' } },
 ]
-
-// ─── Style Maps ────────────────────────────────────────────────────────────────
-
-type IntentConfig = { gradient: string; glow: string; color: string; label: string; borderColor: string; textShadow: string }
-// 確度: 高(Hot) / 中(Middle) / 低(Low)
-const INTENT_CONFIG: Record<IntentSignal, IntentConfig> = {
-  Hot: {
-    label: '高',
-    gradient: 'linear-gradient(135deg, #FFB347 0%, #FF6B35 35%, #FF3B30 70%, #CC1A00 100%)',
-    glow: '0 0 14px rgba(255,59,48,0.85), 0 0 5px rgba(255,107,53,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(120,0,0,0.6)',
-  },
-  Middle: {
-    label: '中',
-    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
-    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-    color: '#5B2E00', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-  },
-  Low: {
-    label: '低',
-    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
-    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(0,40,90,0.6)',
-  },
-}
-
-const OWNER_COLORS: Record<string, string> = {
-  '田中太郎': '#0071E3',
-  '鈴木花子': '#FF2D78',
-  '佐藤次郎': '#FF9F0A',
-}
-
-// ─── Main Page ─────────────────────────────────────────────────────────────────
 
 const OWNERS = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
+
+const INTENT_STYLE: Record<IntentSignal, { label: string; cls: string }> = {
+  Hot:    { label: '高 (High)',   cls: 'bg-[rgba(255,107,107,0.12)] text-[#ff6b6b]' },
+  Middle: { label: '中 (Middle)', cls: 'bg-[rgba(255,184,107,0.12)] text-[#ffb86b]' },
+  Low:    { label: '低 (Low)',    cls: 'bg-[rgba(171,199,255,0.12)] text-[#abc7ff]' },
+}
+
+// ─── Page ─────────────────────────────────────────────────────────────────────
+
+type ViewMode = 'kanban' | 'funnel'
 
 export default function PipelinePage() {
   const [deals, setDeals] = useState<Deal[]>(INITIAL_DEALS)
   const [ownerFilter, setOwnerFilter] = useState('全員')
   const [dragOverStage, setDragOverStage] = useState<StageKey | null>(null)
-  // ドロップ挿入位置のインデックス（そのカードの前に挿入）。-1 = 末尾
-  const [dropIndex, setDropIndex] = useState<number>(-1)
+  const [view, setView] = useState<ViewMode>('kanban')
   const dragDealId = useRef<string | null>(null)
+
+  const filtered = useMemo(() => {
+    if (ownerFilter === '全員') return deals
+    return deals.filter((d) => d.owner === ownerFilter)
+  }, [deals, ownerFilter])
+
+  const dealsByStage = useMemo(() => {
+    const map = {} as Record<StageKey, Deal[]>
+    for (const s of STAGES) map[s.key] = []
+    for (const d of filtered) map[d.stage]?.push(d)
+    for (const s of STAGES) map[s.key].sort((a, b) => a.order - b.order)
+    return map
+  }, [filtered])
 
   function onCardDragStart(e: DragEvent<HTMLDivElement>, dealId: string) {
     dragDealId.current = dealId
     e.dataTransfer.effectAllowed = 'move'
     e.dataTransfer.setData('text/plain', dealId)
     requestAnimationFrame(() => {
-      (e.target as HTMLElement).style.opacity = '0.4'
+      ;(e.target as HTMLElement).style.opacity = '0.4'
     })
   }
-
   function onCardDragEnd(e: DragEvent<HTMLDivElement>) {
-    (e.target as HTMLElement).style.opacity = '1'
+    ;(e.target as HTMLElement).style.opacity = '1'
     dragDealId.current = null
     setDragOverStage(null)
-    setDropIndex(-1)
   }
-
-  // カード上をホバーした時、マウスのY座標でカードの上半分か下半分かを判定
-  function onCardDragOver(e: DragEvent<HTMLDivElement>, stageKey: StageKey, cardIndex: number) {
-    e.preventDefault()
-    e.stopPropagation()
-    e.dataTransfer.dropEffect = 'move'
-    setDragOverStage(stageKey)
-
-    const rect = e.currentTarget.getBoundingClientRect()
-    const midY = rect.top + rect.height / 2
-    if (e.clientY < midY) {
-      setDropIndex(cardIndex)
-    } else {
-      setDropIndex(cardIndex + 1)
-    }
-  }
-
   function onColumnDragOver(e: DragEvent<HTMLDivElement>, stageKey: StageKey) {
     e.preventDefault()
     e.dataTransfer.dropEffect = 'move'
     setDragOverStage(stageKey)
-    // カラムの空白エリアにドラッグ → 末尾に追加
-    setDropIndex(-1)
   }
-
-  function onColumnDragLeave(stageKey: StageKey) {
-    setDragOverStage(prev => {
-      if (prev === stageKey) {
-        setDropIndex(-1)
-        return null
-      }
-      return prev
-    })
+  function onColumnDragLeave() {
+    setDragOverStage(null)
   }
-
   function onDrop(e: DragEvent<HTMLDivElement>, targetStage: StageKey) {
     e.preventDefault()
-    e.stopPropagation()
     const dealId = dragDealId.current || e.dataTransfer.getData('text/plain')
     if (!dealId) return
-
-    setDeals(prev => {
-      const movingDeal = prev.find(d => d.id === dealId)
-      if (!movingDeal) return prev
-
-      // 対象ステージのカードを順序通りに取得（移動するカード自身を除く）
-      const stageDeals = prev
-        .filter(d => d.stage === targetStage && d.id !== dealId)
-        .sort((a, b) => a.order - b.order)
-
-      // 挿入位置を決定
-      const insertAt = dropIndex === -1 ? stageDeals.length : Math.min(dropIndex, stageDeals.length)
-
-      // 挿入
-      stageDeals.splice(insertAt, 0, { ...movingDeal, stage: targetStage })
-
-      // order を振り直す
-      const reordered = new Map<string, { stage: StageKey; order: number }>()
-      stageDeals.forEach((d, i) => reordered.set(d.id, { stage: targetStage, order: i }))
-
-      // 元のステージからも移動元を除外して order を振り直す
-      if (movingDeal.stage !== targetStage) {
-        const srcDeals = prev
-          .filter(d => d.stage === movingDeal.stage && d.id !== dealId)
-          .sort((a, b) => a.order - b.order)
-        srcDeals.forEach((d, i) => reordered.set(d.id, { stage: d.stage, order: i }))
-      }
-
-      return prev.map(d => {
-        const update = reordered.get(d.id)
-        if (update) return { ...d, stage: update.stage, order: update.order }
-        return d
-      })
+    setDeals((prev) => {
+      const moving = prev.find((d) => d.id === dealId)
+      if (!moving || moving.stage === targetStage) return prev
+      const destCount = prev.filter((d) => d.stage === targetStage).length
+      return prev.map((d) => (d.id === dealId ? { ...d, stage: targetStage, order: destCount } : d))
     })
-
     dragDealId.current = null
     setDragOverStage(null)
-    setDropIndex(-1)
   }
 
-  // Group deals by stage (sorted by order)
-  const dealsByStage = STAGES.reduce<Record<StageKey, Deal[]>>((acc, s) => {
-    acc[s.key] = deals
-      .filter(d => d.stage === s.key)
-      .sort((a, b) => a.order - b.order)
-    return acc
-  }, {} as Record<StageKey, Deal[]>)
-
   return (
-    <div className="flex flex-col h-full">
-
-      {/* ── Header ── */}
+    <ObsPageShell>
       <div
-        className="flex items-center justify-between mb-5 pb-5"
-        style={{ borderBottom: '1px solid #2244AA' }}
+        className="w-full min-h-[calc(100vh-56px)] pb-16 stitch-dots"
+        style={{ backgroundColor: 'var(--color-obs-surface)' }}
       >
-        <div className="flex items-center gap-3">
-          <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">
-            パイプライン
-          </h1>
-          <span
-            className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[12px] font-bold tabular-nums"
+        <div className="w-full px-8 xl:px-12 2xl:px-16 pt-10">
+          {/* ── Hero ── */}
+          <div className="mb-10 max-w-5xl">
+            <span
+              className="inline-block text-[11px] font-medium tracking-[0.14em] uppercase mb-3"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              Pipeline
+            </span>
+            <h1
+              className="font-[family-name:var(--font-display)] text-[clamp(2rem,4vw,3.25rem)] font-semibold leading-[1.05] tracking-[-0.03em] mb-3 stitch-title-gradient"
+            >
+              パイプライン
+            </h1>
+            <p
+              className="max-w-2xl text-sm leading-relaxed"
+              style={{ color: 'var(--color-obs-text-muted)' }}
+            >
+              進行中 {deals.length} 件の商談をステージ別に一望。ドラッグで段階を移動できます。
+            </p>
+          </div>
+
+          {/* ── View Tabs（Segmented Control） ── */}
+          <div
+            className="inline-flex items-center p-1 rounded-[var(--radius-obs-lg)] mb-6 relative"
             style={{
-              background: 'linear-gradient(135deg, rgba(136,187,255,0.22) 0%, rgba(85,119,221,0.16) 100%)',
-              color: '#FFFFFF',
-              border: '1px solid rgba(136,187,255,0.45)',
-              boxShadow: '0 0 10px rgba(136,187,255,0.25)',
-              textShadow: '0 0 6px rgba(136,187,255,0.5)',
+              backgroundColor: 'var(--color-obs-surface-low)',
+              boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.3)',
             }}
           >
-            {deals.length}件
-          </span>
+            {[
+              { k: 'kanban' as const, label: 'ステージ', badge: deals.length },
+              { k: 'funnel' as const, label: 'レポート' },
+            ].map((t) => {
+              const active = view === t.k
+              return (
+                <button
+                  key={t.k}
+                  onClick={() => setView(t.k)}
+                  className="relative z-[1] h-9 px-5 rounded-[calc(var(--radius-obs-lg)-0.25rem)] text-[13px] font-medium transition-all duration-200 flex items-center gap-2"
+                  style={{
+                    color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                    background: active
+                      ? 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)'
+                      : 'transparent',
+                    boxShadow: active
+                      ? 'inset 0 1px 0 rgba(255,255,255,0.18), 0 4px 16px rgba(0,113,227,0.28)'
+                      : 'none',
+                    transitionTimingFunction: 'var(--ease-liquid)',
+                  }}
+                >
+                  {t.label}
+                  {t.badge != null && (
+                    <span
+                      className="min-w-[20px] h-[20px] px-1.5 rounded-full text-[10px] font-semibold tabular-nums flex items-center justify-center leading-none"
+                      style={{
+                        backgroundColor: active ? 'rgba(255,255,255,0.18)' : 'var(--color-obs-surface-high)',
+                        color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-subtle)',
+                      }}
+                    >
+                      {t.badge}
+                    </span>
+                  )}
+                </button>
+              )
+            })}
+          </div>
+
+          {view === 'kanban' && (
+            <>
+              {/* ── Owner Filter ── */}
+              <div className="flex items-center gap-2 mb-6 flex-wrap">
+                {OWNERS.map((o) => {
+                  const active = ownerFilter === o
+                  return (
+                    <button
+                      key={o}
+                      onClick={() => setOwnerFilter(o)}
+                      className="h-8 px-3.5 rounded-full text-[11px] font-medium transition-colors duration-150"
+                      style={{
+                        backgroundColor: active ? 'rgba(0,113,227,0.14)' : 'rgba(65,71,83,0.15)',
+                        color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+                        boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : 'none',
+                        transitionTimingFunction: 'var(--ease-liquid)',
+                      }}
+                    >
+                      {o}
+                    </button>
+                  )
+                })}
+                <span className="ml-auto text-[11px] tracking-[0.08em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  {filtered.length}件 ・ 合計 {formatJpy(filtered.reduce((s, d) => s + d.amount, 0))}
+                </span>
+              </div>
+
+              {/* ── Kanban ── */}
+              <div className="flex gap-6 overflow-x-auto pb-8 stitch-scroll select-none">
+            {STAGES.map((stage) => {
+              const stageDeals = dealsByStage[stage.key]
+              const isOver = dragOverStage === stage.key
+              return (
+                <div
+                  key={stage.key}
+                  className="flex-none w-[320px]"
+                  onDragOver={(e) => onColumnDragOver(e, stage.key)}
+                  onDragLeave={onColumnDragLeave}
+                  onDrop={(e) => onDrop(e, stage.key)}
+                >
+                  {/* Column header — Phase Chip スタイル */}
+                  <div className="mb-4">
+                    <div
+                      className="rounded-[var(--radius-obs-md)] px-3 py-2.5 mb-1.5 relative overflow-hidden"
+                      style={{
+                        background: `linear-gradient(140deg, ${stage.color.bg} 0%, rgba(28,28,30,0.4) 100%)`,
+                        boxShadow: `inset 0 0 0 1px ${stage.color.accent}33, inset 0 1px 0 0 ${stage.color.accent}22`,
+                      }}
+                    >
+                      {/* 左端のカラーバー */}
+                      <span
+                        className="absolute left-0 top-0 bottom-0 w-[3px]"
+                        style={{
+                          background: `linear-gradient(180deg, ${stage.color.accent} 0%, transparent 100%)`,
+                          boxShadow: `0 0 10px ${stage.color.glow}`,
+                        }}
+                      />
+
+                      <div className="flex items-center justify-between mb-1 pl-1">
+                        <div className="flex items-center gap-2 min-w-0">
+                          <span
+                            className="w-2 h-2 rounded-full shrink-0"
+                            style={{
+                              backgroundColor: stage.color.accent,
+                              boxShadow: `0 0 10px ${stage.color.glow}, 0 0 3px ${stage.color.accent}`,
+                            }}
+                          />
+                          <h3
+                            className="font-[family-name:var(--font-display)] text-[13px] font-extrabold tracking-[-0.01em] leading-none"
+                            style={{
+                              color: stage.color.text,
+                              textShadow: `0 0 10px ${stage.color.glow}`,
+                            }}
+                          >
+                            {stage.label}
+                          </h3>
+                          <span
+                            className="text-[10px] font-bold tabular-nums px-1.5 h-4 rounded-sm inline-flex items-center leading-none"
+                            style={{
+                              backgroundColor: `${stage.color.accent}22`,
+                              color: stage.color.accent,
+                            }}
+                          >
+                            {stageDeals.length}
+                          </span>
+                        </div>
+                        {stageDeals.length > 0 && (
+                          <span
+                            className="text-[11px] font-bold tabular-nums"
+                            style={{
+                              color: stage.color.accent,
+                              textShadow: `0 0 6px ${stage.color.glow}`,
+                            }}
+                          >
+                            {formatJpy(stageDeals.reduce((s, d) => s + d.amount, 0))}
+                          </span>
+                        )}
+                      </div>
+                      <p
+                        className="text-[10px] leading-tight pl-1 opacity-80"
+                        style={{ color: 'var(--color-obs-text-muted)' }}
+                      >
+                        {stage.desc}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Cards container */}
+                  <div
+                    className="flex flex-col gap-4 min-h-[120px] rounded-[var(--radius-obs-lg)] transition-colors duration-200"
+                    style={{
+                      backgroundColor: isOver ? 'rgba(0,113,227,0.06)' : 'transparent',
+                      padding: isOver ? '0.5rem' : 0,
+                      transitionTimingFunction: 'var(--ease-liquid)',
+                    }}
+                  >
+                    {stageDeals.map((deal) => (
+                      <DealCard
+                        key={deal.id}
+                        deal={deal}
+                        onDragStart={(e) => onCardDragStart(e, deal.id)}
+                        onDragEnd={onCardDragEnd}
+                      />
+                    ))}
+                  </div>
+                </div>
+              )
+            })}
+              </div>
+            </>
+          )}
+
+          {view === 'funnel' && (
+            /* ── 商談パイプライン ファネルレポート ── */
+            <FunnelReport deals={deals} />
+          )}
         </div>
+
+        {/* ── FAB（chromatic + button） ── */}
         <button
-          className="flex items-center gap-1.5 px-4 py-2 text-white text-sm font-semibold rounded-[8px] hover:brightness-105 active:scale-[0.97] transition-all"
-          style={{ background: 'linear-gradient(180deg, #147CE5 0%, #0071E3 100%)', boxShadow: '0 1px 3px rgba(0,113,227,0.3), inset 0 1px 0 rgba(255,255,255,0.12)' }}
+          className="fixed bottom-8 right-8 w-14 h-14 rounded-full flex items-center justify-center transition-transform duration-300 hover:scale-110 group z-40"
+          style={{
+            background:
+              'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+            color: 'var(--color-obs-on-primary)',
+            boxShadow:
+              '0 0 25px rgba(0,113,227,0.4), inset 0 1px 0 rgba(255,255,255,0.2)',
+            transitionTimingFunction: 'var(--ease-liquid)',
+          }}
         >
-          <Plus size={15} strokeWidth={2.5} />
-          取引を追加
+          <Plus size={22} strokeWidth={2.5} className="group-hover:rotate-90 transition-transform duration-300" />
+        </button>
+      </div>
+    </ObsPageShell>
+  )
+}
+
+// ─── FunnelReport ─────────────────────────────────────────────────────────────
+// 商談パイプラインのコンバージョンファネル
+// 有効商談 → PJ化予定 → PJ可能 → PJ進行中 + 失注 / 契約
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// FunnelReport — Liquid Obsidian 準拠（サービス内のレポートタブ）
+//   ・データ：親から渡される deals（パイプラインの実データ）から自動集計
+//   ・フィルタ：期間（全期間/3月/4月）× 担当者（全体/各担当）
+//   ・エグゼクティブサマリー：結論選択＋テキスト編集＋localStorage保存
+//   ・ファネル：4段（有効商談 → PJ化予定あり → PJ可能案件 → PJ進行）
+//   ・失注 / 契約 カード
+//   ・有効商談一覧テーブル
+// ═══════════════════════════════════════════════════════════════════════════════
+
+type ReportPeriod = 'all' | '2026-03' | '2026-04'
+type Conclusion = '順調' | '要注意' | '危険'
+
+interface SummaryState {
+  conclusion: Conclusion
+  next: string
+  help: string
+}
+
+const SUMMARY_KEY = 'bgm.pipeline.report.summary.v1'
+
+const DEFAULT_SUMMARY: SummaryState = {
+  conclusion: '要注意',
+  next: 'トライアル期間の週次MTG\n1週目：動作確認\n2週目：運用確認\n3週目：最終調整\n4週目：意向確認',
+  help: '機能アップデート\n4月：担当者の割り当て通知\n5月：チケットからのFAQ自動作成（Gドライブ・シェアポイント）\n\n※Must Have',
+}
+
+const CONCLUSION_STYLE: Record<Conclusion, { color: string; bg: string; ring: string }> = {
+  '順調':   { color: '#6ee7a1',                       bg: 'rgba(110,231,161,0.12)', ring: 'rgba(110,231,161,0.35)' },
+  '要注意': { color: 'var(--color-obs-middle)',       bg: 'rgba(255,184,107,0.12)', ring: 'rgba(255,184,107,0.35)' },
+  '危険':   { color: 'var(--color-obs-hot)',          bg: 'rgba(255,107,107,0.12)', ring: 'rgba(255,107,107,0.35)' },
+}
+
+// stage → レポート上の分類（ファネル＆バッジ共通）
+type ReportBucket = 'PJ進行' | 'PJ可能' | 'PJ化予定' | '有効商談' | '失注' | '契約' | 'その他'
+
+function bucketOf(stage: StageKey): ReportBucket {
+  if (stage === 'CLOSED_WON') return '契約'
+  if (stage === 'LOST_DEAL' || stage === 'LOST' || stage === 'CHURN') return '失注'
+  if (stage === 'POC') return 'PJ進行'
+  if (stage === 'PROJECT_PLANNED' || stage === 'MULTI_MEETING') return 'PJ可能'
+  if (stage === 'MEETING_DONE') return 'PJ化予定'
+  if (stage === 'IS' || stage === 'NURTURING' || stage === 'MEETING_PLANNED') return '有効商談'
+  return 'その他'
+}
+
+const BADGE_STYLE: Record<ReportBucket, { label: string; color: string; bg: string } | null> = {
+  '有効商談': { label: '有効商談',    color: 'var(--color-obs-primary)',        bg: 'rgba(171,199,255,0.12)' },
+  'PJ化予定': { label: 'PJ化予定あり', color: '#c9a94b',                         bg: 'rgba(201,169,75,0.14)' },
+  'PJ可能':   { label: 'PJ可能案件',   color: 'var(--color-obs-low)',             bg: 'rgba(126,198,255,0.14)' },
+  'PJ進行':   { label: 'PJ進行',       color: '#6ee7a1',                         bg: 'rgba(110,231,161,0.14)' },
+  '失注':     { label: '失注',         color: 'var(--color-obs-hot)',            bg: 'rgba(255,107,107,0.14)' },
+  '契約':     { label: '契約',         color: '#6ee7a1',                         bg: 'rgba(110,231,161,0.14)' },
+  'その他':   null,
+}
+
+function FunnelReport({ deals }: { deals: Deal[] }) {
+  const [period, setPeriod] = useState<ReportPeriod>('all')
+  const [owner, setOwner] = useState<string>('全員')
+
+  // Executive Summary（localStorage 永続化）
+  const [summary, setSummary] = useState<SummaryState>(DEFAULT_SUMMARY)
+  const [summaryOpen, setSummaryOpen] = useState(false)
+  const [draft, setDraft] = useState<SummaryState>(DEFAULT_SUMMARY)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    try {
+      const raw = localStorage.getItem(SUMMARY_KEY)
+      if (raw) {
+        const parsed = JSON.parse(raw) as SummaryState
+        setSummary(parsed)
+        setDraft(parsed)
+      }
+    } catch { /* ignore */ }
+  }, [])
+
+  function openEditor() {
+    setDraft(summary)
+    setSummaryOpen(true)
+  }
+  function saveEditor() {
+    setSummary(draft)
+    try { localStorage.setItem(SUMMARY_KEY, JSON.stringify(draft)) } catch { /* ignore */ }
+    setSummaryOpen(false)
+  }
+  function resetEditor() {
+    setDraft(DEFAULT_SUMMARY)
+  }
+
+  // 担当者一覧は deals から動的生成
+  const OWNER_LIST = useMemo(() => {
+    const s = new Set<string>()
+    deals.forEach((d) => s.add(d.owner))
+    return ['全員', ...Array.from(s).sort((a, b) => a.localeCompare(b, 'ja'))]
+  }, [deals])
+
+  // 期間 × 担当者でスコープ
+  const scoped = useMemo(() => {
+    let list = deals
+    if (owner !== '全員') list = list.filter((d) => d.owner === owner)
+    if (period !== 'all') list = list.filter((d) => d.createdAt.startsWith(period))
+    return list
+  }, [deals, owner, period])
+
+  // ファネル集計
+  // - カード数値：現在その段階で進行中の案件数（現在値）
+  // - 移行率 %：累計ベースで計算（失注・契約は過去実績として各段階の累計に加算）
+  // - 移行率ホバー：累計の内訳（現在 / 失注 / 契約）＋過去案件（失注・契約）リスト
+  const { counts, stageGroups } = useMemo(() => {
+    const activeValid    = scoped.filter((d) => {
+      const b = bucketOf(d.stage)
+      return b === '有効商談' || b === 'PJ化予定' || b === 'PJ可能' || b === 'PJ進行'
+    })
+    const activePlanned  = scoped.filter((d) => {
+      const b = bucketOf(d.stage)
+      return b === 'PJ化予定' || b === 'PJ可能' || b === 'PJ進行'
+    })
+    const activePossible = scoped.filter((d) => {
+      const b = bucketOf(d.stage)
+      return b === 'PJ可能' || b === 'PJ進行'
+    })
+    const activeRunning  = scoped.filter((d) => bucketOf(d.stage) === 'PJ進行')
+    const lostDeals      = scoped.filter((d) => bucketOf(d.stage) === '失注')
+    const contractDeals  = scoped.filter((d) => bucketOf(d.stage) === '契約')
+
+    // 累計（過去にその段階を通過した実績。失注・契約を加算）
+    const totalValid      = activeValid.length    + lostDeals.length + contractDeals.length
+    const totalPlanned    = activePlanned.length  + lostDeals.length + contractDeals.length
+    const totalPossible   = activePossible.length + lostDeals.length + contractDeals.length
+    const totalRunning    = activeRunning.length  + lostDeals.length + contractDeals.length
+
+    return {
+      counts: {
+        // カード表示値 = 現在進行中のみ
+        valid:      activeValid.length,
+        pjPlanned:  activePlanned.length,
+        pjPossible: activePossible.length,
+        pjRunning:  activeRunning.length,
+        lost:       lostDeals.length,
+        contracted: contractDeals.length,
+        // 累計件数（ホバーで表示）
+        totalValid, totalPlanned, totalPossible, totalRunning,
+        // 移行率は累計ベース
+        finalRate:    totalValid > 0 ? Math.round((totalRunning / totalValid) * 100) : 0,
+        plannedRate:  totalValid > 0 ? Math.round((totalPlanned / totalValid) * 100) : 0,
+        possibleRate: totalPlanned > 0 ? Math.round((totalPossible / totalPlanned) * 100) : 0,
+        runningRate:  totalPossible > 0 ? Math.round((totalRunning / totalPossible) * 100) : 0,
+        // 失注/契約の PJ進行中比も累計ベース
+        lostRate:     totalRunning > 0 ? Math.round((lostDeals.length / totalRunning) * 100) : 0,
+        contractRate: totalRunning > 0 ? Math.round((contractDeals.length / totalRunning) * 100) : 0,
+      },
+      stageGroups: {
+        // 現在進行中の案件（カード全体ホバー用）
+        valid:      activeValid,
+        pjPlanned:  activePlanned,
+        pjPossible: activePossible,
+        pjRunning:  activeRunning,
+        lost:       lostDeals,
+        contracted: contractDeals,
+        // 過去案件 = 失注 + 契約（移行率ホバー用。全段階で共通の「過去に通過した案件」）
+        past: [...lostDeals, ...contractDeals],
+      },
+    }
+  }, [scoped])
+
+  // テーブル：有効商談だけを並べる（受注・失注を除く）
+  const activeDeals = useMemo(
+    () => scoped.filter((d) => {
+      const b = bucketOf(d.stage)
+      return b === '有効商談' || b === 'PJ化予定' || b === 'PJ可能' || b === 'PJ進行'
+    }),
+    [scoped],
+  )
+
+  const periodLabel = period === 'all' ? '全期間合算' : period === '2026-03' ? '3月分' : '4月分'
+  const ownerLabel = owner === '全員' ? '全体' : owner
+
+  const conc = CONCLUSION_STYLE[summary.conclusion]
+
+  return (
+    <div className="mt-4 space-y-8 pb-10">
+      {/* ─── フィルタバー：期間タブ ＋ 担当者 ─── */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex items-center gap-1">
+          {([
+            { k: 'all',     label: '全期間' },
+            { k: '2026-03', label: '3月' },
+            { k: '2026-04', label: '4月' },
+          ] as { k: ReportPeriod; label: string }[]).map((t) => {
+            const active = period === t.k
+            return (
+              <button
+                key={t.k}
+                onClick={() => setPeriod(t.k)}
+                className="h-9 px-4 text-[12px] font-medium transition-colors duration-150 relative"
+                style={{
+                  color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+                  transitionTimingFunction: 'var(--ease-liquid)',
+                }}
+              >
+                {t.label}
+                {active && (
+                  <span
+                    className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
+                    style={{
+                      background: 'linear-gradient(90deg, var(--color-obs-primary), var(--color-obs-primary-container))',
+                      boxShadow: '0 0 8px rgba(0,113,227,0.5)',
+                    }}
+                  />
+                )}
+              </button>
+            )
+          })}
+        </div>
+
+        <span className="h-6 w-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+
+        <div className="flex items-center gap-1.5 flex-wrap">
+          {OWNER_LIST.map((o) => {
+            const active = owner === o
+            const label = o === '全員' ? '全体' : o
+            return (
+              <button
+                key={o}
+                onClick={() => setOwner(o)}
+                className="h-7 px-3 rounded-full text-[11px] font-medium transition-colors duration-150"
+                style={{
+                  backgroundColor: active ? 'rgba(0,113,227,0.14)' : 'transparent',
+                  color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+                  boxShadow: active ? 'inset 0 0 0 1px rgba(171,199,255,0.22)' : 'none',
+                  transitionTimingFunction: 'var(--ease-liquid)',
+                }}
+              >
+                {label}
+              </button>
+            )
+          })}
+        </div>
+
+        <span className="ml-auto text-[11px] tracking-[0.08em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          {scoped.length} deals ・ {ownerLabel} / {periodLabel}
+        </span>
+      </div>
+
+      {/* ─── エグゼクティブサマリー（編集可能） ─── */}
+      <div
+        className="stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-6 relative"
+      >
+        <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center gap-3">
+            <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+            <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+              エグゼクティブサマリー
+            </span>
+          </div>
+          {!summaryOpen && (
+            <button
+              onClick={openEditor}
+              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
+              style={{
+                backgroundColor: 'rgba(0,113,227,0.12)',
+                color: 'var(--color-obs-primary)',
+                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
+              }}
+            >
+              <Pencil size={11} />
+              編集
+            </button>
+          )}
+          {summaryOpen && (
+            <div className="flex items-center gap-2">
+              <button
+                onClick={resetEditor}
+                className="h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
+                style={{ backgroundColor: 'transparent', color: 'var(--color-obs-text-muted)' }}
+              >
+                デフォルトに戻す
+              </button>
+              <button
+                onClick={() => setSummaryOpen(false)}
+                className="h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
+                style={{ backgroundColor: 'rgba(65,71,83,0.2)', color: 'var(--color-obs-text-muted)' }}
+              >
+                キャンセル
+              </button>
+              <button
+                onClick={saveEditor}
+                className="h-7 px-4 rounded-full text-[11px] font-semibold transition-colors"
+                style={{
+                  background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+                  color: 'var(--color-obs-on-primary)',
+                  boxShadow: '0 4px 12px rgba(0,113,227,0.25)',
+                }}
+              >
+                保存
+              </button>
+            </div>
+          )}
+        </div>
+
+        {!summaryOpen ? (
+          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-8">
+            <div>
+              <FieldLabel>結論</FieldLabel>
+              <div
+                className="mt-2 inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-obs-md)] text-[14px] font-semibold"
+                style={{ backgroundColor: conc.bg, color: conc.color, boxShadow: `inset 0 0 0 1px ${conc.ring}` }}
+              >
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: conc.color }} />
+                {summary.conclusion}
+              </div>
+            </div>
+            <SummaryView title="NEXT" body={summary.next} />
+            <SummaryView title="助けが必要な1点" body={summary.help} />
+          </div>
+        ) : (
+          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-8">
+            <div>
+              <FieldLabel>結論</FieldLabel>
+              <ConclusionSelect value={draft.conclusion} onChange={(v) => setDraft({ ...draft, conclusion: v })} />
+            </div>
+            <div>
+              <FieldLabel>NEXT</FieldLabel>
+              <textarea
+                value={draft.next}
+                onChange={(e) => setDraft({ ...draft, next: e.target.value })}
+                rows={6}
+                className="mt-2 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
+                style={{
+                  backgroundColor: 'var(--color-obs-surface-low)',
+                  color: 'var(--color-obs-text)',
+                  boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+                  minHeight: 150,
+                }}
+              />
+            </div>
+            <div>
+              <FieldLabel>助けが必要な1点</FieldLabel>
+              <textarea
+                value={draft.help}
+                onChange={(e) => setDraft({ ...draft, help: e.target.value })}
+                rows={6}
+                className="mt-2 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
+                style={{
+                  backgroundColor: 'var(--color-obs-surface-low)',
+                  color: 'var(--color-obs-text)',
+                  boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+                  minHeight: 150,
+                }}
+              />
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* ─── セクションラベル ─── */}
+      <div className="flex items-center gap-3">
+        <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+        <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+          商談パイプライン
+        </span>
+        <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          — {ownerLabel} / {periodLabel}
+        </span>
+        <button
+          className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[10px] font-medium ml-2"
+          style={{ backgroundColor: 'rgba(65,71,83,0.2)', color: 'var(--color-obs-text-subtle)' }}
+        >
+          <HelpCircle size={10} />
+          認定条件とは？
         </button>
       </div>
 
-      {/* ── Filter Bar ── */}
-      <div
-        className="flex items-center gap-2 flex-wrap mb-4 p-3 rounded-[10px]"
-        style={{ background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)', border: '1px solid #2244AA', boxShadow: '0 2px 12px rgba(0,0,0,0.4)' }}
-      >
-        <div className="flex items-center gap-1">
-          {OWNERS.map(o => (
-            <button
-              key={o}
-              onClick={() => setOwnerFilter(o)}
-              className="px-2.5 py-1.5 rounded-[6px] text-[12px] font-medium transition-all duration-150"
-              style={{
-                background: ownerFilter === o ? 'rgba(136,187,255,0.12)' : 'transparent', color: ownerFilter === o ? '#88BBFF' : '#7788AA',
-              }}
-            >
-              {o}
-            </button>
-          ))}
-        </div>
+      {/* ─── ファネル 4ステージ ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] gap-4 items-stretch">
+        <FunnelCard
+          label="有効商談数"
+          value={counts.valid}
+          color="var(--color-obs-primary)"
+          condition={'担当部門 / 導入検討中\n時期感あり'}
+          rateLabel="最終転換率"
+          rate={counts.finalRate}
+          rateColor="var(--color-obs-primary)"
+          activeDeals={stageGroups.valid}
+          activeLabel="現在進行中の案件"
+          rateTotal={counts.totalValid}
+          rateTotalLabel="有効商談累計"
+          rateNumerator={counts.totalRunning}
+          rateNumeratorLabel="PJ進行まで到達"
+          pastDeals={stageGroups.past}
+        />
+        <ArrowStep label="昇格" />
+        <FunnelCard
+          label="PJ化予定あり"
+          value={counts.pjPlanned}
+          color="#c9a94b"
+          condition={'2回目の商談意向\nor トライアル意向'}
+          rateLabel="移行率"
+          rate={counts.plannedRate}
+          rateColor="#6ee7a1"
+          activeDeals={stageGroups.pjPlanned}
+          activeLabel="現在進行中の案件"
+          rateTotal={counts.totalValid}
+          rateTotalLabel="有効商談累計"
+          rateNumerator={counts.totalPlanned}
+          rateNumeratorLabel="PJ化予定まで到達"
+          pastDeals={stageGroups.past}
+        />
+        <ArrowStep label="PJ化" />
+        <FunnelCard
+          label="PJ可能案件"
+          value={counts.pjPossible}
+          color="var(--color-obs-low)"
+          condition={'上長の社内推進\n社内障壁のクリア'}
+          rateLabel="移行率"
+          rate={counts.possibleRate}
+          rateColor="#6ee7a1"
+          activeDeals={stageGroups.pjPossible}
+          activeLabel="現在進行中の案件"
+          rateTotal={counts.totalPlanned}
+          rateTotalLabel="PJ化予定累計"
+          rateNumerator={counts.totalPossible}
+          rateNumeratorLabel="PJ可能まで到達"
+          pastDeals={stageGroups.past}
+        />
+        <ArrowStep label="POC" />
+        <FunnelCard
+          label="PJ進行"
+          value={counts.pjRunning}
+          color="#6ee7a1"
+          condition={'POC実施確定\n2回目商談以降に移行'}
+          rateLabel="移行率"
+          rate={counts.runningRate}
+          rateColor="#6ee7a1"
+          accent
+          activeDeals={stageGroups.pjRunning}
+          activeLabel="現在進行中の案件"
+          rateTotal={counts.totalPossible}
+          rateTotalLabel="PJ可能累計"
+          rateNumerator={counts.totalRunning}
+          rateNumeratorLabel="PJ進行まで到達"
+          pastDeals={stageGroups.past}
+        />
       </div>
 
-      {/* ── Kanban Board ── */}
-      <div className="flex-1 overflow-x-auto overflow-y-hidden pb-4">
-        <div className="flex gap-3 h-full" style={{ minWidth: 'max-content' }}>
-          {STAGES.map(stage => {
-            const stageDeals = dealsByStage[stage.key]
-            const isOver = dragOverStage === stage.key
+      {/* ─── 失注 / 契約 ─── */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <OutcomeCard icon={<X size={16} />}     label="失注" value={counts.lost}       rate={counts.lostRate}     tone="hot"     deals={stageGroups.lost} />
+        <OutcomeCard icon={<Check size={16} />} label="契約" value={counts.contracted} rate={counts.contractRate} tone="success" deals={stageGroups.contracted} />
+      </div>
+
+      {/* ─── 有効商談一覧 ─── */}
+      <div>
+        <div className="flex items-center gap-3 mb-4">
+          <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+          <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+            有効商談一覧
+          </span>
+          <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            — {activeDeals.length}件
+          </span>
+        </div>
+
+        <div
+          className="rounded-[var(--radius-obs-xl)] overflow-hidden"
+          style={{
+            backgroundColor: 'var(--color-obs-surface-high)',
+            boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.2)',
+          }}
+        >
+          <div
+            className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.12em] uppercase"
+            style={{
+              gridTemplateColumns: '40px 1.3fr 0.7fr 1.4fr',
+              color: 'var(--color-obs-text-subtle)',
+              backgroundColor: 'var(--color-obs-surface-low)',
+            }}
+          >
+            <span>#</span>
+            <span>企業名 / 担当</span>
+            <span>ステータス</span>
+            <span>Status / Next</span>
+          </div>
+
+          {activeDeals.length === 0 ? (
+            <div className="px-5 py-10 text-center text-[12px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+              該当する商談がありません
+            </div>
+          ) : activeDeals.map((d, i) => {
+            const bucket = bucketOf(d.stage)
+            const badge = BADGE_STYLE[bucket]
             return (
               <div
-                key={stage.key}
-                className="flex flex-col w-[240px] shrink-0"
-                onDragOver={e => onColumnDragOver(e, stage.key)}
-                onDragLeave={() => onColumnDragLeave(stage.key)}
-                onDrop={e => onDrop(e, stage.key)}
+                key={d.id}
+                className="grid items-center px-5 py-4 transition-colors duration-150"
+                style={{
+                  gridTemplateColumns: '40px 1.3fr 0.7fr 1.4fr',
+                  borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.12)',
+                }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = 'rgba(65,71,83,0.12)')}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
               >
-                {/* Column Header */}
-                <div
-                  className="rounded-[10px] px-3 py-3 mb-3 border-2 transition-all duration-150 relative overflow-hidden"
-                  style={{
-                    background: isOver
-                      ? `linear-gradient(180deg, ${stage.color}55 0%, ${stage.color}25 100%)`
-                      : `linear-gradient(180deg, ${stage.color}40 0%, ${stage.color}18 100%)`,
-                    borderColor: isOver ? stage.color : stage.color,
-                    boxShadow: isOver
-                      ? `0 0 28px ${stage.color}88, 0 0 8px ${stage.color}cc, inset 0 1px 0 ${stage.color}60`
-                      : `0 0 18px ${stage.color}55, 0 0 4px ${stage.color}80, inset 0 1px 0 ${stage.color}50`,
-                    transform: isOver ? 'scale(1.02)' : 'scale(1)',
-                  }}
-                >
-                  {/* 上部のグローライン */}
-                  <div style={{
-                    position: 'absolute', top: 0, left: 0, right: 0, height: '3px',
-                    background: `linear-gradient(90deg, transparent 0%, ${stage.color} 50%, transparent 100%)`,
-                    boxShadow: `0 0 12px ${stage.color}, 0 0 4px ${stage.color}`,
-                  }} />
-                  {/* 背景の放射グロー */}
-                  <div style={{
-                    position: 'absolute', top: '-30%', left: '-10%', width: '120%', height: '160%',
-                    background: `radial-gradient(ellipse at top, ${stage.color}30 0%, transparent 60%)`,
-                    pointerEvents: 'none',
-                  }} />
-
-                  <div className="flex items-center justify-between relative">
-                    <div className="flex items-center gap-2">
-                      <div
-                        className="w-3 h-3 rounded-full"
-                        style={{
-                          background: `radial-gradient(circle, #FFFFFF 0%, ${stage.color} 60%, ${stage.color} 100%)`,
-                          boxShadow: `0 0 10px ${stage.color}, 0 0 20px ${stage.color}cc, 0 0 4px #FFFFFF`,
-                          border: `1px solid ${stage.color}`,
-                        }}
-                      />
-                      <span
-                        className="text-[13px] font-black tracking-[0.02em]"
-                        style={{
-                          color: '#FFFFFF',
-                          textShadow: `0 0 12px ${stage.color}, 0 0 4px ${stage.color}, 0 1px 2px rgba(0,0,0,0.5)`,
-                        }}
-                      >
-                        {stage.label}
-                      </span>
-                    </div>
-                    <span
-                      className="min-w-[22px] h-[22px] px-1.5 rounded-full flex items-center justify-center text-[11px] font-black text-white"
-                      style={{
-                        background: `linear-gradient(180deg, ${stage.color}, ${stage.color}cc)`,
-                        boxShadow: `0 0 12px ${stage.color}cc, 0 0 4px ${stage.color}, inset 0 1px 0 rgba(255,255,255,0.5)`,
-                        border: `1px solid rgba(255,255,255,0.5)`,
-                        textShadow: '0 1px 2px rgba(0,0,0,0.4)',
-                      }}
-                    >
-                      {stageDeals.length}
-                    </span>
+                <span className="text-[12px] tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0">
+                  <div className="text-[13px] font-semibold truncate" style={{ color: 'var(--color-obs-text)' }}>
+                    {d.company}
                   </div>
-                  <p className="text-[10px] mt-1.5 leading-tight font-medium relative" style={{ color: '#EEEEFF' }}>
-                    {stage.desc}
-                  </p>
+                  <div className="text-[11px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                    {d.owner}
+                  </div>
                 </div>
-
-                {/* Drop zone + Cards */}
-                <div
-                  className="flex flex-col gap-2 flex-1 rounded-[8px] p-1 -m-1 transition-all duration-150"
-                  style={{
-                    background: isOver ? stage.color + '08' : 'transparent',
-                    border: isOver ? `2px dashed ${stage.color}40` : '2px dashed transparent',
-                    minHeight: 60,
-                  }}
-                >
-                  {stageDeals.map((deal, cardIdx) => {
-                    const intent = INTENT_CONFIG[deal.intent]
-                    const ownerColor = OWNER_COLORS[deal.owner] ?? '#6B7280'
-                    const dimmed = ownerFilter !== '全員' && deal.owner !== ownerFilter
-                    const showDropBefore = isOver && dropIndex === cardIdx && dragDealId.current !== deal.id
-                    const showDropAfter = isOver && dropIndex === cardIdx + 1 && cardIdx === stageDeals.length - 1 && dragDealId.current !== deal.id
-                    return (
-                      <div key={deal.id}>
-                        {/* Drop indicator line - before */}
-                        {showDropBefore && (
-                          <div className="flex items-center gap-1 py-0.5 mb-1">
-                            <div className="w-2 h-2 rounded-full" style={{ background: stage.color }} />
-                            <div className="flex-1 h-[2px] rounded-full" style={{ background: stage.color }} />
-                          </div>
-                        )}
-                        <div
-                          draggable
-                          onDragStart={e => onCardDragStart(e, deal.id)}
-                          onDragEnd={onCardDragEnd}
-                          onDragOver={e => onCardDragOver(e, stage.key, cardIdx)}
-                          className="rounded-[10px] p-3.5 cursor-grab active:cursor-grabbing select-none transition-all duration-150 hover:-translate-y-0.5"
-                          style={{
-                            background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-                            border: '1px solid #2244AA',
-                            boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)',
-                            opacity: dimmed ? 0.35 : 1,
-                            pointerEvents: dimmed ? 'none' : 'auto',
-                          }}
-                        >
-                          {/* Handle + Intent (確度) */}
-                          <div className="flex items-start justify-between mb-2">
-                            <GripVertical size={13} className="text-[#88BBFF] mt-0.5 -ml-0.5 shrink-0" />
-                            <span
-                              className="inline-flex items-center justify-center rounded-full text-[10px] font-black"
-                              style={{
-                                width: 22,
-                                height: 22,
-                                background: intent.gradient,
-                                boxShadow: intent.glow,
-                                color: intent.color,
-                                border: `1px solid ${intent.borderColor}`,
-                                textShadow: intent.textShadow,
-                                letterSpacing: '0.04em',
-                              }}
-                              title={`確度: ${intent.label}`}
-                            >
-                              {intent.label}
-                            </span>
-                          </div>
-                          <p className="text-[13px] font-semibold text-[#EEEEFF] leading-snug mb-3 truncate">
-                            {deal.name}
-                          </p>
-                          <div className="flex items-center gap-1.5">
-                            <div
-                              className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
-                              style={{
-                                background: ownerColor,
-                                boxShadow: `0 0 8px ${ownerColor}aa, inset 0 1px 0 rgba(255,255,255,0.4)`,
-                                border: '1px solid rgba(255,255,255,0.35)',
-                              }}
-                            >
-                              <span className="text-[9px] font-bold text-white" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.4)' }}>
-                                {deal.owner[0]}
-                              </span>
-                            </div>
-                            <span className="text-[12px] font-medium text-[#EEEEFF]">{deal.owner}</span>
-                          </div>
-                        </div>
-                        {/* Drop indicator line - after last card */}
-                        {showDropAfter && (
-                          <div className="flex items-center gap-1 py-0.5 mt-1">
-                            <div className="w-2 h-2 rounded-full" style={{ background: stage.color }} />
-                            <div className="flex-1 h-[2px] rounded-full" style={{ background: stage.color }} />
-                          </div>
-                        )}
-                      </div>
-                    )
-                  })}
-                  {/* 空のカラムへのドロップ時の末尾インジケーター */}
-                  {isOver && stageDeals.length === 0 && (
-                    <div className="flex items-center gap-1 py-0.5">
-                      <div className="w-2 h-2 rounded-full" style={{ background: stage.color }} />
-                      <div className="flex-1 h-[2px] rounded-full" style={{ background: stage.color }} />
+                <div>
+                  {badge && (
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 h-6 rounded-full text-[11px] font-medium"
+                      style={{ backgroundColor: badge.bg, color: badge.color }}
+                    >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: badge.color }} />
+                      {badge.label}
+                    </span>
+                  )}
+                </div>
+                <div className="text-[11.5px] leading-[1.6] min-w-0" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  {d.status && (
+                    <div>
+                      <span style={{ color: 'var(--color-obs-text-subtle)' }}>Status：</span>
+                      <span style={{ color: 'var(--color-obs-text)' }}>{d.status}</span>
+                    </div>
+                  )}
+                  {d.nextAction && (
+                    <div>
+                      <span style={{ color: 'var(--color-obs-text-subtle)' }}>Next：</span>
+                      <span>{d.nextAction}</span>
+                      {d.nextActionDate && (
+                        <span className="ml-1.5" style={{ color: 'var(--color-obs-primary-dim)' }}>
+                          ({d.nextActionDate})
+                        </span>
+                      )}
                     </div>
                   )}
                 </div>
@@ -455,6 +963,795 @@ export default function PipelinePage() {
             )
           })}
         </div>
+      </div>
+    </div>
+  )
+}
+
+// ─── Sub: 結論セレクタ ─────────────────────────────────────────────────────────
+function ConclusionSelect({ value, onChange }: { value: Conclusion; onChange: (v: Conclusion) => void }) {
+  const [open, setOpen] = useState(false)
+  const cur = CONCLUSION_STYLE[value]
+  return (
+    <div className="relative mt-2">
+      <button
+        onClick={() => setOpen((v) => !v)}
+        className="w-full flex items-center justify-between h-10 px-4 rounded-[var(--radius-obs-md)] text-[14px] font-semibold"
+        style={{ backgroundColor: cur.bg, color: cur.color, boxShadow: `inset 0 0 0 1px ${cur.ring}` }}
+      >
+        <span className="inline-flex items-center gap-2">
+          <span className="w-2 h-2 rounded-full" style={{ backgroundColor: cur.color }} />
+          {value}
+        </span>
+        <ChevronDown size={14} />
+      </button>
+      {open && (
+        <div
+          className="absolute z-10 mt-1 w-full rounded-[var(--radius-obs-md)] overflow-hidden"
+          style={{
+            backgroundColor: 'var(--color-obs-surface-highest)',
+            boxShadow: '0 8px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(65,71,83,0.4)',
+          }}
+        >
+          {(['順調', '要注意', '危険'] as Conclusion[]).map((opt) => {
+            const s = CONCLUSION_STYLE[opt]
+            return (
+              <button
+                key={opt}
+                onClick={() => { onChange(opt); setOpen(false) }}
+                className="w-full flex items-center gap-2 text-left px-4 h-9 text-[13px] font-medium transition-colors"
+                style={{ color: s.color }}
+                onMouseOver={(e) => (e.currentTarget.style.backgroundColor = s.bg)}
+                onMouseOut={(e) => (e.currentTarget.style.backgroundColor = 'transparent')}
+              >
+                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: s.color }} />
+                {opt}
+              </button>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[10px] font-medium tracking-[0.14em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+      {children}
+    </span>
+  )
+}
+
+function SummaryView({ title, body }: { title: string; body: string }) {
+  return (
+    <div>
+      <FieldLabel>{title}</FieldLabel>
+      <div
+        className="mt-2 rounded-[var(--radius-obs-md)] p-3.5 text-[12.5px] leading-[1.9] whitespace-pre-wrap break-words"
+        style={{
+          backgroundColor: 'var(--color-obs-surface-low)',
+          color: 'var(--color-obs-text-muted)',
+          minHeight: 140,
+        }}
+      >
+        {body || <span style={{ color: 'var(--color-obs-text-subtle)' }}>（未入力）</span>}
+      </div>
+    </div>
+  )
+}
+
+// ─── Sub: ファネルカード ───────────────────────────────────────────────────────
+function FunnelCard({
+  label, value, color, condition, rateLabel, rate, rateColor, accent,
+  activeDeals, activeLabel,
+  rateTotal, rateTotalLabel, rateNumerator, rateNumeratorLabel, pastDeals,
+}: {
+  label: string
+  value: number
+  color: string
+  condition: string
+  rateLabel: string
+  rate: number
+  rateColor: string
+  accent?: boolean
+  activeDeals: Deal[]
+  activeLabel: string
+  // 移行率ホバー用：累計件数の内訳と過去案件
+  rateTotal: number
+  rateTotalLabel: string
+  rateNumerator: number
+  rateNumeratorLabel: string
+  pastDeals: Deal[]
+}) {
+  // hover state: 'none' | 'card' | 'rate'
+  const [hover, setHover] = useState<'none' | 'card' | 'rate'>('none')
+
+  return (
+    <div
+      className="relative stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-5 flex flex-col transition-all duration-200"
+      style={{
+        ...(accent ? { boxShadow: '0 0 20px rgba(110,231,161,0.15), inset 0 0 0 1.5px rgba(110,231,161,0.3)' } : {}),
+        transform: hover !== 'none' ? 'translateY(-2px)' : 'translateY(0)',
+        transitionTimingFunction: 'var(--ease-liquid)',
+        cursor: 'default',
+      }}
+      onMouseEnter={() => setHover('card')}
+      onMouseLeave={() => setHover('none')}
+    >
+      <p className="text-[11px] font-bold tracking-[0.1em] uppercase mb-2" style={{ color }}>
+        {label}
+      </p>
+      <div className="flex items-baseline gap-1 mb-4">
+        <span
+          className="font-[family-name:var(--font-display)] text-[44px] font-extrabold leading-none tabular-nums tracking-[-0.04em]"
+          style={{ color: 'var(--color-obs-text)' }}
+        >
+          {value}
+        </span>
+        <span className="text-[12px] font-medium" style={{ color: 'var(--color-obs-text-muted)' }}>社</span>
+      </div>
+      <p className="text-[9px] font-medium tracking-[0.08em] uppercase mb-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        認定条件
+      </p>
+      <p className="text-[11px] leading-[1.6] whitespace-pre-line flex-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+        {condition}
+      </p>
+
+      {/* 移行率ボックス（ホバーで累計内訳＋過去案件ポップオーバー） */}
+      <div
+        className="relative flex items-center justify-between mt-4 pt-3 -mx-2 px-2 rounded-[var(--radius-obs-sm)] cursor-help transition-colors duration-150"
+        style={{
+          boxShadow: 'inset 0 1px 0 0 var(--color-obs-outline-variant)',
+          backgroundColor: hover === 'rate' ? 'rgba(0,113,227,0.06)' : 'transparent',
+        }}
+        onMouseEnter={() => setHover('rate')}
+        onMouseLeave={() => setHover('card')}
+      >
+        <span className="text-[10px] font-medium tracking-[0.05em] uppercase inline-flex items-center gap-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          {rateLabel}
+          <HelpCircle size={9} style={{ opacity: 0.6 }} />
+        </span>
+        <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color: rateColor }}>
+          {rate}%
+        </span>
+      </div>
+
+      {/* カード全体ホバー：現在進行中の案件 */}
+      {hover === 'card' && <DealHoverList deals={activeDeals} title={activeLabel} accent={color} />}
+
+      {/* 移行率ホバー：累計内訳 + 過去案件 */}
+      {hover === 'rate' && (
+        <RateHoverDetail
+          rate={rate}
+          rateColor={rateColor}
+          numerator={rateNumerator}
+          numeratorLabel={rateNumeratorLabel}
+          denominator={rateTotal}
+          denominatorLabel={rateTotalLabel}
+          pastDeals={pastDeals}
+        />
+      )}
+    </div>
+  )
+}
+
+// ─── Sub: 移行率ホバーの詳細 ───────────────────────────────────────────────────
+function RateHoverDetail({
+  rate, rateColor, numerator, numeratorLabel, denominator, denominatorLabel, pastDeals,
+}: {
+  rate: number
+  rateColor: string
+  numerator: number
+  numeratorLabel: string
+  denominator: number
+  denominatorLabel: string
+  pastDeals: Deal[]
+}) {
+  return (
+    <div
+      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(340px,calc(100vw-48px))] z-30 rounded-[var(--radius-obs-lg)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
+      style={{
+        backgroundColor: 'var(--color-obs-surface-highest)',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.4)',
+      }}
+    >
+      <span
+        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
+        style={{
+          backgroundColor: 'var(--color-obs-surface-highest)',
+          boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+        }}
+      />
+      {/* ── 計算式ヘッダー ── */}
+      <div className="px-4 py-3" style={{ backgroundColor: 'var(--color-obs-surface-low)' }}>
+        <div className="flex items-center justify-between mb-2">
+          <span className="text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: rateColor }}>
+            累計ベースの移行率
+          </span>
+          <span className="font-[family-name:var(--font-display)] text-[18px] font-bold tabular-nums" style={{ color: rateColor }}>
+            {rate}%
+          </span>
+        </div>
+        <div className="flex items-baseline gap-3 text-[11px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+          <span>
+            <span style={{ color: 'var(--color-obs-text-subtle)' }}>{numeratorLabel}：</span>
+            <span className="font-semibold" style={{ color: 'var(--color-obs-text)' }}>{numerator}</span>
+            <span className="ml-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>社</span>
+          </span>
+          <span style={{ color: 'var(--color-obs-text-subtle)' }}>/</span>
+          <span>
+            <span style={{ color: 'var(--color-obs-text-subtle)' }}>{denominatorLabel}：</span>
+            <span className="font-semibold" style={{ color: 'var(--color-obs-text)' }}>{denominator}</span>
+            <span className="ml-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>社</span>
+          </span>
+        </div>
+      </div>
+
+      {/* ── 過去案件一覧 ── */}
+      <div className="px-4 py-2.5 flex items-center justify-between">
+        <span className="text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+          過去案件（失注・契約）
+        </span>
+        <span className="text-[10.5px] font-medium tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          {pastDeals.length} 件
+        </span>
+      </div>
+      {pastDeals.length === 0 ? (
+        <div className="px-4 py-5 text-center text-[11.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          過去案件はありません
+        </div>
+      ) : (
+        <div className="max-h-[240px] overflow-y-auto stitch-scroll">
+          {pastDeals.map((d, i) => {
+            const b = bucketOf(d.stage)
+            const isLost = b === '失注'
+            const tone = isLost ? 'var(--color-obs-hot)' : '#6ee7a1'
+            const toneBg = isLost ? 'rgba(255,107,107,0.14)' : 'rgba(110,231,161,0.14)'
+            return (
+              <div
+                key={d.id}
+                className="px-4 py-2.5 flex items-start gap-3"
+                style={{ borderTop: i === 0 ? '1px solid rgba(65,71,83,0.15)' : '1px solid rgba(65,71,83,0.08)' }}
+              >
+                <span className="text-[10.5px] tabular-nums mt-0.5 shrink-0" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  {String(i + 1).padStart(2, '0')}
+                </span>
+                <div className="min-w-0 flex-1">
+                  <div className="flex items-center gap-2">
+                    <span className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-obs-text)' }}>
+                      {d.company}
+                    </span>
+                    <span
+                      className="inline-flex items-center shrink-0 text-[9.5px] font-medium h-[18px] px-1.5 rounded-full"
+                      style={{ backgroundColor: toneBg, color: tone }}
+                    >
+                      {isLost ? '失注' : '契約'}
+                    </span>
+                  </div>
+                  <div className="text-[10.5px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                    {d.owner}
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+      )}
+    </div>
+  )
+}
+
+function ArrowStep({ label }: { label: string }) {
+  return (
+    <div className="hidden lg:flex flex-col items-center justify-center gap-1.5 px-1">
+      <span className="text-[10px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+        {label}
+      </span>
+      <ArrowRight size={18} strokeWidth={1.5} style={{ color: 'var(--color-obs-primary-dim)' }} />
+    </div>
+  )
+}
+
+// ─── Sub: 失注 / 契約 カード ───────────────────────────────────────────────────
+function OutcomeCard({
+  icon, label, value, rate, tone, deals,
+}: {
+  icon: React.ReactNode
+  label: string
+  value: number
+  rate: number
+  tone: 'hot' | 'success'
+  deals: Deal[]
+}) {
+  const [hover, setHover] = useState(false)
+  const color = tone === 'hot' ? 'var(--color-obs-hot)' : '#6ee7a1'
+  const bg = tone === 'hot' ? 'rgba(255,107,107,0.14)' : 'rgba(110,231,161,0.14)'
+  return (
+    <div
+      className="relative stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-5 flex items-center gap-5 transition-all duration-200"
+      style={{
+        transform: hover ? 'translateY(-2px)' : 'translateY(0)',
+        transitionTimingFunction: 'var(--ease-liquid)',
+        cursor: 'default',
+      }}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <div
+        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+        style={{ backgroundColor: bg, color }}
+      >
+        {icon}
+      </div>
+      <div className="flex-1">
+        <p className="text-[11px] font-bold tracking-[0.1em] uppercase mb-1" style={{ color }}>
+          {label}
+        </p>
+        <div className="flex items-baseline gap-1">
+          <span
+            className="font-[family-name:var(--font-display)] text-[32px] font-extrabold leading-none tabular-nums tracking-[-0.04em]"
+            style={{ color: 'var(--color-obs-text)' }}
+          >
+            {value}
+          </span>
+          <span className="text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>社</span>
+        </div>
+      </div>
+      <div className="text-right">
+        <p className="text-[10px] font-medium tracking-[0.08em] uppercase mb-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          PJ進行中比
+        </p>
+        <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color }}>
+          {rate}%
+        </span>
+      </div>
+
+      {/* ホバー：該当案件ポップオーバー */}
+      {hover && <DealHoverList deals={deals} title={`${label}した案件`} accent={color} />}
+    </div>
+  )
+}
+
+// ─── Sub: ホバーポップオーバー（案件一覧） ─────────────────────────────────────
+function DealHoverList({ deals, title, accent }: { deals: Deal[]; title: string; accent: string }) {
+  return (
+    <div
+      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(320px,calc(100vw-48px))] z-30 rounded-[var(--radius-obs-lg)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
+      style={{
+        backgroundColor: 'var(--color-obs-surface-highest)',
+        boxShadow: '0 12px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.4)',
+      }}
+      onClick={(e) => e.stopPropagation()}
+    >
+      {/* 矢印 */}
+      <span
+        className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
+        style={{
+          backgroundColor: 'var(--color-obs-surface-highest)',
+          boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+        }}
+      />
+      <div className="px-4 py-2.5 flex items-center justify-between" style={{ backgroundColor: 'var(--color-obs-surface-low)' }}>
+        <span className="text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: accent }}>
+          {title}
+        </span>
+        <span className="text-[10.5px] font-medium tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          {deals.length} 件
+        </span>
+      </div>
+      {deals.length === 0 ? (
+        <div className="px-4 py-6 text-center text-[11.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          該当する案件はありません
+        </div>
+      ) : (
+        <div className="max-h-[280px] overflow-y-auto stitch-scroll">
+          {deals.map((d, i) => (
+            <div
+              key={d.id}
+              className="px-4 py-2.5 flex items-start gap-3"
+              style={{ borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.15)' }}
+            >
+              <span
+                className="text-[10.5px] tabular-nums mt-0.5 shrink-0"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                {String(i + 1).padStart(2, '0')}
+              </span>
+              <div className="min-w-0 flex-1">
+                <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-obs-text)' }}>
+                  {d.company}
+                </div>
+                <div className="flex items-center gap-2 text-[10.5px] mt-0.5">
+                  <span style={{ color: 'var(--color-obs-text-muted)' }}>{d.owner}</span>
+                  <span style={{ color: 'var(--color-obs-text-subtle)' }}>·</span>
+                  <span style={{ color: 'var(--color-obs-text-muted)' }}>
+                    {STAGES.find((s) => s.key === d.stage)?.label ?? d.stage}
+                  </span>
+                </div>
+                {d.status && (
+                  <div
+                    className="text-[10.5px] mt-1 line-clamp-2"
+                    style={{ color: 'var(--color-obs-text-muted)' }}
+                  >
+                    {d.status}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Activity Gauges ───────────────────────────────────────────────────────────
+// メール：5段階（3, 5, 10, 30, 50+）
+// 商談：5段階（1, 2, 3, 5, 10+）色変化あり
+
+type GaugeLevel = 0 | 1 | 2 | 3 | 4 | 5
+
+function emailLevel(n: number): GaugeLevel {
+  if (n <= 0) return 0
+  if (n <= 3) return 1
+  if (n <= 5) return 2
+  if (n <= 10) return 3
+  if (n <= 30) return 4
+  return 5
+}
+function meetingLevel(n: number): GaugeLevel {
+  if (n <= 0) return 0
+  if (n <= 1) return 1
+  if (n <= 2) return 2
+  if (n <= 3) return 3
+  if (n <= 5) return 4
+  return 5
+}
+
+// RPG風 5段階レアリティ（Common → Mythic）
+// 両ゲージ共通。グラデーション（暗い端→明るい中央）＋レイアウト別発光
+type Tier = {
+  name: string
+  core: string         // 基本色（ラベル・ベース）
+  grad: string         // グラデーション用 CSS
+  glow: string         // outer glow color
+}
+
+const TIERS: Tier[] = [
+  // Lv1: Common（シルバーブルー）
+  {
+    name: 'COMMON',
+    core: '#7e90b0',
+    grad: 'linear-gradient(180deg, #5d6d89 0%, #9fb0cc 50%, #6b7c99 100%)',
+    glow: 'rgba(150, 170, 200, 0.4)',
+  },
+  // Lv2: Rare（エメラルドグリーン）
+  {
+    name: 'RARE',
+    core: '#4ad98a',
+    grad: 'linear-gradient(180deg, #0c8a4a 0%, #6ef7a5 45%, #1fb868 100%)',
+    glow: 'rgba(74, 217, 138, 0.55)',
+  },
+  // Lv3: Epic（ブリリアントブルー）
+  {
+    name: 'EPIC',
+    core: '#4a9eff',
+    grad: 'linear-gradient(180deg, #0054c2 0%, #8dc0ff 40%, #1a7aff 100%)',
+    glow: 'rgba(74, 158, 255, 0.65)',
+  },
+  // Lv4: Legendary（ネオンパープル）
+  {
+    name: 'LEGENDARY',
+    core: '#c07cff',
+    grad: 'linear-gradient(180deg, #6a1eb8 0%, #e0b0ff 40%, #8e3bff 100%)',
+    glow: 'rgba(192, 124, 255, 0.7)',
+  },
+  // Lv5: Mythic（フレイムゴールド／赤）
+  {
+    name: 'MYTHIC',
+    core: '#ffb347',
+    grad: 'linear-gradient(180deg, #c2410c 0%, #ffeaa0 35%, #ff7a00 70%, #ff4e1a 100%)',
+    glow: 'rgba(255, 140, 60, 0.85)',
+  },
+]
+
+function SegmentedGauge({
+  level,
+  labels,
+}: {
+  level: GaugeLevel
+  labels: readonly string[]
+}) {
+  return (
+    <div className="flex-1 min-w-0">
+      {/* バー */}
+      <div className="flex gap-[3px]">
+        {[0, 1, 2, 3, 4].map((i) => {
+          const filled = i < level
+          const tier = TIERS[i]
+          // 満たされた部分は、そのセグメントの tier 色で描画
+          return (
+            <div
+              key={i}
+              className="relative h-[8px] flex-1 rounded-[2px] overflow-hidden transition-all duration-300"
+              style={{
+                background: filled ? tier.grad : 'linear-gradient(180deg, #0a0a0c 0%, #1c1c1f 50%, #0a0a0c 100%)',
+                boxShadow: filled
+                  ? `0 0 10px ${tier.glow}, inset 0 1px 0 rgba(255,255,255,0.35), inset 0 -1px 0 rgba(0,0,0,0.35)`
+                  : 'inset 0 0 0 1px rgba(65,71,83,0.3)',
+                transitionTimingFunction: 'var(--ease-liquid)',
+              }}
+            >
+              {/* Lv5 だけシマー効果 */}
+              {filled && i === 4 && (
+                <div
+                  className="absolute inset-0"
+                  style={{
+                    background:
+                      'linear-gradient(115deg, transparent 30%, rgba(255,255,255,0.55) 50%, transparent 70%)',
+                    animation: 'gauge-shimmer 2.2s ease-in-out infinite',
+                  }}
+                />
+              )}
+            </div>
+          )
+        })}
+      </div>
+      {/* 目安の数字 */}
+      <div className="flex items-center gap-[3px] mt-1">
+        {labels.map((lab, i) => {
+          const tier = TIERS[i]
+          return (
+            <span
+              key={i}
+              className="flex-1 text-[8.5px] font-bold text-center tabular-nums"
+              style={{
+                color: i < level ? tier.core : 'rgba(93,90,95,0.5)',
+                textShadow: i < level ? `0 0 6px ${tier.glow}` : 'none',
+              }}
+            >
+              {lab}
+            </span>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function formatCreatedAt(iso: string): string {
+  // 日本語で「MM月DD日作成」
+  const d = new Date(iso)
+  if (isNaN(d.getTime())) return iso
+  const m = d.getMonth() + 1
+  const dd = d.getDate()
+  const y = d.getFullYear()
+  const now = new Date()
+  const sameYear = now.getFullYear() === y
+  return sameYear ? `${m}月${dd}日 作成` : `${y}年${m}月${dd}日 作成`
+}
+
+// 日本円表記（万円単位、1億以上は億併記）
+function formatJpy(amount: number): string {
+  if (amount < 10_000) return `${amount.toLocaleString()}円`
+  const man = Math.round(amount / 10_000)
+  if (man < 10_000) return `${man.toLocaleString()}万円`
+  const oku = man / 10_000
+  return `${oku.toFixed(oku < 10 ? 2 : 1)}億円`
+}
+
+// ゲージのレベル目安（表示用）
+const EMAIL_THRESHOLDS = ['3', '5', '10', '30', '50+'] as const
+const MEETING_THRESHOLDS = ['1', '2', '3', '5', '10+'] as const
+
+// ─── DealCard ─────────────────────────────────────────────────────────────────
+
+function DealCard({
+  deal,
+  onDragStart,
+  onDragEnd,
+}: {
+  deal: Deal
+  onDragStart: (e: DragEvent<HTMLDivElement>) => void
+  onDragEnd: (e: DragEvent<HTMLDivElement>) => void
+}) {
+  const intent = INTENT_STYLE[deal.intent]
+  const isPOC = deal.stage === 'POC'
+  const isPriority = deal.stage === 'PROJECT_PLANNED'
+  const eLv = emailLevel(deal.emailCount)
+  const mLv = meetingLevel(deal.meetingCount)
+
+  return (
+    <div
+      draggable
+      onDragStart={onDragStart}
+      onDragEnd={onDragEnd}
+      className="stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-4 cursor-grab active:cursor-grabbing transition-colors duration-200 group"
+      style={{
+        transitionTimingFunction: 'var(--ease-liquid)',
+        ...(isPriority
+          ? { borderLeft: '4px solid var(--color-obs-primary)' }
+          : {}),
+        ...(isPOC
+          ? { boxShadow: '0 0 15px rgba(0,113,227,0.15), inset 0 0 0 1.5px rgba(171,199,255,0.3)' }
+          : {}),
+      }}
+      onMouseOver={(e) => {
+        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(67, 66, 71, 0.65)'
+      }}
+      onMouseOut={(e) => {
+        ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(53, 52, 55, 0.6)'
+      }}
+    >
+      {/* Header: intent + createdAt */}
+      <div className="flex justify-between items-start mb-2.5">
+        <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase ${intent.cls}`}>
+          {intent.label}
+        </span>
+        <span
+          className="inline-flex items-center gap-1 text-[9.5px] tabular-nums"
+          style={{ color: 'rgba(143,140,144,0.65)' }}
+        >
+          <Calendar size={10} />
+          {formatCreatedAt(deal.createdAt)}
+        </span>
+      </div>
+
+      {/* Title */}
+      <h4
+        className="text-sm font-semibold mb-1 leading-snug tracking-[-0.01em] group-hover:text-[color:var(--color-obs-primary)] transition-colors duration-150"
+        style={{ color: 'var(--color-obs-text)' }}
+      >
+        {deal.name}
+      </h4>
+
+      {/* Priority / Phase pill for special stages */}
+      {deal.priorityPhase && (
+        <div className="flex items-center gap-1.5 mt-2">
+          {isPriority ? (
+            <Star size={12} style={{ color: 'var(--color-obs-primary)' }} />
+          ) : isPOC ? (
+            <FlaskConical size={12} style={{ color: 'var(--color-obs-primary)' }} />
+          ) : null}
+          <span
+            className="text-[9px] font-bold uppercase tracking-[0.1em]"
+            style={{ color: 'var(--color-obs-primary)' }}
+          >
+            {deal.priorityPhase}
+          </span>
+        </div>
+      )}
+
+      {/* Activity Gauges — メール + 商談（RPGレアリティ風） */}
+      <div className="mt-4 space-y-3">
+        <div className="flex items-start gap-2.5">
+          <span
+            className="w-10 shrink-0 text-[9px] font-bold tracking-[0.08em] uppercase leading-[8px]"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            メール
+          </span>
+          <SegmentedGauge level={eLv} labels={EMAIL_THRESHOLDS} />
+          <span
+            className="text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
+            style={{
+              color: eLv > 0 ? TIERS[eLv - 1].core : 'var(--color-obs-text-subtle)',
+              textShadow: eLv > 0 ? `0 0 6px ${TIERS[eLv - 1].glow}` : 'none',
+            }}
+          >
+            {deal.emailCount}
+          </span>
+        </div>
+        <div className="flex items-start gap-2.5">
+          <span
+            className="w-10 shrink-0 text-[9px] font-bold tracking-[0.08em] uppercase leading-[8px]"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            商談
+          </span>
+          <SegmentedGauge level={mLv} labels={MEETING_THRESHOLDS} />
+          <span
+            className="text-[11px] font-black tabular-nums w-8 text-right shrink-0 leading-[8px]"
+            style={{
+              color: mLv > 0 ? TIERS[mLv - 1].core : 'var(--color-obs-text-subtle)',
+              textShadow: mLv > 0 ? `0 0 6px ${TIERS[mLv - 1].glow}` : 'none',
+            }}
+          >
+            {deal.meetingCount}
+          </span>
+        </div>
+      </div>
+
+      {/* Status + Next Step (2段) */}
+      {(deal.status || deal.nextAction) && (
+        <div
+          className="mt-4 pt-3 flex flex-col gap-1.5"
+          style={{ boxShadow: 'inset 0 1px 0 0 rgba(65,71,83,0.25)' }}
+        >
+          {deal.status && (
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className="px-1.5 h-4 rounded-sm text-[9px] font-bold tracking-[0.08em] uppercase inline-flex items-center shrink-0"
+                style={{
+                  backgroundColor: 'rgba(109,106,111,0.22)',
+                  color: 'var(--color-obs-text-muted)',
+                }}
+              >
+                Status
+              </span>
+              <span
+                className="text-[11px] font-medium truncate flex-1"
+                style={{ color: 'var(--color-obs-text-muted)' }}
+                title={deal.status}
+              >
+                {deal.status}
+              </span>
+            </div>
+          )}
+          {deal.nextAction && (
+            <div className="flex items-center gap-2 min-w-0">
+              <span
+                className="px-1.5 h-4 rounded-sm text-[9px] font-bold tracking-[0.08em] uppercase inline-flex items-center shrink-0"
+                style={{
+                  backgroundColor: 'rgba(0,113,227,0.18)',
+                  color: 'var(--color-obs-primary)',
+                }}
+              >
+                Next
+              </span>
+              <span
+                className="text-[11px] font-medium truncate flex-1"
+                style={{ color: 'var(--color-obs-text)' }}
+                title={deal.nextAction}
+              >
+                {deal.nextAction}
+              </span>
+              {deal.nextActionDate && (
+                <span
+                  className="text-[10px] tabular-nums shrink-0"
+                  style={{ color: 'var(--color-obs-text-muted)' }}
+                >
+                  {deal.nextActionDate}
+                </span>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Footer: owner + amount */}
+      <div className="flex items-center justify-between mt-3 pt-3" style={{ boxShadow: 'inset 0 1px 0 0 rgba(65,71,83,0.25)' }}>
+        <div className="flex items-center gap-1.5 min-w-0">
+          <div
+            className="w-5 h-5 rounded-full flex items-center justify-center shrink-0"
+            style={{
+              background:
+                'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+            }}
+          >
+            <span
+              className="text-[9px] font-bold leading-none"
+              style={{ color: 'var(--color-obs-on-primary)' }}
+            >
+              {deal.owner[0]}
+            </span>
+          </div>
+          <span
+            className="text-[11px] font-medium truncate"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+          >
+            {deal.owner}
+          </span>
+        </div>
+        {deal.amount > 0 && (
+          <span
+            className="text-[12px] font-bold tabular-nums shrink-0"
+            style={{ color: 'var(--color-obs-text)' }}
+          >
+            {formatJpy(deal.amount)}
+          </span>
+        )}
       </div>
     </div>
   )

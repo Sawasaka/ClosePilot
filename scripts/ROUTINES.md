@@ -5,7 +5,7 @@
 ## 前提
 - Claude Max プラン（1日20 Routines 実行可能）
 - Routines は Anthropic クラウド側で実行されるため、**ローカルPCが閉じていても稼働**する
-- GitHub リポジトリ（closepilot）と紐付けておく
+- GitHub リポジトリ（bgm）と紐付けておく
 
 ## Routine 構成
 
@@ -16,7 +16,7 @@
 - **目的**: `enrichment_status=PENDING` の企業を Claude Haiku 4.5 で補完
 - **プロンプト**:
   ```
-  closepilot リポジトリで以下を実行してください:
+  bgm リポジトリで以下を実行してください:
 
   1. リポジトリをチェックアウト
   2. `pnpm install` 実行
@@ -38,7 +38,7 @@
 - **目的**: エンリッチ完了企業から、部門構造と担当者名を抽出
 - **プロンプト**:
   ```
-  closepilot リポジトリで `pnpm enrich:orgchart --limit=30` を実行してください。
+  bgm リポジトリで `pnpm enrich:orgchart --limit=30` を実行してください。
 
   完了後、新規に取得された部門の数、公開担当者が見つかった企業の数を報告。
   失敗企業があれば企業名と原因をリストアップ。
@@ -49,7 +49,7 @@
 - **目的**: 前日のクロール・エンリッチ結果をSlackに投稿
 - **プロンプト**:
   ```
-  closepilot のDBに接続して、以下の日次サマリを生成してSlack #daily-intent に投稿:
+  bgm のDBに接続して、以下の日次サマリを生成してSlack #daily-intent に投稿:
 
   - 今日のクロールで検出された「HOT」インテント企業数
   - 24時間以内に掲載された求人数（部門別）
@@ -73,7 +73,7 @@
 3. 名前: `daily-enrich-companies`（例）
 4. スケジュール: `0 5 * * *` (JST) → UTC は `0 20 * * *`
 5. 上記プロンプトを貼り付け
-6. 「GitHub access」を有効化（closepilot リポジトリへの書き込み不要、読み取りのみ）
+6. 「GitHub access」を有効化（bgm リポジトリへの書き込み不要、読み取りのみ）
 7. 「Secrets」で `DATABASE_URL` `ANTHROPIC_API_KEY` 等を登録
 
 ## コスト見積（日次）

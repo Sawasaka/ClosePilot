@@ -1,0 +1,526 @@
+{
+  "meta": {
+    "category": "営業トーク技術",
+    "total_frameworks": 37
+  },
+  "frameworks": [
+    {
+      "id": "T-MIRRORING",
+      "name": "Mirroring",
+      "name_ja": "ミラーリング",
+      "category": "rapport",
+      "purpose": "姿勢・所作・話速を合わせて無意識の親近感を生む",
+      "technique": "相手の姿勢・ジェスチャー・話すスピード・声のトーンをさりげなく模倣する。 完全コピーではなく 70% 程度の再現がコツ。 ラポール形成の最も基本的な非言語テクニック。\n",
+      "level": "beginner",
+      "phase": "rapport",
+      "combo": [
+        "T-PACING",
+        "T-BACKTRACKING"
+      ]
+    },
+    {
+      "id": "T-PACING",
+      "name": "Pacing & Leading",
+      "name_ja": "ペーシング",
+      "category": "rapport",
+      "purpose": "テンポ・感情に同調してから主導権を取る",
+      "technique": "まず相手のテンポ・感情に同調（ペーシング）し、 十分に合わせた後に自分のペースへ導く（リーディング）。 感情→論理の順で信頼を築きながら会話を進める。\n",
+      "level": "beginner",
+      "phase": "rapport",
+      "combo": [
+        "T-MIRRORING",
+        "T-ACTIVE-LISTEN"
+      ]
+    },
+    {
+      "id": "T-BACKTRACKING",
+      "name": "Backtracking",
+      "name_ja": "バックトラッキング",
+      "category": "rapport",
+      "purpose": "相手の言葉を繰り返し理解の証明を示す",
+      "technique": "相手が話した内容のキーワードや感情表現をそのまま繰り返す。 「○○ということですね」と確認することで「聴いてもらえている」安心感を与える。 要約型・感情反映型・オウム返し型の 3 パターンを使い分ける。\n",
+      "level": "beginner",
+      "phase": "rapport",
+      "combo": [
+        "T-ACTIVE-LISTEN",
+        "T-MIRRORING"
+      ]
+    },
+    {
+      "id": "T-ACTIVE-LISTEN",
+      "name": "Active Listening",
+      "name_ja": "アクティブリスニング",
+      "category": "rapport",
+      "purpose": "要約と感情の言語化で深い共感を示す",
+      "technique": "相手の話を要約しつつ、その裏にある感情を言語化して返す。 「つまり〇〇で、△△とお感じなんですね」で認知・感情の両方を承認。 沈黙も活用し、相手に考える時間を与える。\n",
+      "level": "intermediate",
+      "phase": "rapport",
+      "combo": [
+        "T-BACKTRACKING",
+        "T-OPEN-Q"
+      ]
+    },
+    {
+      "id": "T-MERE-EXPOSURE",
+      "name": "Mere Exposure Effect",
+      "name_ja": "単純接触効果",
+      "category": "rapport",
+      "purpose": "短い接点を継続し好意を蓄積する",
+      "technique": "長時間の商談 1 回より、短く価値ある接触を複数回に分割する。 メール・電話・訪問・SNS など接触チャネルを組み合わせる。 毎回ワンポイントの情報提供を添えて「また連絡したい」と思わせる。\n",
+      "level": "beginner",
+      "phase": "rapport",
+      "combo": [
+        "T-RECIPROCITY",
+        "T-COCKTAIL"
+      ]
+    },
+    {
+      "id": "T-HALO",
+      "name": "Halo Effect",
+      "name_ja": "ハロー効果",
+      "category": "rapport",
+      "purpose": "冒頭で強み・実績・専門性を提示し第一印象を底上げ",
+      "technique": "自己紹介や商談冒頭で、受賞歴・導入企業数・専門資格など ポジティブな情報をさりげなく提示する。 その後の話全体が好意的に評価されるハロー効果を活用する。\n",
+      "level": "beginner",
+      "phase": "rapport",
+      "combo": [
+        "T-AUTHORITY",
+        "T-SOCIAL-PROOF"
+      ]
+    },
+    {
+      "id": "T-RECIPROCITY",
+      "name": "Reciprocity",
+      "name_ja": "返報性",
+      "category": "persuasion",
+      "purpose": "先出し価値で「お返ししたい」心理を起動する",
+      "technique": "無料診断・業界レポート・テンプレートなど有用な情報を先に提供する。 相手に「何か返さないと」という心理的負債を自然に生む。 見返りを求めない姿勢がかえって返報性を強化する。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-MERE-EXPOSURE",
+        "T-SOCIAL-PROOF"
+      ]
+    },
+    {
+      "id": "T-SOCIAL-PROOF",
+      "name": "Social Proof",
+      "name_ja": "社会的証明",
+      "category": "persuasion",
+      "purpose": "同業事例・導入社数・レビューで安心感を与える",
+      "technique": "「同業の○○社も導入済みです」「導入企業 500 社突破」など 他者の行動を示して判断の正当性を裏付ける。 数値・固有名詞・具体的成果を入れるほど効果が高い。\n",
+      "level": "beginner",
+      "phase": "persuasion",
+      "combo": [
+        "T-AUTHORITY",
+        "T-CASE-STORY"
+      ]
+    },
+    {
+      "id": "T-AUTHORITY",
+      "name": "Authority",
+      "name_ja": "権威性",
+      "category": "persuasion",
+      "purpose": "専門家視点の問い・フレームで信頼を高める",
+      "technique": "業界データ・学術研究・専門家コメントを引用して主張を補強する。 「この分野の調査では〜」と第三者の権威を借りる形が自然。 自分自身の専門性も資格・実績で裏付ける。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-HALO",
+        "T-WINDSOR"
+      ]
+    },
+    {
+      "id": "T-CONSISTENCY",
+      "name": "Consistency (Foot-in-the-Door)",
+      "name_ja": "一貫性",
+      "category": "persuasion",
+      "purpose": "小さな Yes を積んで大きな合意へ導く",
+      "technique": "最初に小さな質問や依頼で「Yes」を引き出す。 人は過去の発言・行動と一貫していたい心理が働くため、 段階的に大きな合意へ自然に進められる（フット・イン・ザ・ドア）。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-COMMITMENT-CLOSE",
+        "T-CLOSED-Q"
+      ]
+    },
+    {
+      "id": "T-SCARCITY",
+      "name": "Scarcity",
+      "name_ja": "希少性",
+      "category": "persuasion",
+      "purpose": "枠・期限・限定条件で行動を促進する",
+      "technique": "「残り 3 枠」「今月末まで」「先着 10 社限定」など 数量・期間・条件の制約を提示して即決を促す。 希少性は事実に基づく範囲で使い、誇張は信頼を損なう。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-URGENCY-CLOSE",
+        "T-LOSS-AVERSION"
+      ]
+    },
+    {
+      "id": "T-ANCHORING",
+      "name": "Anchoring",
+      "name_ja": "アンカリング",
+      "category": "persuasion",
+      "purpose": "比較基準点を先に置いて判断を有利にする",
+      "technique": "最初に高い数字や広い範囲を提示し、基準点（アンカー）を設定する。 その後の提案が「お得」「妥当」と感じられるように誘導する。 価格交渉だけでなく、ROI・工数・期間の比較にも応用可能。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-MATSU-TAKE-UME",
+        "T-LOSS-AVERSION"
+      ]
+    },
+    {
+      "id": "T-LOSS-AVERSION",
+      "name": "Loss Aversion",
+      "name_ja": "損失回避",
+      "category": "persuasion",
+      "purpose": "得より『失うもの』を提示して意思決定を加速する",
+      "technique": "「導入しない場合、年間○○万円のコストが継続します」のように 得られるメリットではなく、行動しない場合の損失を具体的に示す。 人は同額の利得より損失に 2 倍敏感に反応する。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-STATUS-QUO",
+        "T-URGENCY-CLOSE"
+      ]
+    },
+    {
+      "id": "T-STATUS-QUO",
+      "name": "Status Quo Bias Countermeasure",
+      "name_ja": "現状維持バイアス対策",
+      "category": "persuasion",
+      "purpose": "変えないリスクを可視化して現状維持から動かす",
+      "technique": "「このまま何もしなかった場合の 1 年後」を具体的に描写する。 変化のリスクではなく\"変わらないリスク\"にフォーカスを移す。 数値シミュレーションや競合動向の提示が効果的。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-LOSS-AVERSION",
+        "T-IMPLICATION-Q"
+      ]
+    },
+    {
+      "id": "T-COCKTAIL",
+      "name": "Cocktail Party Effect",
+      "name_ja": "カクテルパーティー効果",
+      "category": "persuasion",
+      "purpose": "固有名詞・相手事情で自分事化させる",
+      "technique": "「○○様の業界では」「御社の△△部門では」と 相手固有の情報を織り込み、\"自分に関係ある話だ\"と感じさせる。 事前リサーチが不可欠。固有名詞の使用回数を意識的に増やす。\n",
+      "level": "beginner",
+      "phase": "persuasion",
+      "combo": [
+        "T-SPIN-TALK",
+        "T-ACTIVE-LISTEN"
+      ]
+    },
+    {
+      "id": "T-WINDSOR",
+      "name": "Windsor Effect / Third-Party Endorsement",
+      "name_ja": "ウィンザー効果/第三者話法",
+      "category": "persuasion",
+      "purpose": "第三者の声を借りて説得力を高める",
+      "technique": "「他のお客様がおっしゃっていたのですが…」と 第三者の評価・体験談を間接的に伝える。 直接の売り込みより信頼性が高まり、押し付け感を軽減する。\n",
+      "level": "intermediate",
+      "phase": "persuasion",
+      "combo": [
+        "T-SOCIAL-PROOF",
+        "T-CASE-STORY"
+      ]
+    },
+    {
+      "id": "T-SPIN-TALK",
+      "name": "SPIN Selling Talk",
+      "name_ja": "SPIN話法",
+      "category": "hearing",
+      "purpose": "状況→問題→示唆→解決の順で課題を深掘りする",
+      "technique": "Situation（状況質問）→ Problem（問題質問）→ Implication（示唆質問）→ Need-payoff（解決質問）の 4 段階で質問を設計する。 顧客自身に課題の深刻さと解決の価値を語らせるのがゴール。\n",
+      "level": "intermediate",
+      "phase": "hearing",
+      "combo": [
+        "T-IMPLICATION-Q",
+        "T-NEED-PAYOFF-Q"
+      ]
+    },
+    {
+      "id": "T-OPEN-Q",
+      "name": "Open Question",
+      "name_ja": "オープンクエスチョン",
+      "category": "hearing",
+      "purpose": "背景・理由を広く引き出す",
+      "technique": "「どのような〜」「なぜ〜」「どうお感じですか」など Yes/No では答えられない質問で相手の思考・背景を広く引き出す。 会話の序盤で使い、情報量を最大化する。\n",
+      "level": "beginner",
+      "phase": "hearing",
+      "combo": [
+        "T-CLOSED-Q",
+        "T-ACTIVE-LISTEN"
+      ]
+    },
+    {
+      "id": "T-CLOSED-Q",
+      "name": "Closed Question",
+      "name_ja": "クローズドクエスチョン",
+      "category": "hearing",
+      "purpose": "事実確認・合意形成をピンポイントで行う",
+      "technique": "「○○でよろしいですか？」「A と B どちらですか？」など Yes/No または選択肢で答えられる質問で事実を確定させる。 ヒアリング後半やクロージング前の合意確認に有効。\n",
+      "level": "beginner",
+      "phase": "hearing",
+      "combo": [
+        "T-OPEN-Q",
+        "T-BINARY-CHOICE"
+      ]
+    },
+    {
+      "id": "T-IMPLICATION-Q",
+      "name": "Implication Question",
+      "name_ja": "示唆質問",
+      "category": "hearing",
+      "purpose": "放置コスト・波及影響を認識させる",
+      "technique": "「この課題を放置すると、他の部門にどんな影響がありますか？」 「半年後にはどのくらいコストが膨らむと思いますか？」と問い、 課題の波及効果を顧客自身の言葉で認識させる。\n",
+      "level": "advanced",
+      "phase": "hearing",
+      "combo": [
+        "T-SPIN-TALK",
+        "T-STATUS-QUO"
+      ]
+    },
+    {
+      "id": "T-NEED-PAYOFF-Q",
+      "name": "Need-Payoff Question",
+      "name_ja": "解決質問",
+      "category": "hearing",
+      "purpose": "理想状態を顧客本人の口で言わせる",
+      "technique": "「もしこの課題が解決したら、どんな変化がありますか？」と問い、 顧客自身に理想の未来を語らせる。 自分で口にした解決像は自己説得力を持ち、提案への合意が格段に高まる。\n",
+      "level": "advanced",
+      "phase": "hearing",
+      "combo": [
+        "T-SPIN-TALK",
+        "T-SUMMARY-CLOSE"
+      ]
+    },
+    {
+      "id": "T-TOUGH-Q",
+      "name": "Tough Question",
+      "name_ja": "Tough Question",
+      "category": "hearing",
+      "purpose": "『選ばれないとしたら理由は？』で本音を引き出す",
+      "technique": "「仮に今回見送るとしたら、その理由は何ですか？」と直球で尋ねる。 隠れた懸念やボトルネックを表面化させ、対策を打てる状態にする。 信頼関係が構築された段階で使うのが前提。\n",
+      "level": "advanced",
+      "phase": "hearing",
+      "combo": [
+        "T-LAER",
+        "T-YES-AND"
+      ]
+    },
+    {
+      "id": "T-TRIANGLE-Q",
+      "name": "Triangle Question",
+      "name_ja": "三角質問",
+      "category": "hearing",
+      "purpose": "『現場も同じ認識ですか？』で多面的に情報を取る",
+      "technique": "「現場の方々も同じ課題認識をお持ちですか？」 「上長はこの件についてどうお考えですか？」と 第三者の視点を通じて社内の温度差や意思決定構造を把握する。\n",
+      "level": "intermediate",
+      "phase": "hearing",
+      "combo": [
+        "T-SPIN-TALK",
+        "T-OPEN-Q"
+      ]
+    },
+    {
+      "id": "T-BINARY-CHOICE",
+      "name": "Binary Choice / 3-Point Selection",
+      "name_ja": "二者択一/3ポイント",
+      "category": "hearing",
+      "purpose": "選択肢提示で意思決定を軽くする",
+      "technique": "「火曜と木曜ならどちらがご都合よいですか？」と Yes/No ではなく A or B で問い、断りにくい構造を作る。 選択肢を 2〜3 に絞ることで決断の負荷を下げる。\n",
+      "level": "intermediate",
+      "phase": "hearing",
+      "combo": [
+        "T-CLOSED-Q",
+        "T-MATSU-TAKE-UME"
+      ]
+    },
+    {
+      "id": "T-HEROS-JOURNEY",
+      "name": "Hero's Journey Application",
+      "name_ja": "ヒーローズ・ジャーニー応用",
+      "category": "storytelling",
+      "purpose": "顧客＝主人公、営業＝導師の物語構造で共感を得る",
+      "technique": "顧客を「課題に立ち向かう主人公」、自社を「導く賢者」として位置づける。 日常→課題直面→解決の旅→変革という物語構造で提案を語る。 顧客自身が主人公であるため、自分事として聞いてもらえる。\n",
+      "level": "intermediate",
+      "phase": "storytelling",
+      "combo": [
+        "T-CASE-STORY",
+        "T-LOSS-AVERSION"
+      ]
+    },
+    {
+      "id": "T-CASE-STORY",
+      "name": "Case Story Framework",
+      "name_ja": "受注ストーリー化",
+      "category": "storytelling",
+      "purpose": "基本情報→背景→経緯→決め手→ポイントで事例を語る",
+      "technique": "事例を「企業概要→導入前の課題→検討の経緯→導入の決め手→成果とポイント」 の 5 パートで構造化して語る。 抽象的な機能紹介より記憶に残り、同業種の顧客に強く響く。\n",
+      "level": "intermediate",
+      "phase": "storytelling",
+      "combo": [
+        "T-SOCIAL-PROOF",
+        "T-WINDSOR"
+      ]
+    },
+    {
+      "id": "T-PREP",
+      "name": "PREP + Story Hybrid",
+      "name_ja": "PREPとストーリー併用",
+      "category": "storytelling",
+      "purpose": "論理は PREP、共感はストーリーで補完する",
+      "technique": "Point（結論）→ Reason（理由）→ Example（具体例）→ Point（再結論）で 論理的な説明をしつつ、Example 部分にストーリーを挿入する。 左脳（論理）と右脳（感情）の両方に訴求するハイブリッド話法。\n",
+      "level": "beginner",
+      "phase": "storytelling",
+      "combo": [
+        "T-CASE-STORY",
+        "T-SUMMARY-CLOSE"
+      ]
+    },
+    {
+      "id": "T-LAER",
+      "name": "LAER Framework",
+      "name_ja": "LAER",
+      "category": "objection",
+      "purpose": "Listen→Acknowledge→Explore→Respond で反論を処理する",
+      "technique": "Listen（傾聴）→ Acknowledge（承認）→ Explore（深掘り）→ Respond（回答） の 4 ステップで反論に対応する。 いきなり反論せず、まず聴き・認めることで相手の防御を下げる。\n",
+      "level": "intermediate",
+      "phase": "objection",
+      "combo": [
+        "T-YES-AND",
+        "T-ACTIVE-LISTEN"
+      ]
+    },
+    {
+      "id": "T-YES-AND",
+      "name": "Yes, And / Cushion Words",
+      "name_ja": "Yes, And / クッション言葉",
+      "category": "objection",
+      "purpose": "否定せず前に進める受け止め話法",
+      "technique": "「おっしゃる通りですね。その上で…」「確かに。加えて…」と 相手の意見を一度受け止めてから自分の主張を展開する。 「でも」「しかし」を避け、心理的抵抗を最小化する。\n",
+      "level": "beginner",
+      "phase": "objection",
+      "combo": [
+        "T-LAER",
+        "T-BACKTRACKING"
+      ]
+    },
+    {
+      "id": "T-SUMMARY-CLOSE",
+      "name": "Summary Close",
+      "name_ja": "要約クロージング",
+      "category": "closing",
+      "purpose": "合意点・価値・不安解消を再提示して決断を促す",
+      "technique": "商談中に合意した内容・確認された価値・解消した不安を簡潔に要約する。 「整理しますと、○○と△△が確認でき、□□の懸念も解消しました」で 意思決定に必要な情報を再度見える化する。\n",
+      "level": "intermediate",
+      "phase": "closing",
+      "combo": [
+        "T-NEED-PAYOFF-Q",
+        "T-ASSUMPTIVE-CLOSE"
+      ]
+    },
+    {
+      "id": "T-ASSUMPTIVE-CLOSE",
+      "name": "Assumptive Close",
+      "name_ja": "推定承諾クロージング",
+      "category": "closing",
+      "purpose": "『導入後の次は？』と決定前提で話を進める",
+      "technique": "「導入後のスケジュールですが…」「担当窓口はどなたになりますか？」と 購入を前提とした質問で自然にクロージングへ進む。 押し売り感を出さず、意思決定のハードルを心理的に下げる。\n",
+      "level": "intermediate",
+      "phase": "closing",
+      "combo": [
+        "T-SUMMARY-CLOSE",
+        "T-COMMITMENT-CLOSE"
+      ]
+    },
+    {
+      "id": "T-URGENCY-CLOSE",
+      "name": "Urgency Close",
+      "name_ja": "緊急性クロージング",
+      "category": "closing",
+      "purpose": "先延ばしコストを定量提示して即決を促す",
+      "technique": "「1 か月遅れるごとに○○万円の機会損失が発生します」と 先延ばしのコストを具体的な数値で提示する。 希少性（T-SCARCITY）と組み合わせるとさらに効果的。\n",
+      "level": "intermediate",
+      "phase": "closing",
+      "combo": [
+        "T-SCARCITY",
+        "T-LOSS-AVERSION"
+      ]
+    },
+    {
+      "id": "T-COMMITMENT-CLOSE",
+      "name": "Commitment Close",
+      "name_ja": "コミットメントクロージング",
+      "category": "closing",
+      "purpose": "『この条件なら？』で仮決定を引き出す",
+      "technique": "「もしこの条件をクリアできたら、進めていただけますか？」と 条件付きのコミットメントを取り付ける。 相手が出した条件を満たせば断る理由がなくなる構造を作る。\n",
+      "level": "intermediate",
+      "phase": "closing",
+      "combo": [
+        "T-CONSISTENCY",
+        "T-SHARP-ANGLE"
+      ]
+    },
+    {
+      "id": "T-PUPPY-DOG",
+      "name": "Puppy Dog Close (Trial)",
+      "name_ja": "パピードッグ（試用）",
+      "category": "closing",
+      "purpose": "小さく試す→保有効果で手放せなくする",
+      "technique": "「まず 1 週間お試しください」と小さなトライアルを提案する。 一度使い始めると保有効果（手放したくない心理）が働き、 継続利用・正式契約につながりやすい。\n",
+      "level": "beginner",
+      "phase": "closing",
+      "combo": [
+        "T-RECIPROCITY",
+        "T-ASSUMPTIVE-CLOSE"
+      ]
+    },
+    {
+      "id": "T-SHARP-ANGLE",
+      "name": "Sharp Angle Close",
+      "name_ja": "シャープアングル",
+      "category": "closing",
+      "purpose": "要求に応える代わりに即決を条件にする",
+      "technique": "「値引きしてほしい」→「○○% お引きできます。その場合、今週中にご決定いただけますか？」と 相手の要求を受け入れる代わりに即決のコミットを取る。 交渉力と瞬発力が求められる上級テクニック。\n",
+      "level": "advanced",
+      "phase": "closing",
+      "combo": [
+        "T-COMMITMENT-CLOSE",
+        "T-SCARCITY"
+      ]
+    },
+    {
+      "id": "T-MATSU-TAKE-UME",
+      "name": "Three-Tier Pricing (Extreme Aversion)",
+      "name_ja": "松竹梅（極端回避性）",
+      "category": "closing",
+      "purpose": "3 プランで中間を選ばせる極端回避性を活用",
+      "technique": "松（高額）・竹（中間）・梅（低額）の 3 プランを提示する。 人は極端を避ける心理があるため、中間プランが選ばれやすい。 本命プランを竹に置き、松は比較のアンカーとして設計する。\n",
+      "level": "beginner",
+      "phase": "closing",
+      "combo": [
+        "T-ANCHORING",
+        "T-BINARY-CHOICE"
+      ]
+    },
+    {
+      "id": "T-TAKEAWAY",
+      "name": "Takeaway Close",
+      "name_ja": "テイクアウェイ",
+      "category": "closing",
+      "purpose": "迷うなら一度引いて執着を引き出す",
+      "technique": "「もしかしたら今のタイミングではないかもしれませんね」と あえて提案を引くことで、相手の中に「失いたくない」気持ちを起こす。 損失回避の心理を逆手に取る高等テクニック。使いすぎは逆効果。\n",
+      "level": "advanced",
+      "phase": "closing",
+      "combo": [
+        "T-LOSS-AVERSION",
+        "T-SCARCITY"
+      ]
+    }
+  ]
+}

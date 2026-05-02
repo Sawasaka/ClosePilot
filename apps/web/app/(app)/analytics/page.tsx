@@ -3,10 +3,15 @@
 import { useState } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
-  BarChart2, TrendingUp, Users, DollarSign, CalendarDays, Award,
+  BarChart2, TrendingUp, Users, Award,
   Globe, FileText, Eye, Clock, Copy, ChevronDown, ChevronRight,
 } from 'lucide-react'
 import type { GA4PageData, GA4DailyTraffic, GA4SourceMedium, TrackedDocument, DocumentViewEvent } from '@/types/crm'
+import {
+  ObsCard,
+  ObsHero,
+  ObsPageShell,
+} from '@/components/obsidian'
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -43,9 +48,9 @@ const LEAD_SOURCES: LeadSource[] = [
 ]
 
 const REPS: RepData[] = [
-  { name: '田中太郎', deals: 18, won: 8, avgAmount: 3200000, avgCycleDays: 42, color: '#0071E3' },
-  { name: '鈴木花子', deals: 14, won: 7, avgAmount: 2800000, avgCycleDays: 38, color: '#34C759' },
-  { name: '佐藤次郎', deals: 12, won: 4, avgAmount: 1900000, avgCycleDays: 56, color: '#FF9F0A' },
+  { name: '田中太郎', deals: 18, won: 8, avgAmount: 3200000, avgCycleDays: 42, color: 'var(--color-obs-primary)' },
+  { name: '鈴木花子', deals: 14, won: 7, avgAmount: 2800000, avgCycleDays: 38, color: 'var(--color-obs-low)' },
+  { name: '佐藤次郎', deals: 12, won: 4, avgAmount: 1900000, avgCycleDays: 56, color: 'var(--color-obs-middle)' },
 ]
 
 // ─── GA4 Mock Data ──────────────────────────────────────────────────────────
@@ -80,10 +85,10 @@ const GA4_SOURCES: GA4SourceMedium[] = [
 // ─── Tracking Mock Data ─────────────────────────────────────────────────────
 
 const MOCK_DOCS: TrackedDocument[] = [
-  { id: 'doc-1', name: 'Intent Force サービス紹介資料 v2.1', type: 'service_intro', trackingUrl: 'https://track.closepilot.app/d/abc123', totalPages: 12, createdAt: '2026-03-15', createdBy: '田中太郎', totalViews: 45, uniqueViewers: 28 },
-  { id: 'doc-2', name: '株式会社テクノリード向け提案書', type: 'proposal', trackingUrl: 'https://track.closepilot.app/d/def456', totalPages: 18, createdAt: '2026-03-20', createdBy: '鈴木花子', totalViews: 12, uniqueViewers: 3 },
-  { id: 'doc-3', name: '導入事例集 2026年版', type: 'case_study', trackingUrl: 'https://track.closepilot.app/d/ghi789', totalPages: 24, createdAt: '2026-03-10', createdBy: '田中太郎', totalViews: 67, uniqueViewers: 41 },
-  { id: 'doc-4', name: '料金プラン比較表', type: 'pricing', trackingUrl: 'https://track.closepilot.app/d/jkl012', totalPages: 4, createdAt: '2026-03-22', createdBy: '佐藤次郎', totalViews: 23, uniqueViewers: 18 },
+  { id: 'doc-1', name: 'BGM サービス紹介資料 v2.1', type: 'service_intro', trackingUrl: 'https://track.bgm.app/d/abc123', totalPages: 12, createdAt: '2026-03-15', createdBy: '田中太郎', totalViews: 45, uniqueViewers: 28 },
+  { id: 'doc-2', name: '株式会社テクノリード向け提案書', type: 'proposal', trackingUrl: 'https://track.bgm.app/d/def456', totalPages: 18, createdAt: '2026-03-20', createdBy: '鈴木花子', totalViews: 12, uniqueViewers: 3 },
+  { id: 'doc-3', name: '導入事例集 2026年版', type: 'case_study', trackingUrl: 'https://track.bgm.app/d/ghi789', totalPages: 24, createdAt: '2026-03-10', createdBy: '田中太郎', totalViews: 67, uniqueViewers: 41 },
+  { id: 'doc-4', name: '料金プラン比較表', type: 'pricing', trackingUrl: 'https://track.bgm.app/d/jkl012', totalPages: 4, createdAt: '2026-03-22', createdBy: '佐藤次郎', totalViews: 23, uniqueViewers: 18 },
 ]
 
 const MOCK_VIEWS: Record<string, DocumentViewEvent[]> = {
@@ -110,13 +115,6 @@ const DOC_TYPE_LABELS: Record<string, string> = {
   proposal: '提案書', service_intro: 'サービス紹介', case_study: '事例集', pricing: '料金表', other: 'その他',
 }
 
-const FUNNEL_COLORS = {
-  leads:  { color: '#99AACC', label: 'リード' },
-  deals:  { color: '#0071E3', label: '商談化' },
-  pocs:   { color: '#5E5CE6', label: 'PoC'   },
-  won:    { color: '#34C759', label: '受注'   },
-}
-
 // ─── Helpers ────────────────────────────────────────────────────────────────
 
 function formatAmount(n: number): string {
@@ -131,55 +129,79 @@ function ChannelFunnelChart({ costMap, setCostMap }: {
   setCostMap: React.Dispatch<React.SetStateAction<Record<string, string>>>
 }) {
   return (
-    <div className="bg-[#0c1028] rounded-[8px] overflow-hidden" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
-        <div className="px-6 py-3.5" style={{ borderBottom: '1px solid #2244AA' }}>
-          <h3 className="text-[14px] font-semibold text-[#EEEEFF]">経路別 費用 & ROI</h3>
-        </div>
-
-        {/* Header */}
-        <div className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] items-center px-6 py-2.5" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
-          {['経路', 'リード', '商談', '受注', '費用', 'ROI'].map(h => (
-            <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
-          ))}
-        </div>
-
-        {/* Rows */}
-        {LEAD_SOURCES.map((src, i) => {
-          const cost = parseInt(costMap[src.id] || '0', 10) || 0
-          const revenue = src.won * src.avgDealAmount
-          const roi = cost > 0 ? (revenue / cost).toFixed(1) + 'x' : '—'
-          const roiColor = cost > 0
-            ? (revenue / cost >= 3 ? '#44FF88' : revenue / cost >= 1 ? '#FFDD44' : '#FF4444')
-            : '#4466AA'
-
-          return (
-            <motion.div
-              key={src.id}
-              initial={{ opacity: 0, y: 4 }}
-              animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.2, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
-              className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] items-center px-6 py-3"
-              style={{ borderBottom: i < LEAD_SOURCES.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}
-            >
-              <span className="text-[13px] font-medium text-[#EEEEFF]">{src.label}</span>
-              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{src.leads}件</span>
-              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{src.deals}件</span>
-              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF]">{src.won}件</span>
-              <div className="relative">
-                <span className="absolute left-2 top-1/2 -translate-y-1/2 text-[11px] text-[#99AACC]">¥</span>
-                <input
-                  type="number"
-                  placeholder="0"
-                  value={costMap[src.id] ?? ''}
-                  onChange={e => setCostMap(m => ({ ...m, [src.id]: e.target.value }))}
-                  className="w-full pl-5 pr-2 py-1.5 text-[13px] bg-[rgba(34,68,170,0.1)] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] focus:outline-none focus:ring-2 focus:ring-[#0071E3] focus:bg-[#0c1028] transition-all tabular-nums"
-                />
-              </div>
-              <span className="text-[14px] font-bold tabular-nums" style={{ color: roiColor }}>{roi}</span>
-            </motion.div>
-          )
-        })}
+    <ObsCard depth="low" padding="none" radius="xl" className="overflow-hidden">
+      <div className="px-6 py-4">
+        <h3
+          className="font-[family-name:var(--font-display)] text-base font-semibold tracking-[-0.02em]"
+          style={{ color: 'var(--color-obs-text)' }}
+        >
+          経路別 費用 & ROI
+        </h3>
       </div>
+
+      <div
+        className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] items-center px-6 py-2.5 text-[11px] font-medium tracking-[0.1em] uppercase"
+        style={{ color: 'var(--color-obs-text-subtle)' }}
+      >
+        {['経路', 'リード', '商談', '受注', '費用', 'ROI'].map(h => (
+          <span key={h}>{h}</span>
+        ))}
+      </div>
+
+      {LEAD_SOURCES.map((src, i) => {
+        const cost = parseInt(costMap[src.id] || '0', 10) || 0
+        const revenue = src.won * src.avgDealAmount
+        const roi = cost > 0 ? (revenue / cost).toFixed(1) + 'x' : '—'
+        const roiColor = cost > 0
+          ? (revenue / cost >= 3 ? 'var(--color-obs-low)' : revenue / cost >= 1 ? 'var(--color-obs-middle)' : 'var(--color-obs-hot)')
+          : 'var(--color-obs-text-subtle)'
+
+        return (
+          <motion.div
+            key={src.id}
+            initial={{ opacity: 0, y: 4 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.2, delay: i * 0.04, ease: [0.16, 1, 0.3, 1] }}
+            className="grid grid-cols-[1fr_80px_80px_80px_120px_80px] items-center px-6 py-3"
+          >
+            <span className="text-[13px] font-medium" style={{ color: 'var(--color-obs-text)' }}>
+              {src.label}
+            </span>
+            <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {src.leads}件
+            </span>
+            <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {src.deals}件
+            </span>
+            <span className="text-[13px] tabular-nums font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+              {src.won}件
+            </span>
+            <div className="relative">
+              <span
+                className="absolute left-2.5 top-1/2 -translate-y-1/2 text-[11px]"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                ¥
+              </span>
+              <input
+                type="number"
+                placeholder="0"
+                value={costMap[src.id] ?? ''}
+                onChange={e => setCostMap(m => ({ ...m, [src.id]: e.target.value }))}
+                className="w-full pl-6 pr-2 h-8 text-[13px] rounded-[var(--radius-obs-md)] focus:outline-none focus:ring-2 transition-all tabular-nums"
+                style={{
+                  backgroundColor: 'var(--color-obs-surface-high)',
+                  color: 'var(--color-obs-text)',
+                }}
+              />
+            </div>
+            <span className="text-[14px] font-bold tabular-nums" style={{ color: roiColor }}>
+              {roi}
+            </span>
+          </motion.div>
+        )
+      })}
+    </ObsCard>
   )
 }
 
@@ -202,26 +224,44 @@ function TeamPerformanceTab() {
       {/* Team KPI */}
       <div className="grid grid-cols-4 gap-3 mb-5">
         {[
-          { label: '総商談数', value: `${totalDeals}件`, color: '#0071E3' },
-          { label: '総受注数', value: `${totalWon}件`, color: '#34C759' },
-          { label: '平均受注率', value: `${avgWin}%`, color: '#5E5CE6' },
-          { label: '総受注額', value: formatAmount(totalRevenue), color: '#FF9F0A' },
+          { label: '総商談数', value: `${totalDeals}件`, color: 'var(--color-obs-primary)' },
+          { label: '総受注数', value: `${totalWon}件`, color: 'var(--color-obs-low)' },
+          { label: '平均受注率', value: `${avgWin}%`, color: 'var(--color-obs-primary-container)' },
+          { label: '総受注額', value: formatAmount(totalRevenue), color: 'var(--color-obs-middle)' },
         ].map(kpi => (
-          <div key={kpi.label} className="rounded-[10px] px-4 py-3" style={{ background: `${kpi.color}0A` }}>
-            <p className="text-[10px] text-[#CCDDF0] uppercase tracking-[0.04em]">{kpi.label}</p>
-            <p className="text-[20px] font-bold tracking-[-0.03em] mt-0.5" style={{ color: kpi.color }}>{kpi.value}</p>
-          </div>
+          <ObsCard key={kpi.label} depth="high" padding="md" radius="lg">
+            <p
+              className="text-[10px] uppercase tracking-[0.1em] font-medium mb-1"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              {kpi.label}
+            </p>
+            <p
+              className="font-[family-name:var(--font-display)] text-[22px] font-bold tracking-[-0.03em]"
+              style={{ color: kpi.color }}
+            >
+              {kpi.value}
+            </p>
+          </ObsCard>
         ))}
       </div>
 
       {/* 担当者比較テーブル */}
-      <div className="rounded-[8px] overflow-hidden bg-[#0c1028] mb-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
-        <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
-          <h4 className="text-[14px] font-semibold text-[#EEEEFF]">担当者別パフォーマンス</h4>
+      <ObsCard depth="low" padding="none" radius="xl" className="overflow-hidden mb-5">
+        <div className="px-5 py-3.5">
+          <h4
+            className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.02em]"
+            style={{ color: 'var(--color-obs-text)' }}
+          >
+            担当者別パフォーマンス
+          </h4>
         </div>
-        <div className="grid grid-cols-[1fr_80px_80px_80px_100px_80px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
+        <div
+          className="grid grid-cols-[1fr_80px_80px_80px_100px_80px] items-center px-5 py-2 text-[11px] font-medium uppercase tracking-[0.1em]"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
+        >
           {['担当者', '商談', '受注', '受注率', '平均金額', 'サイクル'].map(h => (
-            <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
+            <span key={h}>{h}</span>
           ))}
         </div>
         {REPS.map((rep, i) => {
@@ -233,34 +273,79 @@ function TeamPerformanceTab() {
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.2, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
               className="grid grid-cols-[1fr_80px_80px_80px_100px_80px] items-center px-5 py-3"
-              style={{ borderBottom: i < REPS.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}
             >
               <div className="flex items-center gap-2.5">
-                <div className="w-[28px] h-[28px] rounded-full flex items-center justify-center text-white text-[11px] font-bold shrink-0" style={{ background: rep.color, boxShadow: `0 0 12px ${rep.color}aa, 0 0 4px ${rep.color}, inset 0 1px 0 rgba(255,255,255,0.4)`, border: "1px solid rgba(255,255,255,0.3)" }}>
+                <div
+                  className="w-7 h-7 rounded-full flex items-center justify-center text-[11px] font-semibold shrink-0"
+                  style={{ backgroundColor: rep.color, color: 'var(--color-obs-on-primary)' }}
+                >
                   {rep.name[0]}
                 </div>
-                <span className="text-[13px] font-medium text-[#EEEEFF]">{rep.name}</span>
+                <span className="text-[13px] font-medium" style={{ color: 'var(--color-obs-text)' }}>
+                  {rep.name}
+                </span>
               </div>
-              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{rep.deals}件</span>
-              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF]">{rep.won}件</span>
-              <span className="text-[13px] tabular-nums font-semibold" style={{ color: winRate >= 50 ? '#1A7A35' : winRate >= 30 ? '#C07000' : '#CF3131' }}>{winRate}%</span>
-              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{formatAmount(rep.avgAmount)}</span>
-              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{rep.avgCycleDays}日</span>
+              <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+                {rep.deals}件
+              </span>
+              <span className="text-[13px] tabular-nums font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                {rep.won}件
+              </span>
+              <span
+                className="text-[13px] tabular-nums font-semibold"
+                style={{
+                  color:
+                    winRate >= 50
+                      ? 'var(--color-obs-low)'
+                      : winRate >= 30
+                        ? 'var(--color-obs-middle)'
+                        : 'var(--color-obs-hot)',
+                }}
+              >
+                {winRate}%
+              </span>
+              <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+                {formatAmount(rep.avgAmount)}
+              </span>
+              <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+                {rep.avgCycleDays}日
+              </span>
             </motion.div>
           )
         })}
-      </div>
+      </ObsCard>
 
       {/* Next Action 推奨 */}
       <div className="space-y-2">
-        <h4 className="text-[13px] font-semibold text-[#EEEEFF]">Next Action 推奨</h4>
-        <div className="flex items-center gap-3 px-4 py-3 rounded-[10px]" style={{ background: 'rgba(255,59,48,0.06)', border: '1px solid rgba(255,59,48,0.15)' }}>
-          <div className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: '#FF4444' }} />
-          <p className="text-[13px] text-[#FF8A82]"><span className="font-semibold">佐藤:</span> 受注率33% — 商談の質向上が必要。Aランク案件に集中推奨</p>
+        <h4
+          className="text-[13px] font-semibold mb-2"
+          style={{ color: 'var(--color-obs-text)' }}
+        >
+          Next Action 推奨
+        </h4>
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-[var(--radius-obs-lg)]"
+          style={{ backgroundColor: 'rgba(255,107,107,0.10)' }}
+        >
+          <div
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ backgroundColor: 'var(--color-obs-hot)' }}
+          />
+          <p className="text-[13px]" style={{ color: 'var(--color-obs-hot)' }}>
+            <span className="font-semibold">佐藤:</span> 受注率33% — 商談の質向上が必要。Aランク案件に集中推奨
+          </p>
         </div>
-        <div className="flex items-center gap-3 px-4 py-3 rounded-[10px]" style={{ background: 'rgba(255,159,10,0.06)', border: '1px solid rgba(255,159,10,0.15)' }}>
-          <div className="w-[6px] h-[6px] rounded-full shrink-0" style={{ background: '#FF9F0A' }} />
-          <p className="text-[13px] text-[#FFC266]"><span className="font-semibold">佐藤:</span> 平均サイクル56日 — 他メンバー（38-42日）対比で長い。ボトルネック確認推奨</p>
+        <div
+          className="flex items-center gap-3 px-4 py-3 rounded-[var(--radius-obs-lg)]"
+          style={{ backgroundColor: 'rgba(255,184,107,0.10)' }}
+        >
+          <div
+            className="w-1.5 h-1.5 rounded-full shrink-0"
+            style={{ backgroundColor: 'var(--color-obs-middle)' }}
+          />
+          <p className="text-[13px]" style={{ color: 'var(--color-obs-middle)' }}>
+            <span className="font-semibold">佐藤:</span> 平均サイクル56日 — 他メンバー（38-42日）対比で長い。ボトルネック確認推奨
+          </p>
         </div>
       </div>
     </motion.div>
@@ -276,90 +361,207 @@ function GATab() {
   const avgCV = (GA4_DAILY.reduce((s, d) => s + d.cvRate, 0) / GA4_DAILY.length).toFixed(1)
 
   return (
-    <motion.div key="ga" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}>
+    <motion.div
+      key="ga"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+    >
       {/* KPI Summary */}
       <div className="grid grid-cols-4 gap-3 mb-5">
         {[
-          { label: 'セッション', value: totalSessions.toLocaleString(), color: '#0071E3' },
-          { label: 'ユーザー', value: totalUsers.toLocaleString(), color: '#34C759' },
-          { label: 'ページビュー', value: totalPV.toLocaleString(), color: '#5E5CE6' },
-          { label: 'CV率', value: `${avgCV}%`, color: '#FF9F0A' },
+          { label: 'セッション', value: totalSessions.toLocaleString(), color: 'var(--color-obs-primary)' },
+          { label: 'ユーザー', value: totalUsers.toLocaleString(), color: 'var(--color-obs-low)' },
+          { label: 'ページビュー', value: totalPV.toLocaleString(), color: 'var(--color-obs-primary-container)' },
+          { label: 'CV率', value: `${avgCV}%`, color: 'var(--color-obs-middle)' },
         ].map(kpi => (
-          <div key={kpi.label} className="rounded-[10px] px-4 py-3" style={{ background: `${kpi.color}0A` }}>
-            <p className="text-[10px] text-[#CCDDF0] uppercase tracking-[0.04em]">{kpi.label}</p>
-            <p className="text-[20px] font-bold tracking-[-0.03em] mt-0.5" style={{ color: kpi.color }}>{kpi.value}</p>
-          </div>
+          <ObsCard key={kpi.label} depth="high" padding="md" radius="lg">
+            <p
+              className="text-[10px] uppercase tracking-[0.1em] font-medium mb-1"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              {kpi.label}
+            </p>
+            <p
+              className="font-[family-name:var(--font-display)] text-[22px] font-bold tracking-[-0.03em]"
+              style={{ color: kpi.color }}
+            >
+              {kpi.value}
+            </p>
+          </ObsCard>
         ))}
       </div>
 
       {/* Daily traffic table */}
-      <div className="rounded-[8px] overflow-hidden bg-[#0c1028] mb-5" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
-        <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
-          <h4 className="text-[14px] font-semibold text-[#EEEEFF]">日別トラフィック</h4>
+      <ObsCard depth="low" padding="none" radius="xl" className="overflow-hidden mb-5">
+        <div className="px-5 py-3.5">
+          <h4
+            className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.02em]"
+            style={{ color: 'var(--color-obs-text)' }}
+          >
+            日別トラフィック
+          </h4>
         </div>
-        <div className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
+        <div
+          className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2 text-[11px] font-medium uppercase tracking-[0.1em]"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
+        >
           {['日付', 'セッション', 'ユーザー', 'PV', 'CV率'].map(h => (
-            <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
+            <span key={h}>{h}</span>
           ))}
         </div>
-        {GA4_DAILY.map((d, i) => (
-          <div key={d.date} className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2.5" style={{ borderBottom: i < GA4_DAILY.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}>
-            <span className="text-[13px] font-medium text-[#EEEEFF]">{d.date}</span>
-            <span className="text-[13px] tabular-nums text-[#CCDDF0]">{d.sessions}</span>
-            <span className="text-[13px] tabular-nums text-[#CCDDF0]">{d.users}</span>
-            <span className="text-[13px] tabular-nums text-[#CCDDF0]">{d.pageViews.toLocaleString()}</span>
-            <span className="text-[13px] tabular-nums font-semibold" style={{ color: d.cvRate >= 3 ? '#44FF88' : d.cvRate >= 2.5 ? '#FFDD44' : '#7788AA' }}>{d.cvRate}%</span>
+        {GA4_DAILY.map((d) => (
+          <div
+            key={d.date}
+            className="grid grid-cols-[1fr_90px_90px_90px_60px] items-center px-5 py-2.5"
+          >
+            <span className="text-[13px] font-medium" style={{ color: 'var(--color-obs-text)' }}>
+              {d.date}
+            </span>
+            <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {d.sessions}
+            </span>
+            <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {d.users}
+            </span>
+            <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+              {d.pageViews.toLocaleString()}
+            </span>
+            <span
+              className="text-[13px] tabular-nums font-semibold"
+              style={{
+                color:
+                  d.cvRate >= 3
+                    ? 'var(--color-obs-low)'
+                    : d.cvRate >= 2.5
+                      ? 'var(--color-obs-middle)'
+                      : 'var(--color-obs-text-subtle)',
+              }}
+            >
+              {d.cvRate}%
+            </span>
           </div>
         ))}
-      </div>
+      </ObsCard>
 
-      {/* Tables stacked vertically */}
       <div className="space-y-5">
         {/* Page PV table */}
-        <div className="rounded-[8px] overflow-hidden bg-[#0c1028]" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
-          <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
-            <h4 className="text-[14px] font-semibold text-[#EEEEFF]">ページ別パフォーマンス</h4>
+        <ObsCard depth="low" padding="none" radius="xl" className="overflow-hidden">
+          <div className="px-5 py-3.5">
+            <h4
+              className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.02em]"
+              style={{ color: 'var(--color-obs-text)' }}
+            >
+              ページ別パフォーマンス
+            </h4>
           </div>
-          <div className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
+          <div
+            className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2 text-[11px] font-medium uppercase tracking-[0.1em]"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
             {['ページ', 'PV', 'UU', '直帰率', 'CV'].map(h => (
-              <span key={h} className="text-[11px] font-medium text-[#99AACC] uppercase tracking-[0.05em]">{h}</span>
+              <span key={h}>{h}</span>
             ))}
           </div>
-          {GA4_PAGES.map((p, i) => (
-            <div key={p.path} className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2.5" style={{ borderBottom: i < GA4_PAGES.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}>
+          {GA4_PAGES.map((p) => (
+            <div
+              key={p.path}
+              className="grid grid-cols-[1fr_90px_90px_80px_70px] items-center px-5 py-2.5"
+            >
               <div>
-                <p className="text-[13px] font-medium text-[#EEEEFF]">{p.title}</p>
-                <p className="text-[11px] text-[#99AACC]">{p.path}</p>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--color-obs-text)' }}>
+                  {p.title}
+                </p>
+                <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  {p.path}
+                </p>
               </div>
-              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF]">{p.pageViews.toLocaleString()}</span>
-              <span className="text-[13px] tabular-nums text-[#CCDDF0]">{p.uniqueUsers.toLocaleString()}</span>
-              <span className="text-[13px] tabular-nums" style={{ color: p.bounceRate <= 25 ? '#44FF88' : p.bounceRate <= 40 ? '#7788AA' : '#FF4444' }}>{p.bounceRate}%</span>
-              <span className="text-[13px] tabular-nums font-semibold text-[#0071E3]">{p.conversions}</span>
+              <span
+                className="text-[13px] tabular-nums font-semibold"
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                {p.pageViews.toLocaleString()}
+              </span>
+              <span className="text-[13px] tabular-nums" style={{ color: 'var(--color-obs-text-muted)' }}>
+                {p.uniqueUsers.toLocaleString()}
+              </span>
+              <span
+                className="text-[13px] tabular-nums"
+                style={{
+                  color:
+                    p.bounceRate <= 25
+                      ? 'var(--color-obs-low)'
+                      : p.bounceRate <= 40
+                        ? 'var(--color-obs-text-muted)'
+                        : 'var(--color-obs-hot)',
+                }}
+              >
+                {p.bounceRate}%
+              </span>
+              <span
+                className="text-[13px] tabular-nums font-semibold"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
+                {p.conversions}
+              </span>
             </div>
           ))}
-        </div>
+        </ObsCard>
 
         {/* Sources table */}
-        <div className="rounded-[8px] overflow-hidden bg-[#0c1028]" style={{ boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}>
-          <div className="px-5 py-3" style={{ borderBottom: '1px solid #2244AA' }}>
-            <h4 className="text-[14px] font-semibold text-[#EEEEFF]">流入元別セッション</h4>
+        <ObsCard depth="low" padding="none" radius="xl" className="overflow-hidden">
+          <div className="px-5 py-3.5">
+            <h4
+              className="font-[family-name:var(--font-display)] text-[15px] font-semibold tracking-[-0.02em]"
+              style={{ color: 'var(--color-obs-text)' }}
+            >
+              流入元別セッション
+            </h4>
           </div>
-          {GA4_SOURCES.map((s, i) => (
-            <div key={`${s.source}-${s.medium}`} className="grid grid-cols-[1fr_80px_60px] items-center px-5 py-3" style={{ borderBottom: i < GA4_SOURCES.length - 1 ? '1px solid rgba(34,68,170,0.2)' : 'none' }}>
+          {GA4_SOURCES.map((s) => (
+            <div
+              key={`${s.source}-${s.medium}`}
+              className="grid grid-cols-[1fr_80px_60px] items-center px-5 py-3"
+            >
               <div>
-                <p className="text-[13px] font-medium text-[#EEEEFF]">{s.source}</p>
-                <p className="text-[11px] text-[#99AACC]">{s.medium}</p>
+                <p className="text-[13px] font-medium" style={{ color: 'var(--color-obs-text)' }}>
+                  {s.source}
+                </p>
+                <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  {s.medium}
+                </p>
               </div>
-              <span className="text-[13px] tabular-nums font-semibold text-[#EEEEFF] text-right">{s.sessions}</span>
+              <span
+                className="text-[13px] tabular-nums font-semibold text-right"
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                {s.sessions}
+              </span>
               <div className="text-right">
-                <span className="text-[13px] tabular-nums font-semibold px-2 py-0.5 rounded-[4px]" style={{
-                  color: s.cvRate >= 4 ? '#44FF88' : s.cvRate >= 2.5 ? '#FFDD44' : '#7788AA',
-                  background: s.cvRate >= 4 ? 'rgba(52,199,89,0.1)' : s.cvRate >= 2.5 ? 'rgba(255,159,10,0.1)' : 'rgba(0,0,0,0.04)',
-                }}>{s.cvRate}%</span>
+                <span
+                  className="text-[12px] tabular-nums font-semibold px-2 py-0.5 rounded-[var(--radius-obs-sm)]"
+                  style={{
+                    color:
+                      s.cvRate >= 4
+                        ? 'var(--color-obs-low)'
+                        : s.cvRate >= 2.5
+                          ? 'var(--color-obs-middle)'
+                          : 'var(--color-obs-text-subtle)',
+                    backgroundColor:
+                      s.cvRate >= 4
+                        ? 'rgba(126,198,255,0.12)'
+                        : s.cvRate >= 2.5
+                          ? 'rgba(255,184,107,0.12)'
+                          : 'var(--color-obs-surface-high)',
+                  }}
+                >
+                  {s.cvRate}%
+                </span>
               </div>
             </div>
           ))}
-        </div>
+        </ObsCard>
       </div>
     </motion.div>
   )
@@ -380,18 +582,34 @@ function TrackingTab() {
   }
 
   return (
-    <motion.div key="tracking" initial={{ opacity: 0, y: 6 }} animate={{ opacity: 1, y: 0 }} exit={{ opacity: 0, y: -6 }} transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}>
+    <motion.div
+      key="tracking"
+      initial={{ opacity: 0, y: 6 }}
+      animate={{ opacity: 1, y: 0 }}
+      exit={{ opacity: 0, y: -6 }}
+      transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+    >
       {/* Summary */}
       <div className="grid grid-cols-3 gap-3 mb-5">
         {[
-          { label: '総資料数', value: MOCK_DOCS.length, color: '#0071E3' },
-          { label: '総閲覧数', value: MOCK_DOCS.reduce((s, d) => s + d.totalViews, 0), color: '#5E5CE6' },
-          { label: 'ユニーク閲覧者', value: MOCK_DOCS.reduce((s, d) => s + d.uniqueViewers, 0), color: '#34C759' },
+          { label: '総資料数', value: MOCK_DOCS.length, color: 'var(--color-obs-primary)' },
+          { label: '総閲覧数', value: MOCK_DOCS.reduce((s, d) => s + d.totalViews, 0), color: 'var(--color-obs-primary-container)' },
+          { label: 'ユニーク閲覧者', value: MOCK_DOCS.reduce((s, d) => s + d.uniqueViewers, 0), color: 'var(--color-obs-low)' },
         ].map(kpi => (
-          <div key={kpi.label} className="rounded-[10px] px-4 py-3" style={{ background: `${kpi.color}0A` }}>
-            <p className="text-[10px] text-[#CCDDF0] uppercase tracking-[0.04em]">{kpi.label}</p>
-            <p className="text-[20px] font-bold tracking-[-0.03em] mt-0.5" style={{ color: kpi.color }}>{kpi.value}</p>
-          </div>
+          <ObsCard key={kpi.label} depth="high" padding="md" radius="lg">
+            <p
+              className="text-[10px] uppercase tracking-[0.1em] font-medium mb-1"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            >
+              {kpi.label}
+            </p>
+            <p
+              className="font-[family-name:var(--font-display)] text-[22px] font-bold tracking-[-0.03em]"
+              style={{ color: kpi.color }}
+            >
+              {kpi.value}
+            </p>
+          </ObsCard>
         ))}
       </div>
 
@@ -407,92 +625,154 @@ function TrackingTab() {
               initial={{ opacity: 0, y: 6 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.22, delay: di * 0.05, ease: [0.16, 1, 0.3, 1] }}
-              className="rounded-[8px] overflow-hidden"
-              style={{ border: '1px solid #2244AA' }}
             >
-              {/* Card header */}
-              <div className="px-4 py-3.5 flex items-center gap-3">
-                <div className="w-[36px] h-[36px] rounded-[8px] flex items-center justify-center shrink-0" style={{ background: 'rgba(94,92,230,0.08)' }}>
-                  <FileText size={16} style={{ color: '#5E5CE6' }} />
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="text-[13px] font-semibold text-[#EEEEFF] truncate">{doc.name}</p>
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-[11px] text-[#99AACC]">{DOC_TYPE_LABELS[doc.type]}</span>
-                    <span className="text-[11px] text-[#99AACC]">{doc.totalPages}ページ</span>
-                    <span className="text-[11px] text-[#99AACC]">{doc.createdAt}</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 shrink-0">
-                  <div className="flex items-center gap-1">
-                    <Eye size={12} style={{ color: '#5E5CE6' }} />
-                    <span className="text-[12px] font-semibold text-[#5E5CE6]">{doc.totalViews}</span>
-                  </div>
-                  <div className="flex items-center gap-1">
-                    <Users size={12} style={{ color: '#34C759' }} />
-                    <span className="text-[12px] font-medium text-[#34C759]">{doc.uniqueViewers}</span>
-                  </div>
-                  <button
-                    onClick={() => handleCopy(doc.trackingUrl)}
-                    className="h-[26px] px-2 flex items-center gap-1 text-[11px] font-medium text-[#CCDDF0] rounded-[6px] hover:bg-[rgba(0,0,0,0.04)] transition-colors"
+              <ObsCard depth="high" padding="none" radius="xl" className="overflow-hidden">
+                {/* Card header */}
+                <div className="px-4 py-4 flex items-center gap-3">
+                  <div
+                    className="w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0"
+                    style={{ backgroundColor: 'rgba(171,199,255,0.12)' }}
                   >
-                    <Copy size={11} />
-                    URL
-                  </button>
-                  <button
-                    onClick={() => setExpandedDoc(isExpanded ? null : doc.id)}
-                    className="h-[26px] px-2 flex items-center gap-1 text-[11px] font-medium rounded-[6px] transition-colors"
-                    style={{ background: isExpanded ? 'rgba(136,187,255,0.12)' : 'rgba(136,187,255,0.06)', color: isExpanded ? '#88BBFF' : '#7788AA' }}
-                  >
-                    {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
-                    詳細
-                  </button>
+                    <FileText size={16} style={{ color: 'var(--color-obs-primary)' }} />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p
+                      className="text-[13.5px] font-semibold truncate"
+                      style={{ color: 'var(--color-obs-text)' }}
+                    >
+                      {doc.name}
+                    </p>
+                    <div className="flex items-center gap-3 mt-0.5">
+                      <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        {DOC_TYPE_LABELS[doc.type]}
+                      </span>
+                      <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        {doc.totalPages}ページ
+                      </span>
+                      <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        {doc.createdAt}
+                      </span>
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-3 shrink-0">
+                    <div className="flex items-center gap-1">
+                      <Eye size={12} style={{ color: 'var(--color-obs-primary-container)' }} />
+                      <span
+                        className="text-[12px] font-semibold"
+                        style={{ color: 'var(--color-obs-primary-container)' }}
+                      >
+                        {doc.totalViews}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-1">
+                      <Users size={12} style={{ color: 'var(--color-obs-low)' }} />
+                      <span
+                        className="text-[12px] font-medium"
+                        style={{ color: 'var(--color-obs-low)' }}
+                      >
+                        {doc.uniqueViewers}
+                      </span>
+                    </div>
+                    <button
+                      onClick={() => handleCopy(doc.trackingUrl)}
+                      className="h-7 px-2.5 flex items-center gap-1 text-[11px] font-medium rounded-[var(--radius-obs-md)] transition-colors duration-150 hover:bg-[var(--color-obs-surface-highest)]"
+                      style={{ color: 'var(--color-obs-text-muted)' }}
+                    >
+                      <Copy size={11} />
+                      URL
+                    </button>
+                    <button
+                      onClick={() => setExpandedDoc(isExpanded ? null : doc.id)}
+                      className="h-7 px-2.5 flex items-center gap-1 text-[11px] font-medium rounded-[var(--radius-obs-md)] transition-colors duration-150"
+                      style={{
+                        backgroundColor: isExpanded
+                          ? 'rgba(171,199,255,0.14)'
+                          : 'var(--color-obs-surface-highest)',
+                        color: isExpanded
+                          ? 'var(--color-obs-primary)'
+                          : 'var(--color-obs-text-muted)',
+                      }}
+                    >
+                      {isExpanded ? <ChevronDown size={11} /> : <ChevronRight size={11} />}
+                      詳細
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              {/* Expanded view history */}
-              <AnimatePresence>
-                {isExpanded && views.length > 0 && (
-                  <motion.div
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                  >
-                    <div style={{ borderTop: '1px solid #2244AA' }}>
-                      {/* View table header */}
-                      <div className="grid grid-cols-[1fr_100px_80px_1fr] items-center px-4 py-2" style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}>
-                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">企業</span>
-                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">閲覧時間</span>
-                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">ページ</span>
-                        <span className="text-[10px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">スクロール深度</span>
+                {/* Expanded view history */}
+                <AnimatePresence>
+                  {isExpanded && views.length > 0 && (
+                    <motion.div
+                      initial={{ height: 0, opacity: 0 }}
+                      animate={{ height: 'auto', opacity: 1 }}
+                      exit={{ height: 0, opacity: 0 }}
+                      transition={{ duration: 0.25, ease: [0.16, 1, 0.3, 1] }}
+                      className="overflow-hidden"
+                      style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
+                    >
+                      <div
+                        className="grid grid-cols-[1fr_100px_80px_1fr] items-center px-4 py-2 text-[10px] font-medium uppercase tracking-[0.1em]"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        <span>企業</span>
+                        <span>閲覧時間</span>
+                        <span>ページ</span>
+                        <span>スクロール深度</span>
                       </div>
-                      {views.map((v, vi) => (
-                        <div key={v.id} className="grid grid-cols-[1fr_100px_80px_1fr] items-center px-4 py-2.5" style={{ borderBottom: vi < views.length - 1 ? '1px solid rgba(0,0,0,0.03)' : 'none' }}>
+                      {views.map((v) => (
+                        <div
+                          key={v.id}
+                          className="grid grid-cols-[1fr_100px_80px_1fr] items-center px-4 py-2.5"
+                        >
                           <div>
-                            <p className="text-[12px] font-medium" style={{ color: v.resolvedCompany ? '#EEEEFF' : '#4466AA' }}>
+                            <p
+                              className="text-[12px] font-medium"
+                              style={{
+                                color: v.resolvedCompany
+                                  ? 'var(--color-obs-text)'
+                                  : 'var(--color-obs-text-subtle)',
+                              }}
+                            >
                               {v.resolvedCompany || '不明な訪問者'}
                             </p>
-                            <p className="text-[10px] text-[#99AACC]">{v.viewedAt}</p>
+                            <p className="text-[10px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                              {v.viewedAt}
+                            </p>
                           </div>
                           <div className="flex items-center gap-1">
-                            <Clock size={10} style={{ color: '#CCDDF0' }} />
-                            <span className="text-[11px] text-[#CCDDF0]">{formatDuration(v.totalDurationSec)}</span>
+                            <Clock size={10} style={{ color: 'var(--color-obs-text-muted)' }} />
+                            <span className="text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                              {formatDuration(v.totalDurationSec)}
+                            </span>
                           </div>
-                          <span className="text-[11px] text-[#CCDDF0]">{v.pagesViewed}/{doc.totalPages}</span>
-                          <span className="text-[13px] tabular-nums font-semibold px-2 py-0.5 rounded-[4px]" style={{
-                            color: v.maxScrollDepth >= 80 ? '#1A7A35' : v.maxScrollDepth >= 50 ? '#C07000' : '#CF3131',
-                            background: v.maxScrollDepth >= 80 ? 'rgba(52,199,89,0.1)' : v.maxScrollDepth >= 50 ? 'rgba(255,159,10,0.1)' : 'rgba(255,59,48,0.1)',
-                          }}>
+                          <span className="text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                            {v.pagesViewed}/{doc.totalPages}
+                          </span>
+                          <span
+                            className="text-[12px] tabular-nums font-semibold px-2 py-0.5 rounded-[var(--radius-obs-sm)] w-fit"
+                            style={{
+                              color:
+                                v.maxScrollDepth >= 80
+                                  ? 'var(--color-obs-low)'
+                                  : v.maxScrollDepth >= 50
+                                    ? 'var(--color-obs-middle)'
+                                    : 'var(--color-obs-hot)',
+                              backgroundColor:
+                                v.maxScrollDepth >= 80
+                                  ? 'rgba(126,198,255,0.12)'
+                                  : v.maxScrollDepth >= 50
+                                    ? 'rgba(255,184,107,0.12)'
+                                    : 'rgba(255,107,107,0.12)',
+                            }}
+                          >
                             {v.maxScrollDepth}%
                           </span>
                         </div>
                       ))}
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
+              </ObsCard>
             </motion.div>
           )
         })}
@@ -516,7 +796,7 @@ export default function AnalyticsPage() {
     const ra = parseInt(costMap[a.id] || '0') > 0 ? (a.won * a.avgDealAmount) / parseInt(costMap[a.id] || '0') : 0
     const rb = parseInt(costMap[b.id] || '0') > 0 ? (b.won * b.avgDealAmount) / parseInt(costMap[b.id] || '0') : 0
     return rb - ra
-  })[0]!  // LEAD_SOURCES is non-empty, so [0] is always defined
+  })[0]!
 
   const TABS: { key: AnalyticsTab; label: string; icon: React.ElementType }[] = [
     { key: 'channel',  label: 'IS経路分析',      icon: TrendingUp },
@@ -527,144 +807,168 @@ export default function AnalyticsPage() {
   ]
 
   return (
-    <div className="space-y-5">
+    <ObsPageShell>
+      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
+        <ObsHero
+          eyebrow="Analytics"
+          title="アナリティクス"
+          caption="経路別・担当者別の商談パフォーマンス分析"
+        />
 
-      {/* ── Page Header ── */}
-      <div>
-        <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">アナリティクス</h1>
-        <p className="text-[13px] text-[#CCDDF0] mt-0.5">経路別・担当者別の商談パフォーマンス分析</p>
-      </div>
-
-      {/* ── Summary KPI Bar ── */}
-      <div className="grid grid-cols-3 gap-4">
-        {[
-          {
-            label: '総リード数',
-            value: `${totalLeads}件`,
-            sub: '全経路合計',
-            icon: Users,
-            color: '#0071E3',
-            bg: 'rgba(0,113,227,0.08)',
-          },
-          {
-            label: '平均受注率',
-            value: `${avgWinRate}%`,
-            sub: '商談→受注',
-            icon: Award,
-            color: '#34C759',
-            bg: 'rgba(52,199,89,0.08)',
-          },
-          {
-            label: '最高ROI経路',
-            value: bestROI.label,
-            sub: `受注${bestROI.won}件 / 受注額${formatAmount(bestROI.won * bestROI.avgDealAmount)}`,
-            icon: TrendingUp,
-            color: '#5E5CE6',
-            bg: 'rgba(94,92,230,0.08)',
-          },
-        ].map((kpi, i) => (
-          <motion.div
-            key={kpi.label}
-            initial={{ opacity: 0, y: 8 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-[#0c1028] rounded-[8px] p-4 flex items-start gap-3"
-            style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-          >
-            <div
-              className="w-9 h-9 rounded-[9px] flex items-center justify-center shrink-0 mt-0.5"
-              style={{ background: kpi.bg }}
+        {/* ── Summary KPI Bar ── */}
+        <div className="grid grid-cols-3 gap-4">
+          {[
+            {
+              label: '総リード数',
+              value: `${totalLeads}件`,
+              sub: '全経路合計',
+              icon: Users,
+              color: 'var(--color-obs-primary)',
+            },
+            {
+              label: '平均受注率',
+              value: `${avgWinRate}%`,
+              sub: '商談→受注',
+              icon: Award,
+              color: 'var(--color-obs-low)',
+            },
+            {
+              label: '最高ROI経路',
+              value: bestROI.label,
+              sub: `受注${bestROI.won}件 / 受注額${formatAmount(bestROI.won * bestROI.avgDealAmount)}`,
+              icon: TrendingUp,
+              color: 'var(--color-obs-primary-container)',
+            },
+          ].map((kpi, i) => (
+            <motion.div
+              key={kpi.label}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: i * 0.06, ease: [0.16, 1, 0.3, 1] }}
             >
-              <kpi.icon size={16} style={{ color: kpi.color }} />
-            </div>
-            <div>
-              <p className="text-[11px] text-[#99AACC] uppercase tracking-[0.04em] font-medium mb-0.5">{kpi.label}</p>
-              <p className="text-[18px] font-semibold text-[#EEEEFF] tracking-[-0.02em] leading-none">{kpi.value}</p>
-              <p className="text-[11px] text-[#CCDDF0] mt-0.5">{kpi.sub}</p>
-            </div>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* ── Tab Bar ── */}
-      <div
-        className="bg-[#0c1028] rounded-[8px] overflow-hidden"
-        style={{ border: '1px solid #2244AA', boxShadow: '0 1px 4px rgba(0,0,0,0.04)' }}
-      >
-        <div className="flex" style={{ borderBottom: '1px solid #2244AA' }}>
-          {TABS.map(tab => (
-            <button
-              key={tab.key}
-              onClick={() => setActiveTab(tab.key)}
-              className={`relative flex items-center gap-2 px-5 py-3.5 text-[13px] font-medium transition-colors duration-100 ${
-                activeTab === tab.key ? 'text-[#0071E3]' : 'text-[#CCDDF0] hover:text-[#EEEEFF]'
-              }`}
-            >
-              <tab.icon size={13} />
-              {tab.label}
-              {activeTab === tab.key && (
-                <motion.div
-                  layoutId="analytics-tab"
-                  className="absolute bottom-0 left-0 right-0 h-[2px] rounded-full"
-                  style={{ background: '#0071E3' }}
-                  transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                />
-              )}
-            </button>
+              <ObsCard depth="high" padding="md" radius="xl" className="flex items-start gap-3">
+                <div
+                  className="w-10 h-10 rounded-[var(--radius-obs-md)] flex items-center justify-center shrink-0 mt-0.5"
+                  style={{ backgroundColor: 'rgba(171,199,255,0.10)' }}
+                >
+                  <kpi.icon size={16} style={{ color: kpi.color }} />
+                </div>
+                <div>
+                  <p
+                    className="text-[11px] uppercase tracking-[0.1em] font-medium mb-0.5"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    {kpi.label}
+                  </p>
+                  <p
+                    className="font-[family-name:var(--font-display)] text-[20px] font-semibold tracking-[-0.02em] leading-none"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
+                    {kpi.value}
+                  </p>
+                  <p className="text-[11px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                    {kpi.sub}
+                  </p>
+                </div>
+              </ObsCard>
+            </motion.div>
           ))}
         </div>
 
-        {/* ── Tab Content ── */}
-        <div className="p-5">
-          <AnimatePresence mode="wait">
-            {activeTab === 'channel' && (
-              <motion.div
-                key="channel"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-              >
-                <ChannelFunnelChart costMap={costMap} setCostMap={setCostMap} />
-              </motion.div>
-            )}
+        {/* ── Tab Bar ── */}
+        <div className="mt-6">
+          <ObsCard depth="low" padding="none" radius="xl" className="overflow-hidden">
+            <div className="flex px-2 pt-2 gap-1">
+              {TABS.map(tab => {
+                const active = activeTab === tab.key
+                return (
+                  <button
+                    key={tab.key}
+                    onClick={() => setActiveTab(tab.key)}
+                    className="relative flex items-center gap-2 px-4 py-2.5 text-[13px] font-medium rounded-[var(--radius-obs-md)] transition-colors duration-150"
+                    style={{
+                      color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+                      backgroundColor: active ? 'var(--color-obs-surface-high)' : 'transparent',
+                    }}
+                  >
+                    <tab.icon size={13} />
+                    {tab.label}
+                    {active && (
+                      <motion.div
+                        layoutId="analytics-tab"
+                        className="absolute bottom-0 left-2 right-2 h-[2px] rounded-full"
+                        style={{ backgroundColor: 'var(--color-obs-primary)' }}
+                        transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                      />
+                    )}
+                  </button>
+                )
+              })}
+            </div>
 
-            {activeTab === 'team' && <TeamPerformanceTab />}
+            {/* ── Tab Content ── */}
+            <div className="p-5">
+              <AnimatePresence mode="wait">
+                {activeTab === 'channel' && (
+                  <motion.div
+                    key="channel"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                  >
+                    <ChannelFunnelChart costMap={costMap} setCostMap={setCostMap} />
+                  </motion.div>
+                )}
 
-            {activeTab === 'ga' && <GATab />}
+                {activeTab === 'team' && <TeamPerformanceTab />}
 
-            {activeTab === 'tracking' && <TrackingTab />}
+                {activeTab === 'ga' && <GATab />}
 
-            {activeTab === 'event' && (
-              <motion.div
-                key="event"
-                initial={{ opacity: 0, y: 6 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -6 }}
-                transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                className="flex flex-col items-center justify-center py-16 gap-4"
-              >
-                <div
-                  className="w-14 h-14 rounded-[8px] flex items-center justify-center"
-                  style={{ background: 'rgba(0,113,227,0.08)' }}
-                >
-                  <BarChart2 size={24} style={{ color: '#0071E3' }} />
-                </div>
-                <div className="text-center">
-                  <p className="text-[15px] font-semibold text-[#EEEEFF] tracking-[-0.02em]">イベント成果分析</p>
-                  <p className="text-[13px] text-[#99AACC] mt-1">セミナー・展示会・ウェビナーの成果分析 — 近日公開</p>
-                </div>
-                <div
-                  className="px-4 py-2 rounded-full text-[12px] font-medium"
-                  style={{ background: 'rgba(0,113,227,0.08)', color: '#0071E3' }}
-                >
-                  Coming Soon
-                </div>
-              </motion.div>
-            )}
-          </AnimatePresence>
+                {activeTab === 'tracking' && <TrackingTab />}
+
+                {activeTab === 'event' && (
+                  <motion.div
+                    key="event"
+                    initial={{ opacity: 0, y: 6 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, y: -6 }}
+                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
+                    className="flex flex-col items-center justify-center py-16 gap-4"
+                  >
+                    <div
+                      className="w-14 h-14 rounded-[var(--radius-obs-lg)] flex items-center justify-center"
+                      style={{ backgroundColor: 'rgba(171,199,255,0.10)' }}
+                    >
+                      <BarChart2 size={24} style={{ color: 'var(--color-obs-primary)' }} />
+                    </div>
+                    <div className="text-center">
+                      <p
+                        className="font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.02em]"
+                        style={{ color: 'var(--color-obs-text)' }}
+                      >
+                        イベント成果分析
+                      </p>
+                      <p className="text-[13px] mt-1" style={{ color: 'var(--color-obs-text-muted)' }}>
+                        セミナー・展示会・ウェビナーの成果分析 — 近日公開
+                      </p>
+                    </div>
+                    <div
+                      className="px-4 py-1.5 rounded-full text-[12px] font-medium"
+                      style={{
+                        backgroundColor: 'rgba(171,199,255,0.12)',
+                        color: 'var(--color-obs-primary)',
+                      }}
+                    >
+                      Coming Soon
+                    </div>
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </div>
+          </ObsCard>
         </div>
       </div>
-    </div>
+    </ObsPageShell>
   )
 }

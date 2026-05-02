@@ -1,14 +1,14 @@
 /**
- * abm-tool（Supabase）→ closepilot（Prisma/PostgreSQL）
+ * abm-tool（Supabase）→ bgm（Prisma/PostgreSQL）
  * 企業マスターデータ移行スクリプト
  *
  * 使い方:
  *   .env.local に以下を設定:
- *     DATABASE_URL              … closepilot側の接続URL
+ *     DATABASE_URL              … bgm側の接続URL
  *     ABM_SUPABASE_URL          … abm-toolのSupabase URL
  *     ABM_SUPABASE_SERVICE_KEY  … abm-toolのservice_role key
  *
- *   pnpm --filter @closepilot/db import:abm [--dry-run] [--limit=100]
+ *   pnpm --filter @bgm/db import:abm [--dry-run] [--limit=100]
  */
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js'
@@ -168,7 +168,7 @@ type AbmCompanyIntent = {
 }
 
 async function main() {
-  console.log('🚀 abm-tool → closepilot データ移行開始')
+  console.log('🚀 abm-tool → bgm データ移行開始')
   if (DRY_RUN) console.log('⚠️  DRY-RUN モード（DB書き込みなし）')
   if (LIMIT) console.log(`⚠️  LIMIT=${LIMIT} で制限取得`)
 
@@ -179,7 +179,7 @@ async function main() {
   // ========== 1. Industry マスタ ==========
   console.log('\n[1/7] industries 取得')
   const abmIndustries = await fetchAll<AbmIndustry>(sb, 'industries')
-  const industryIdMap = new Map<string, string>() // abm UUID → closepilot cuid
+  const industryIdMap = new Map<string, string>() // abm UUID → bgm cuid
 
   for (const ind of abmIndustries) {
     if (DRY_RUN) {

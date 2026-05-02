@@ -1,6 +1,6 @@
 import { Worker } from 'bullmq'
-import { redis, JOB_NAMES } from '@closepilot/queue'
-import { prisma } from '@closepilot/db'
+import { redis, JOB_NAMES } from '@bgm/queue'
+import { prisma } from '@bgm/db'
 
 // ステージ別の停滞しきい値（日数）
 const STALL_THRESHOLDS: Record<string, number> = {

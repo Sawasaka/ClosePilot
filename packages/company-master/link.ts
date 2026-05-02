@@ -1,4 +1,4 @@
-import { prisma } from '@closepilot/db'
+import { prisma } from '@bgm/db'
 
 /**
  * テナント側のCompanyを企業マスターに紐付け、マスターの情報をCompany側のローカル項目にコピーする。

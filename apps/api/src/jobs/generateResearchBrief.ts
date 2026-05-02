@@ -1,7 +1,7 @@
 import { Worker } from 'bullmq'
-import { redis, JOB_NAMES } from '@closepilot/queue'
-import { prisma } from '@closepilot/db'
-import { synthesizeResearchBrief } from '@closepilot/ai'
+import { redis, JOB_NAMES } from '@bgm/queue'
+import { prisma } from '@bgm/db'
+import { synthesizeResearchBrief } from '@bgm/ai'
 
 export const researchBriefWorker = new Worker(
   'standard',

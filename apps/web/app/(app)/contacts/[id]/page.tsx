@@ -17,34 +17,70 @@ import {
   Pencil,
   X,
   CheckCircle2,
+  FileEdit,
+  Search,
+  Megaphone,
+  Share2,
+  Calendar,
+  UserCheck,
+  PhoneOutgoing,
+  Send,
+  Handshake,
+  Inbox,
+  HelpCircle,
+  PencilLine,
 } from 'lucide-react'
 import { useCallStore } from '@/lib/stores/callStore'
-import { RANK_CONFIG as BASE_RANK_CONFIG, STATUS_GAME_STYLES } from '@/types/crm'
 import type { ApproachStatus } from '@/types/crm'
-import { StatusGameBadge } from '@/components/ui/GameBadge'
+import { GoogleTimeline } from '@/components/google/google-timeline'
+
+// ─── Liquid Obsidian Status Chip ───────────────────────────────────────────────
+// 全ステータスバッジは「薄い同色背景 + ●ドット + 同色文字」の統一フォーマット。
+// グラデや glow / borderColor / textShadow は使わない。
+
+interface ObsChipStyle {
+  bg: string
+  fg: string
+}
+
+const STATUS_OBS_STYLES: Record<ApproachStatus, ObsChipStyle> = {
+  '未着手':     { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
+  '不通':       { bg: 'rgba(255,107,107,0.14)', fg: 'var(--color-obs-hot)' },
+  '不在':       { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
+  '接続済み':   { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
+  'コール不可': { bg: 'rgba(255,107,107,0.14)', fg: 'var(--color-obs-hot)' },
+  'アポ獲得':   { bg: 'rgba(74,217,138,0.14)',  fg: '#4ad98a' },
+}
+
+function StatusObsBadge({ status, size = 'md' }: { status: ApproachStatus; size?: 'sm' | 'md' }) {
+  const s = STATUS_OBS_STYLES[status] ?? STATUS_OBS_STYLES['未着手']
+  const fontSize = size === 'sm' ? 'text-[10px]' : 'text-[11px]'
+  return (
+    <span
+      className={`inline-flex items-center gap-1.5 px-2 h-5 rounded-full font-medium tracking-[-0.005em] whitespace-nowrap ${fontSize}`}
+      style={{ backgroundColor: s.bg, color: s.fg }}
+    >
+      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.fg }} />
+      {status}
+    </span>
+  )
+}
 
 // ─── Local RANK_CONFIG (角度 - A/B/C/プラス/設定なし) ────────────────────────
+// Liquid Obsidian: グラデ・発光は廃止、フラットチップ(背景α=0.14 + 同色文字)
+// A → primary系 / B → low系 / C → muted neutral / プラス → middle系 / 設定なし → neutral
 
 interface RankStyle {
-  gradient: string
-  glow: string
-  color: string
+  bg: string
+  fg: string
 }
 
 const RANK_CONFIG: Record<'A' | 'B' | 'C' | 'プラス' | '設定なし', RankStyle> = {
-  A: BASE_RANK_CONFIG.A,
-  B: BASE_RANK_CONFIG.B,
-  C: BASE_RANK_CONFIG.C,
-  'プラス': {
-    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
-    glow: '0 0 14px rgba(236,72,153,0.85), 0 0 5px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF',
-  },
-  '設定なし': {
-    gradient: 'linear-gradient(135deg, #4A4A52 0%, #3A3A42 100%)',
-    glow: '0 0 8px rgba(174,174,178,0.3), inset 0 1px 0 rgba(255,255,255,0.15)',
-    color: '#D8DCE6',
-  },
+  A:        { bg: 'rgba(171,199,255,0.14)', fg: 'var(--color-obs-primary)' },
+  B:        { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
+  C:        { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
+  'プラス': { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
+  '設定なし': { bg: 'rgba(143,140,144,0.10)', fg: 'var(--color-obs-text-subtle)' },
 }
 
 const RANK_OPTIONS_FULL: ContactRank[] = ['A', 'B', 'C', 'プラス', null]
@@ -69,12 +105,31 @@ interface ActivityItem {
   description?: string
 }
 
-type NextActionValue = 'メール' | 'コール' | '連絡待ち' | '商談' | 'フォロー' | null
+type NextActionValue = 'メール' | 'コール' | '連絡待ち' | 'ナーチャリング' | '除外' | 'その他' | null
 type PersonRole = '決裁者' | '推進者' | '一般'
 
 // 角度 — A / B / C / プラス / 設定なし
 type ContactRank = 'A' | 'B' | 'C' | 'プラス' | null
-type Signal = 'Hot' | 'Middle' | 'Low'
+
+// リード経由元（チャネル種別）
+type LeadSourceType =
+  | 'manual'
+  | 'web_form'
+  | 'organic_search'
+  | 'paid_ads'
+  | 'sns'
+  | 'event'
+  | 'referral'
+  | 'cold_call'
+  | 'cold_mail'
+  | 'partner'
+  | 'inbound'
+  | 'other'
+
+interface LeadSource {
+  type: LeadSourceType
+  detail: string
+}
 
 interface ContactDetail {
   id: string
@@ -86,7 +141,6 @@ interface ContactDetail {
   email: string
   phone: string
   rank: ContactRank
-  signal: Signal
   status: ApproachStatus
   statusMemo: string
   nextAction: NextActionValue
@@ -95,10 +149,57 @@ interface ContactDetail {
   lastCallAt: string | null
   nextActionAt: string | null
   personRole: PersonRole
+  leadSource: LeadSource
 }
 
-const SIGNAL_OPTIONS: Signal[] = ['Hot', 'Middle', 'Low']
-const SIGNAL_LABEL: Record<Signal, string> = { Hot: '高', Middle: '中', Low: '低' }
+// ─── Lead Source Style ─────────────────────────────────────────────────────────
+// Liquid Obsidian: 全タイプ共通の薄い neutral surface 下地 + アイコンの色のみ意味で変化。
+// テキストは text-muted、ゴーストアウトラインなし。
+
+interface LeadSourceStyle {
+  Icon: React.ElementType
+  label: string
+  // チップ背景 (全タイプ共通: 薄い neutral)
+  chipBg: string
+  // アイコンの色 (種別判別)
+  iconFg: string
+  // テキスト色 (全タイプ共通: muted)
+  fg: string
+}
+
+// 全タイプ共通: surface-high 相当の薄い neutral 下地 + ラベルは muted 統一
+const LEAD_SOURCE_CHIP_BG = 'rgba(143,140,144,0.10)'
+const LEAD_SOURCE_FG = 'var(--color-obs-text-muted)'
+
+const LEAD_SOURCE_STYLES: Record<LeadSourceType, LeadSourceStyle> = {
+  manual:         { Icon: PencilLine,    label: '手動作成',         chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-muted)',  fg: LEAD_SOURCE_FG },
+  web_form:       { Icon: FileEdit,      label: 'Webフォーム',      chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+  organic_search: { Icon: Search,        label: '自然検索',         chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+  paid_ads:       { Icon: Megaphone,     label: '広告経由',         chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-primary)',     fg: LEAD_SOURCE_FG },
+  sns:            { Icon: Share2,        label: 'SNS',              chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+  event:          { Icon: Calendar,      label: '展示会・イベント', chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-middle)',      fg: LEAD_SOURCE_FG },
+  referral:       { Icon: UserCheck,     label: '紹介',             chipBg: LEAD_SOURCE_CHIP_BG, iconFg: '#4ad98a',                      fg: LEAD_SOURCE_FG },
+  cold_call:      { Icon: PhoneOutgoing, label: '新規コール',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+  cold_mail:      { Icon: Send,          label: '新規メール',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+  partner:        { Icon: Handshake,     label: 'パートナー',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+  inbound:        { Icon: Inbox,         label: '問い合わせ',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-low)',         fg: LEAD_SOURCE_FG },
+  other:          { Icon: HelpCircle,    label: 'その他',           chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+}
+
+const ALL_LEAD_SOURCE_TYPES: LeadSourceType[] = [
+  'manual',
+  'web_form',
+  'organic_search',
+  'paid_ads',
+  'sns',
+  'event',
+  'referral',
+  'cold_call',
+  'cold_mail',
+  'partner',
+  'inbound',
+  'other',
+]
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -107,96 +208,66 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     id: '1', name: '田中 誠', title: '営業部長', department: '営業部',
     company: '株式会社テクノリード', companyId: '1',
     email: 'tanaka@techno-lead.co.jp', phone: '03-1234-5678',
-    rank: 'A', signal: 'Hot', status: 'アポ獲得', statusMemo: '3/28 14:00 商談設定済み。Google Meet URL送付済み。',
+    rank: 'A', status: 'アポ獲得', statusMemo: '3/28 14:00 商談設定済み。Google Meet URL送付済み。',
     nextAction: null, nextActionMemo: '',
     callAttempts: 3, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28',
     personRole: '決裁者',
+    leadSource: { type: 'manual', detail: '' },
   },
   '2': {
     id: '2', name: '山本 佳子', title: 'マネージャー', department: '購買部',
     company: '合同会社フューチャー', companyId: '2',
     email: 'yamamoto@future-llc.jp', phone: '06-2345-6789',
-    rank: 'A', signal: 'Hot', status: '接続済み', statusMemo: '初回コンタクト完了。提案資料の希望あり。',
+    rank: 'A', status: '接続済み', statusMemo: '初回コンタクト完了。提案資料の希望あり。',
     nextAction: null, nextActionMemo: '',
     callAttempts: 5, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22',
     personRole: '推進者',
+    leadSource: { type: 'event', detail: '2026年Q1 SaaSWORLD出展時に名刺交換' },
+  },
+  '3': {
+    id: '3', name: '佐々木 拓也', title: '事業企画 部長', department: '経営企画部',
+    company: '株式会社ノヴァソリューションズ', companyId: '3',
+    email: 'sasaki@nova-solutions.jp', phone: '03-3456-7890',
+    rank: 'B', status: '未着手', statusMemo: '紹介元(株式会社グロース)から「決裁ライン直結」と聞いている。',
+    nextAction: 'コール', nextActionMemo: '',
+    callAttempts: 0, lastCallAt: null, nextActionAt: '2026-04-25',
+    personRole: '決裁者',
+    leadSource: { type: 'referral', detail: '既存顧客（株式会社グロース）からの紹介' },
+  },
+  '4': {
+    id: '4', name: '中村 理恵', title: 'マーケティング マネージャー', department: 'マーケティング部',
+    company: '株式会社ブライトワークス', companyId: '4',
+    email: 'nakamura@brightworks.co.jp', phone: '03-4567-8901',
+    rank: 'A', status: '接続済み', statusMemo: 'SFA切り替え検討中。現行はSalesforce、Q2中の比較検討と明言。',
+    nextAction: 'メール', nextActionMemo: '比較資料(機能差分 + 料金)を送付予定',
+    callAttempts: 2, lastCallAt: '2026-04-18', nextActionAt: '2026-04-23',
+    personRole: '推進者',
+    leadSource: { type: 'paid_ads', detail: 'Google広告 (キーワード: SFA 切替)' },
   },
 }
 
-// ─── Person Role Style ─────────────────────────────────────────────────────────
+// ─── Person Role Style (Liquid Obsidian flat chip) ────────────────────────────
 
-interface PersonRoleStyle {
-  gradient: string
-  glow: string
-  color: string
-  borderColor: string
-  textShadow: string
-  iconColor: string
-}
-
-const PERSON_ROLE_STYLES: Record<PersonRole, PersonRoleStyle> = {
-  '決裁者': {
-    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
-    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-    color: '#5B2E00', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-    iconColor: '#5B2E00',
-  },
-  '推進者': {
-    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
-    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(50,20,100,0.6)',
-    iconColor: '#FFFFFF',
-  },
-  '一般': {
-    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
-    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#2C2C2E', borderColor: 'rgba(255,255,255,0.35)', textShadow: 'none',
-    iconColor: '#2C2C2E',
-  },
+const PERSON_ROLE_STYLES: Record<PersonRole, ObsChipStyle> = {
+  '決裁者': { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
+  '推進者': { bg: 'rgba(171,199,255,0.14)', fg: 'var(--color-obs-primary)' },
+  '一般':   { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
 }
 
 const ALL_PERSON_ROLES: PersonRole[] = ['決裁者', '推進者', '一般']
 
-// ─── Next Action Game Style ────────────────────────────────────────────────────
+// ─── Next Action Style (Liquid Obsidian flat chip) ────────────────────────────
 
-interface NextActionStyle {
-  gradient: string
-  glow: string
-  color: string
-  dotColor: string
-  borderColor: string
-  textShadow: string
+const NEXT_ACTION_STYLES: Record<Exclude<NextActionValue, null>, ObsChipStyle> = {
+  'メール':       { bg: 'rgba(171,199,255,0.14)', fg: 'var(--color-obs-primary)' },
+  'コール':       { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
+  '連絡待ち':     { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
+  'ナーチャリング': { bg: 'rgba(74,217,138,0.14)',  fg: '#4ad98a' },
+  '除外':         { bg: 'rgba(255,107,107,0.14)', fg: 'var(--color-obs-hot)' },
+  'その他':       { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
 }
 
-const NEXT_ACTION_STYLES: Record<Exclude<NextActionValue, null>, NextActionStyle> = {
-  'メール': {
-    gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
-    glow: '0 0 14px rgba(139,92,246,0.85), 0 0 5px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', dotColor: '#E9E5FF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(50,20,100,0.6)',
-  },
-  'コール': {
-    gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
-    glow: '0 0 14px rgba(50,173,230,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', dotColor: '#E0F4FF', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(0,40,90,0.6)',
-  },
-  '商談': {
-    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
-    glow: '0 0 14px rgba(52,199,89,0.85), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#053D24', dotColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-  },
-  '連絡待ち': {
-    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
-    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-    color: '#5B2E00', dotColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-  },
-  'フォロー': {
-    gradient: 'linear-gradient(135deg, #FBCFE8 0%, #F9A8D4 35%, #EC4899 70%, #BE185D 100%)',
-    glow: '0 0 14px rgba(236,72,153,0.85), 0 0 5px rgba(251,207,232,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#FFFFFF', dotColor: '#FCE7F3', borderColor: 'rgba(255,255,255,0.3)', textShadow: '0 1px 2px rgba(110,15,60,0.6)',
-  },
-}
-
-const ALL_NEXT_ACTIONS: Exclude<NextActionValue, null>[] = ['メール', 'コール', '商談', '連絡待ち', 'フォロー']
+const ALL_NEXT_ACTIONS: Exclude<NextActionValue, null>[] = ['メール', 'コール', '連絡待ち', 'ナーチャリング', '除外', 'その他']
 
 const MOCK_ACTIVITIES: ActivityItem[] = [
   {
@@ -223,12 +294,11 @@ const MOCK_ACTIVITIES: ActivityItem[] = [
   },
 ]
 
-// ─── Style Constants ───────────────────────────────────────────────────────────
+// ─── Style Constants (Liquid Obsidian) ─────────────────────────────────────────
 
-const CARD_STYLE = {
-  background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-  border: '1px solid #2244AA',
-  boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)',
+const CARD_STYLE: React.CSSProperties = {
+  background: 'var(--color-obs-surface-high)',
+  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12), 0 2px 12px rgba(0,0,0,0.35)',
 }
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
@@ -246,61 +316,42 @@ function formatDuration(sec: number): string {
 }
 
 // ─── Activity Icon ─────────────────────────────────────────────────────────────
+// Liquid Obsidian: 単色フラット背景 + lucide アイコン1色。グラデ・発光・borderはなし。
+// 種別判別はアイコン形状とアイコン色 (意味色) の差で確保。
 
 interface ActivityIconStyle {
   Icon: React.ElementType
-  gradient: string
-  glow: string
+  bg: string
   iconColor: string
-  border: string
-  isContact: boolean // 接点ありかどうか(明暗判定)
 }
 
-// 接点あり = コール/メール/商談 (実施したアクティビティ)
-const CONTACT_TYPES: ActivityType[] = ['call', 'email', 'note']
-
 function getActivityIconStyle(type: ActivityType): ActivityIconStyle {
-  const isContact = CONTACT_TYPES.includes(type)
-
   if (type === 'call') {
     return {
       Icon: PhoneCall,
-      gradient: 'linear-gradient(135deg, #7DD3FC 0%, #5AC8FA 35%, #32ADE6 70%, #0071E3 100%)',
-      glow: '0 0 16px rgba(50,173,230,0.85), 0 0 6px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-      iconColor: '#FFFFFF',
-      border: '1.5px solid rgba(255,255,255,0.4)',
-      isContact: true,
+      bg: 'rgba(126,198,255,0.14)',
+      iconColor: 'var(--color-obs-low)',
     }
   }
   if (type === 'email') {
     return {
       Icon: Mail,
-      gradient: 'linear-gradient(135deg, #C4B5FD 0%, #A78BFA 35%, #8B5CF6 70%, #6D28D9 100%)',
-      glow: '0 0 16px rgba(139,92,246,0.85), 0 0 6px rgba(196,181,253,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-      iconColor: '#FFFFFF',
-      border: '1.5px solid rgba(255,255,255,0.4)',
-      isContact: true,
+      bg: 'rgba(171,199,255,0.14)',
+      iconColor: 'var(--color-obs-primary)',
     }
   }
   if (type === 'note') {
-    // 商談メモなど
     return {
       Icon: MessageSquare,
-      gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
-      glow: '0 0 16px rgba(52,199,89,0.85), 0 0 6px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-      iconColor: '#FFFFFF',
-      border: '1.5px solid rgba(255,255,255,0.4)',
-      isContact: true,
+      bg: 'rgba(143,140,144,0.14)',
+      iconColor: 'var(--color-obs-text-muted)',
     }
   }
-  // deal_advance などのシステムイベントは暗めに
+  // deal_advance などのシステムイベント
   return {
     Icon: TrendingUp,
-    gradient: 'linear-gradient(135deg, #3A4058 0%, #2A3048 35%, #1E2438 70%, #141828 100%)',
-    glow: '0 0 8px rgba(85,119,221,0.25), inset 0 1px 0 rgba(255,255,255,0.1)',
-    iconColor: '#7799CC',
-    border: '1px solid rgba(85,119,221,0.35)',
-    isContact: false,
+    bg: 'var(--color-obs-surface-high)',
+    iconColor: 'var(--color-obs-text-subtle)',
   }
 }
 
@@ -309,19 +360,10 @@ function ActivityIcon({ type }: { type: ActivityType }) {
   const Icon = s.Icon
   return (
     <div
-      className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
-      style={{
-        background: s.gradient,
-        boxShadow: s.glow,
-        border: s.border,
-        opacity: s.isContact ? 1 : 0.65,
-      }}
+      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
+      style={{ backgroundColor: s.bg }}
     >
-      <Icon
-        size={17}
-        style={{ color: s.iconColor, filter: s.isContact ? 'drop-shadow(0 1px 2px rgba(0,0,0,0.25))' : 'none' }}
-        strokeWidth={s.isContact ? 2.5 : 2}
-      />
+      <Icon size={15} style={{ color: s.iconColor }} strokeWidth={2} />
     </div>
   )
 }
@@ -336,6 +378,7 @@ function StatusSelector({ value, onChange }: {
 }) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
+  const active = hover || open
 
   return (
     <div className="relative">
@@ -345,17 +388,17 @@ function StatusSelector({ value, onChange }: {
         onMouseLeave={() => setHover(false)}
         className="inline-flex items-center gap-1 px-1.5 py-1 -mx-1.5 -my-1 rounded-[8px] transition-all cursor-pointer"
         style={{
-          background: hover || open ? 'rgba(136,187,255,0.10)' : 'transparent',
-          border: hover || open ? '1px dashed rgba(136,187,255,0.5)' : '1px dashed transparent',
+          background: active ? 'rgba(171,199,255,0.10)' : 'var(--color-obs-surface-high)',
+          boxShadow: active ? 'inset 0 0 0 1px var(--color-obs-primary)' : 'none',
         }}
         title="クリックして変更"
       >
-        <StatusGameBadge status={value} />
+        <StatusObsBadge status={value} />
         <ChevronDown
           size={13}
           className="transition-transform"
           style={{
-            color: hover || open ? '#88BBFF' : '#7799CC',
+            color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
             transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         />
@@ -371,27 +414,26 @@ function StatusSelector({ value, onChange }: {
               transition={{ duration: 0.15 }}
               className="absolute top-full right-0 mt-1.5 z-40 rounded-[10px] py-1.5 min-w-[160px]"
               style={{
-                background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-                border: '1px solid #2244AA',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(85,119,221,0.2)',
+                background: 'var(--color-obs-surface-highest)',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(109,106,111,0.18)',
               }}
             >
               {STATUS_OPTIONS.map(s => {
-                const style = STATUS_GAME_STYLES[s]
+                const style = STATUS_OBS_STYLES[s]
                 const selected = s === value
                 return (
                   <button
                     key={s}
                     onClick={e => { e.stopPropagation(); onChange(s); setOpen(false) }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(136,187,255,0.06)] transition-colors"
-                    style={{ color: '#CCDDF0', fontWeight: selected ? 700 : 500 }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
+                    style={{ color: 'var(--color-obs-text)', fontWeight: selected ? 600 : 500 }}
                   >
                     <span
                       className="rounded-full shrink-0"
-                      style={{ width: 7, height: 7, background: style.dotColor, boxShadow: `0 0 6px ${style.dotColor}` }}
+                      style={{ width: 6, height: 6, backgroundColor: style.fg }}
                     />
                     {s}
-                    {selected && <span className="ml-auto text-[#88BBFF]">✓</span>}
+                    {selected && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
                   </button>
                 )
               })}
@@ -409,21 +451,17 @@ function NextActionSelector({ value, onChange }: {
 }) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
+  const active = hover || open
 
   const renderBadge = () => {
     if (!value) {
+      const fg = 'var(--color-obs-primary)'
       return (
         <span
-          className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-bold whitespace-nowrap"
-          style={{
-            background: 'linear-gradient(135deg, rgba(136,187,255,0.18) 0%, rgba(85,119,221,0.12) 100%)',
-            boxShadow: '0 0 10px rgba(136,187,255,0.25), inset 0 1px 0 rgba(255,255,255,0.15)',
-            color: '#88BBFF',
-            border: '1px dashed rgba(136,187,255,0.5)',
-            letterSpacing: '0.01em',
-          }}
+          className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"
+          style={{ backgroundColor: 'rgba(171,199,255,0.14)', color: fg }}
         >
-          <span className="rounded-full" style={{ width: 6, height: 6, background: '#88BBFF', boxShadow: '0 0 4px #88BBFF' }} />
+          <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: fg }} />
           未設定
         </span>
       )
@@ -431,17 +469,10 @@ function NextActionSelector({ value, onChange }: {
     const s = NEXT_ACTION_STYLES[value]
     return (
       <span
-        className="inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-bold whitespace-nowrap"
-        style={{
-          background: s.gradient,
-          boxShadow: s.glow,
-          color: s.color,
-          border: `1px solid ${s.borderColor}`,
-          textShadow: s.textShadow,
-          letterSpacing: '0.01em',
-        }}
+        className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"
+        style={{ backgroundColor: s.bg, color: s.fg }}
       >
-        <span className="rounded-full" style={{ width: 6, height: 6, background: s.dotColor, boxShadow: `0 0 4px ${s.dotColor}cc` }} />
+        <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: s.fg }} />
         {value}
       </span>
     )
@@ -455,8 +486,8 @@ function NextActionSelector({ value, onChange }: {
         onMouseLeave={() => setHover(false)}
         className="inline-flex items-center gap-1 px-1.5 py-1 -mx-1.5 -my-1 rounded-[8px] transition-all cursor-pointer"
         style={{
-          background: hover || open ? 'rgba(136,187,255,0.10)' : 'transparent',
-          border: hover || open ? '1px dashed rgba(136,187,255,0.5)' : '1px dashed transparent',
+          background: active ? 'rgba(171,199,255,0.10)' : 'transparent',
+          boxShadow: active ? 'inset 0 0 0 1px var(--color-obs-primary)' : 'none',
         }}
         title="クリックして変更"
       >
@@ -465,7 +496,7 @@ function NextActionSelector({ value, onChange }: {
           size={13}
           className="transition-transform"
           style={{
-            color: hover || open ? '#88BBFF' : '#7799CC',
+            color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
             transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
           }}
         />
@@ -481,9 +512,8 @@ function NextActionSelector({ value, onChange }: {
               transition={{ duration: 0.15 }}
               className="absolute top-full right-0 mt-1.5 z-40 rounded-[10px] py-1.5 min-w-[160px]"
               style={{
-                background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-                border: '1px solid #2244AA',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(85,119,221,0.2)',
+                background: 'var(--color-obs-surface-highest)',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(109,106,111,0.18)',
               }}
             >
               {ALL_NEXT_ACTIONS.map(a => {
@@ -493,32 +523,131 @@ function NextActionSelector({ value, onChange }: {
                   <button
                     key={a}
                     onClick={e => { e.stopPropagation(); onChange(a); setOpen(false) }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(136,187,255,0.06)] transition-colors"
-                    style={{ color: '#CCDDF0', fontWeight: selected ? 700 : 500 }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
+                    style={{ color: 'var(--color-obs-text)', fontWeight: selected ? 600 : 500 }}
                   >
                     <span
                       className="rounded-full shrink-0"
-                      style={{ width: 7, height: 7, background: style.dotColor, boxShadow: `0 0 6px ${style.dotColor}` }}
+                      style={{ width: 6, height: 6, backgroundColor: style.fg }}
                     />
                     {a}
-                    {selected && <span className="ml-auto text-[#88BBFF]">✓</span>}
+                    {selected && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
                   </button>
                 )
               })}
-              <div className="mx-2 my-1 h-px" style={{ background: 'rgba(34,68,170,0.3)' }} />
+              <div className="mx-2 my-1 h-px" style={{ background: 'var(--color-obs-surface-low)' }} />
               <button
                 onClick={e => { e.stopPropagation(); onChange(null); setOpen(false) }}
-                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(136,187,255,0.06)] transition-colors"
-                style={{ color: value === null ? '#88BBFF' : '#99AACC', fontWeight: value === null ? 700 : 500 }}
+                className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
+                style={{ color: value === null ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)', fontWeight: value === null ? 600 : 500 }}
               >
-                <span className="w-[7px] h-[7px] rounded-full shrink-0" style={{ background: '#88BBFF', boxShadow: '0 0 4px #88BBFF' }} />
+                <span
+                  className="w-1.5 h-1.5 rounded-full shrink-0"
+                  style={{ backgroundColor: 'var(--color-obs-primary)' }}
+                />
                 未設定
-                {value === null && <span className="ml-auto text-[#88BBFF]">✓</span>}
+                {value === null && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
               </button>
             </motion.div>
           </>
         )}
       </AnimatePresence>
+    </div>
+  )
+}
+
+// ─── LeadSourceSelector (リード経由元) ────────────────────────────────────────
+// チップ(タイプ) + フリーテキスト(detail) の 2 段構成。
+// チップをクリックすると種別ドロップダウン、テキストをクリックするとインライン編集。
+
+function LeadSourceTypeChip({ type }: { type: LeadSourceType }) {
+  const s = LEAD_SOURCE_STYLES[type]
+  const Icon = s.Icon
+  return (
+    <span
+      className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"
+      style={{
+        backgroundColor: s.chipBg,
+        color: s.fg,
+      }}
+    >
+      <Icon size={11} strokeWidth={2.2} style={{ color: s.iconFg }} />
+      {s.label}
+    </span>
+  )
+}
+
+function LeadSourceSelector({ value, onChange }: {
+  value: LeadSource
+  onChange: (v: LeadSource) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [hover, setHover] = useState(false)
+
+  const active = hover || open
+
+  return (
+    <div className="flex items-start max-w-full">
+      {/* タイプチップ + ドロップダウン（detail表示は廃止） */}
+      <div className="relative">
+        <button
+          onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
+          onMouseEnter={() => setHover(true)}
+          onMouseLeave={() => setHover(false)}
+          className="inline-flex items-center gap-1 px-1.5 py-1 -mx-1.5 -my-1 rounded-[8px] transition-all cursor-pointer"
+          style={{
+            background: active ? 'rgba(171,199,255,0.10)' : 'transparent',
+            boxShadow: active ? 'inset 0 0 0 1px var(--color-obs-primary)' : 'none',
+          }}
+          title="クリックして経由元の種別を変更"
+        >
+          <LeadSourceTypeChip type={value.type} />
+          <ChevronDown
+            size={12}
+            className="transition-transform"
+            style={{
+              color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+              transform: open ? 'rotate(180deg)' : 'rotate(0deg)',
+            }}
+          />
+        </button>
+        <AnimatePresence>
+          {open && (
+            <>
+              <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+              <motion.div
+                initial={{ opacity: 0, y: -4, scale: 0.97 }}
+                animate={{ opacity: 1, y: 0, scale: 1 }}
+                exit={{ opacity: 0, y: -4, scale: 0.97 }}
+                transition={{ duration: 0.15 }}
+                className="absolute top-full left-0 mt-1.5 z-40 rounded-[10px] py-1.5 min-w-[200px]"
+                style={{
+                  background: 'var(--color-obs-surface-highest)',
+                  boxShadow: '0 12px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(109,106,111,0.18)',
+                }}
+              >
+                {ALL_LEAD_SOURCE_TYPES.map(t => {
+                  const s = LEAD_SOURCE_STYLES[t]
+                  const Icon = s.Icon
+                  const selected = t === value.type
+                  return (
+                    <button
+                      key={t}
+                      onClick={e => { e.stopPropagation(); onChange({ ...value, type: t }); setOpen(false) }}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
+                      style={{ color: 'var(--color-obs-text)', fontWeight: selected ? 600 : 500 }}
+                    >
+                      <Icon size={12} style={{ color: s.iconFg }} strokeWidth={2.2} />
+                      {s.label}
+                      {selected && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
+                    </button>
+                  )
+                })}
+              </motion.div>
+            </>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   )
 }
@@ -532,6 +661,7 @@ function PersonRoleSelector({ value, onChange }: {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
   const s = PERSON_ROLE_STYLES[value]
+  const active = hover || open
 
   return (
     <div className="relative inline-block">
@@ -539,20 +669,17 @@ function PersonRoleSelector({ value, onChange }: {
         onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
         onMouseEnter={() => setHover(true)}
         onMouseLeave={() => setHover(false)}
-        className="inline-flex items-center gap-1 px-2.5 py-[3px] rounded-full text-[11px] font-bold whitespace-nowrap transition-all cursor-pointer"
+        className="inline-flex items-center gap-1 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap transition-all cursor-pointer"
         style={{
-          background: s.gradient,
-          boxShadow: hover || open ? `${s.glow}, 0 0 0 2px rgba(136,187,255,0.4)` : s.glow,
-          color: s.color,
-          border: `1px solid ${s.borderColor}`,
-          textShadow: s.textShadow,
-          letterSpacing: '0.01em',
+          backgroundColor: s.bg,
+          color: s.fg,
+          boxShadow: active ? 'inset 0 0 0 1px rgba(109,106,111,0.18)' : 'none',
         }}
         title="クリックして変更"
       >
-        <Star size={10} fill={s.iconColor} />
+        <Star size={10} style={{ color: s.fg, opacity: 0.85 }} fill="currentColor" />
         {value}
-        <ChevronDown size={11} style={{ color: s.color, opacity: 0.7 }} />
+        <ChevronDown size={11} style={{ color: s.fg, opacity: 0.7 }} />
       </button>
       <AnimatePresence>
         {open && (
@@ -565,24 +692,23 @@ function PersonRoleSelector({ value, onChange }: {
               transition={{ duration: 0.15 }}
               className="absolute top-full left-0 mt-1.5 z-40 rounded-[10px] py-1.5 min-w-[140px]"
               style={{
-                background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-                border: '1px solid #2244AA',
-                boxShadow: '0 8px 24px rgba(0,0,0,0.6), 0 0 16px rgba(85,119,221,0.2)',
+                background: 'var(--color-obs-surface-highest)',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(109,106,111,0.18)',
               }}
             >
               {ALL_PERSON_ROLES.map(r => {
-                const style = PERSON_ROLE_STYLES[r]
                 const selected = r === value
+                const rs = PERSON_ROLE_STYLES[r]
                 return (
                   <button
                     key={r}
                     onClick={e => { e.stopPropagation(); onChange(r); setOpen(false) }}
-                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(136,187,255,0.06)] transition-colors"
-                    style={{ color: '#CCDDF0', fontWeight: selected ? 700 : 500 }}
+                    className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
+                    style={{ color: 'var(--color-obs-text)', fontWeight: selected ? 600 : 500 }}
                   >
-                    <Star size={11} style={{ color: r === '決裁者' ? '#FFC266' : r === '推進者' ? '#A78BFA' : '#AEAEB2' }} />
+                    <Star size={11} style={{ color: rs.fg, opacity: 0.85 }} fill="currentColor" />
                     {r}
-                    {selected && <span className="ml-auto text-[#88BBFF]">✓</span>}
+                    {selected && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
                   </button>
                 )
               })}
@@ -617,6 +743,11 @@ function EditContactModal({ contact, onClose, onSave }: {
     onClose()
   }
 
+  const inputBaseStyle: React.CSSProperties = {
+    background: 'var(--color-obs-surface-low)',
+    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+  }
+
   return (
     <motion.div
       className="fixed inset-0 z-50 flex items-center justify-center p-4"
@@ -628,9 +759,8 @@ function EditContactModal({ contact, onClose, onSave }: {
       <motion.div
         className="relative w-full max-w-[480px] rounded-[14px] overflow-hidden"
         style={{
-          background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-          border: '1px solid #2244AA',
-          boxShadow: '0 24px 64px rgba(0,0,0,0.6), 0 0 32px rgba(85,119,221,0.2), inset 0 1px 0 rgba(136,187,255,0.08)',
+          background: 'var(--color-obs-surface-highest)',
+          boxShadow: '0 24px 64px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(109,106,111,0.18)',
         }}
         initial={{ opacity: 0, scale: 0.96, y: 8 }}
         animate={{ opacity: 1, scale: 1, y: 0 }}
@@ -639,13 +769,16 @@ function EditContactModal({ contact, onClose, onSave }: {
         onClick={e => e.stopPropagation()}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4" style={{ borderBottom: '1px solid rgba(34,68,170,0.3)' }}>
-          <h2 className="text-[16px] font-bold text-[#EEEEFF]">コンタクト編集</h2>
+        <div
+          className="flex items-center justify-between px-5 py-4"
+          style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.12)' }}
+        >
+          <h2 className="text-[16px] font-semibold" style={{ color: 'var(--color-obs-text)' }}>コンタクト編集</h2>
           <button
             onClick={onClose}
-            className="p-1 rounded-full hover:bg-[rgba(136,187,255,0.08)] transition-colors"
+            className="p-1 rounded-full transition-colors hover:bg-[rgba(171,199,255,0.08)]"
           >
-            <X size={16} className="text-[#CCDDF0]" />
+            <X size={16} style={{ color: 'var(--color-obs-text-muted)' }} />
           </button>
         </div>
 
@@ -653,78 +786,96 @@ function EditContactModal({ contact, onClose, onSave }: {
           <div className="px-5 py-4 space-y-4 max-h-[70vh] overflow-y-auto">
             {/* 氏名 */}
             <div>
-              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
-                氏名 <span className="text-[#FF8A82]">*</span>
+              <label
+                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
+                氏名 <span style={{ color: 'var(--color-obs-hot)' }}>*</span>
               </label>
               <input
                 type="text"
                 value={form.name}
                 onChange={e => setForm(f => ({ ...f, name: e.target.value }))}
                 required
-                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none transition-all"
-                style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] outline-none transition-all"
+                style={{ ...inputBaseStyle, color: 'var(--color-obs-text)' }}
               />
             </div>
 
             {/* 部署 + 役職 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
-                <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+                <label
+                  className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                >
                   部署
                 </label>
                 <input
                   type="text"
                   value={form.department}
                   onChange={e => setForm(f => ({ ...f, department: e.target.value }))}
-                  className="w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none"
-                  style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+                  className="w-full h-[36px] px-3 text-[14px] rounded-[8px] outline-none"
+                  style={{ ...inputBaseStyle, color: 'var(--color-obs-text)' }}
                 />
               </div>
               <div>
-                <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+                <label
+                  className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                >
                   役職
                 </label>
                 <input
                   type="text"
                   value={form.title}
                   onChange={e => setForm(f => ({ ...f, title: e.target.value }))}
-                  className="w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none"
-                  style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+                  className="w-full h-[36px] px-3 text-[14px] rounded-[8px] outline-none"
+                  style={{ ...inputBaseStyle, color: 'var(--color-obs-text)' }}
                 />
               </div>
             </div>
 
             {/* メール */}
             <div>
-              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+              <label
+                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 メールアドレス
               </label>
               <input
                 type="email"
                 value={form.email}
                 onChange={e => setForm(f => ({ ...f, email: e.target.value }))}
-                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none"
-                style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] outline-none"
+                style={{ ...inputBaseStyle, color: 'var(--color-obs-text)' }}
               />
             </div>
 
             {/* 電話 */}
             <div>
-              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+              <label
+                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 電話番号
               </label>
               <input
                 type="tel"
                 value={form.phone}
                 onChange={e => setForm(f => ({ ...f, phone: e.target.value }))}
-                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none"
-                style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+                className="w-full h-[36px] px-3 text-[14px] rounded-[8px] outline-none"
+                style={{ ...inputBaseStyle, color: 'var(--color-obs-text)' }}
               />
             </div>
 
             {/* 角度 */}
             <div>
-              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+              <label
+                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 角度
               </label>
               <div className="flex flex-wrap gap-1.5">
@@ -737,19 +888,17 @@ function EditContactModal({ contact, onClose, onSave }: {
                       key={label}
                       type="button"
                       onClick={() => setForm(f => ({ ...f, rank: r }))}
-                      className="px-3 h-[36px] rounded-[8px] text-[12px] font-black transition-all"
+                      className="inline-flex items-center gap-1.5 px-3 h-[36px] rounded-[8px] text-[12px] font-medium transition-all"
                       style={active ? {
-                        background: cfg.gradient,
-                        boxShadow: cfg.glow,
-                        color: cfg.color,
-                        border: '1px solid rgba(255,255,255,0.4)',
-                        textShadow: cfg.color === '#fff' || cfg.color === '#FFFFFF' ? '0 1px 2px rgba(0,0,0,0.4)' : 'none',
+                        backgroundColor: cfg.bg,
+                        color: cfg.fg,
+                        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
                       } : {
-                        background: 'rgba(16,16,40,0.8)',
-                        border: '1px solid #2244AA',
-                        color: '#7799CC',
+                        background: 'var(--color-obs-surface-low)',
+                        color: 'var(--color-obs-text-muted)',
                       }}
                     >
+                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: active ? cfg.fg : 'var(--color-obs-text-subtle)' }} />
                       {label}
                     </button>
                   )
@@ -759,27 +908,37 @@ function EditContactModal({ contact, onClose, onSave }: {
 
             {/* ステータス */}
             <div>
-              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+              <label
+                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 ステータス
               </label>
               <div className="relative">
                 <select
                   value={form.status}
                   onChange={e => setForm(f => ({ ...f, status: e.target.value as ApproachStatus }))}
-                  className="w-full h-[36px] px-3 pr-8 text-[13px] rounded-[8px] text-[#EEEEFF] appearance-none cursor-pointer outline-none"
-                  style={{ background: 'rgba(16,16,40,0.8)', border: '1px solid #2244AA' }}
+                  className="w-full h-[36px] px-3 pr-8 text-[13px] rounded-[8px] appearance-none cursor-pointer outline-none"
+                  style={{ ...inputBaseStyle, color: 'var(--color-obs-text)' }}
                 >
                   {STATUS_OPTIONS.map(s => (
                     <option key={s} value={s}>{s}</option>
                   ))}
                 </select>
-                <ChevronDown size={13} className="absolute right-2.5 top-1/2 -translate-y-1/2 text-[#7799CC] pointer-events-none" />
+                <ChevronDown
+                  size={13}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none"
+                  style={{ color: 'var(--color-obs-text-muted)' }}
+                />
               </div>
             </div>
 
             {/* 職位 */}
             <div>
-              <label className="text-[11px] font-bold text-[#88BBFF] uppercase tracking-[0.06em] mb-1.5 block">
+              <label
+                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 職位
               </label>
               <div className="flex gap-1.5">
@@ -791,20 +950,18 @@ function EditContactModal({ contact, onClose, onSave }: {
                       key={r}
                       type="button"
                       onClick={() => setForm(f => ({ ...f, personRole: r }))}
-                      className="flex-1 inline-flex items-center justify-center gap-1 h-[36px] rounded-[8px] text-[12px] font-bold transition-all"
+                      className="flex-1 inline-flex items-center justify-center gap-1 h-[36px] rounded-[8px] text-[12px] font-medium transition-all"
                       style={active ? {
-                        background: style.gradient,
-                        boxShadow: style.glow,
-                        color: style.color,
-                        border: `1px solid ${style.borderColor}`,
-                        textShadow: style.textShadow,
+                        backgroundColor: style.bg,
+                        color: style.fg,
+                        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
                       } : {
-                        background: 'rgba(16,16,40,0.8)',
-                        border: '1px solid #2244AA',
-                        color: '#7799CC',
+                        background: 'var(--color-obs-surface-low)',
+                        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+                        color: 'var(--color-obs-text-muted)',
                       }}
                     >
-                      <Star size={11} fill={active ? style.iconColor : 'none'} />
+                      <Star size={11} style={{ color: active ? style.fg : 'currentColor', opacity: active ? 0.85 : 0.6 }} fill={active ? 'currentColor' : 'none'} />
                       {r}
                     </button>
                   )
@@ -815,21 +972,25 @@ function EditContactModal({ contact, onClose, onSave }: {
           </div>
 
           {/* Footer */}
-          <div className="flex justify-end gap-2 px-5 py-4" style={{ borderTop: '1px solid rgba(34,68,170,0.3)' }}>
+          <div
+            className="flex justify-end gap-2 px-5 py-4"
+            style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.12)' }}
+          >
             <button
               type="button"
               onClick={onClose}
-              className="h-[36px] px-4 text-[13px] font-medium text-[#CCDDF0] rounded-[8px] hover:bg-[rgba(136,187,255,0.06)] transition-colors"
+              className="h-[36px] px-4 text-[13px] font-medium rounded-[8px] transition-colors hover:bg-[var(--color-obs-surface-high)]"
+              style={{ color: 'var(--color-obs-text-muted)' }}
             >
               キャンセル
             </button>
             <button
               type="submit"
-              className="h-[36px] px-5 text-[13px] font-bold text-white rounded-[8px] transition-all hover:brightness-110"
+              className="h-[36px] px-5 text-[13px] font-semibold rounded-[8px] transition-all hover:brightness-106"
               style={{
-                background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
-                border: '1px solid #3355CC',
-                boxShadow: '0 2px 8px rgba(34,68,170,0.5), inset 0 1px 0 rgba(200,220,255,0.2)',
+                background: 'var(--color-obs-primary-container)',
+                color: 'var(--color-obs-on-primary)',
+                boxShadow: '0 8px 24px rgba(0,113,227,0.20)',
               }}
             >
               保存
@@ -843,24 +1004,41 @@ function EditContactModal({ contact, onClose, onSave }: {
 
 // ─── IS Field Row ──────────────────────────────────────────────────────────────
 
-function ISFieldRow({ label, children, editable }: { label: string; children: React.ReactNode; editable?: boolean }) {
+function ISFieldRow({
+  label,
+  children,
+  editable,
+  vertical,
+}: {
+  label: string
+  children: React.ReactNode
+  editable?: boolean
+  vertical?: boolean
+}) {
   return (
     <motion.div
       variants={{
         hidden: { opacity: 0, y: 6 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
       }}
-      className="flex items-center justify-between py-2.5"
-      style={{ borderBottom: '1px solid rgba(34,68,170,0.2)' }}
+      className={
+        vertical
+          ? 'flex flex-col gap-1.5 py-2.5'
+          : 'flex items-center justify-between gap-3 py-2.5'
+      }
+      style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }}
     >
       <span
-        className="text-xs shrink-0 w-28 inline-flex items-center gap-1"
-        style={{ color: editable ? '#88BBFF' : '#99AACC' }}
+        className={`text-[11px] inline-flex items-center gap-1 ${vertical ? '' : 'shrink-0 w-24'}`}
+        style={{
+          color: editable ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+          letterSpacing: '0.02em',
+        }}
       >
         {label}
-        {editable && <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />}
+        {editable && <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />}
       </span>
-      <div className="text-right">{children}</div>
+      <div className={vertical ? 'w-full' : 'text-right min-w-0 flex-1'}>{children}</div>
     </motion.div>
   )
 }
@@ -873,9 +1051,6 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
   const initialContact = MOCK_CONTACTS[id] ?? MOCK_CONTACTS['1']!
   const [contact, setContact] = useState<ContactDetail>(initialContact)
-  const rankConfig  = rankConfigOf(contact.rank)
-  const rankLabelStr = rankLabel(contact.rank)
-
   const [activityTab, setActivityTab] = useState<'all' | 'call' | 'email' | 'note'>('all')
   const [showEditModal, setShowEditModal] = useState(false)
 
@@ -895,6 +1070,11 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
     })
   }
 
+  const nestedInputStyle: React.CSSProperties = {
+    background: 'var(--color-obs-surface-low)',
+    boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+  }
+
   return (
     <div className="space-y-4">
 
@@ -902,7 +1082,8 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
       <div className="flex items-center justify-between">
         <Link
           href="/contacts"
-          className="flex items-center gap-1 text-sm text-[#CCDDF0] hover:text-[#EEEEFF] transition-colors"
+          className="flex items-center gap-1 text-sm transition-colors"
+          style={{ color: 'var(--color-obs-text-muted)' }}
         >
           <ChevronLeft size={15} />
           コンタクト一覧
@@ -912,14 +1093,14 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
           whileTap={{ scale: 0.97 }}
           whileHover={{ filter: 'brightness(1.06)' }}
           onClick={handleCall}
-          className="flex items-center gap-2 px-5 py-2.5 text-white text-sm font-semibold rounded-[9px] transition-all"
+          className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-[9px] transition-all"
           style={{
-            background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
-            border: '1px solid #3355CC',
-            boxShadow: '0 2px 8px rgba(34,68,170,0.4), inset 0 1px 0 rgba(200,220,255,0.15)',
+            background: 'var(--color-obs-primary-container)',
+            color: 'var(--color-obs-on-primary)',
+            boxShadow: '0 8px 24px rgba(0,113,227,0.20)',
           }}
         >
-          <Phone size={15} strokeWidth={2.5} />
+          <Phone size={15} strokeWidth={2.4} />
           今すぐコール
         </motion.button>
       </div>
@@ -938,92 +1119,91 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             className="rounded-[12px] p-5"
             style={CARD_STYLE}
           >
-            <div className="flex items-start gap-4">
-              {/* Avatar */}
+            <div className="flex items-center gap-4">
+              {/* Avatar — primary→primary_container グラデ1種のみ、シャドウ・グロウなし */}
               <div
-                className="w-14 h-14 rounded-full flex items-center justify-center shrink-0"
+                className="w-12 h-12 rounded-full flex items-center justify-center shrink-0"
                 style={{
-                  background: 'linear-gradient(145deg, #3355CC, #5E5CE6)',
-                  boxShadow: '0 2px 12px rgba(94,92,230,0.4), inset 0 1px 0 rgba(200,220,255,0.2)',
-                  border: '1px solid #5577DD',
+                  background: 'linear-gradient(135deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
                 }}
               >
-                <span className="text-xl font-semibold text-white">{contact.name[0]}</span>
+                <span className="text-[17px] font-semibold" style={{ color: 'var(--color-obs-on-primary)' }}>{contact.name[0]}</span>
               </div>
 
-              <div className="flex-1 min-w-0">
-                <div className="flex items-center gap-2 flex-wrap">
-                  <h1 className="text-xl font-semibold text-[#EEEEFF] tracking-[-0.02em]">
+              <div className="flex-1 min-w-0 flex flex-col gap-1.5">
+                {/* 1行目: 氏名 + 職位チップ */}
+                <div className="flex items-center gap-2.5 flex-wrap">
+                  <h1
+                    className="text-[20px] font-semibold tracking-[-0.02em] leading-none"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
                     {contact.name}
                   </h1>
-                  <span
-                    className="inline-flex items-center justify-center rounded-[6px] text-[11px] font-black px-2"
-                    style={{
-                      minWidth: 26,
-                      height: 26,
-                      background: rankConfig.gradient,
-                      boxShadow: rankConfig.glow,
-                      color: rankConfig.color,
-                      border: '1px solid rgba(255,255,255,0.25)',
-                      textShadow: rankConfig.color === '#fff' || rankConfig.color === '#FFFFFF' ? '0 1px 2px rgba(0,0,0,0.4)' : 'none',
-                      letterSpacing: '0.04em',
-                    }}
-                    title="角度"
-                  >
-                    {rankLabelStr}
-                  </span>
                   <PersonRoleSelector
                     value={contact.personRole}
                     onChange={v => setContact(c => ({ ...c, personRole: v }))}
                   />
                 </div>
 
-                <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-                  <span className="text-sm text-[#CCDDF0]">{contact.title}</span>
-                  <span className="text-[#99AACC]">·</span>
-                  <span className="text-sm text-[#CCDDF0]">{contact.department}</span>
-                </div>
-
-                <div className="flex items-center gap-1.5 mt-0.5">
-                  <Building2 size={12} className="text-[#99AACC]" />
-                  <Link href={`/companies/${contact.companyId}`} className="text-sm text-[#CCDDF0] font-medium hover:text-[#88BBFF] transition-colors">
+                {/* 2行目: 会社 → 部門 → 役職（軽い区切りで横整列） */}
+                <div className="flex items-center gap-2 flex-wrap text-[12.5px]">
+                  <Link
+                    href={`/companies/${contact.companyId}`}
+                    className="inline-flex items-center gap-1.5 font-medium transition-colors hover:!text-[color:var(--color-obs-primary)]"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
+                    <Building2 size={12} style={{ color: 'var(--color-obs-text-subtle)' }} />
                     {contact.company}
                   </Link>
+                  {(contact.department || contact.title) && (
+                    <span style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.6 }}>·</span>
+                  )}
+                  {contact.department && (
+                    <span style={{ color: 'var(--color-obs-text-muted)' }}>{contact.department}</span>
+                  )}
+                  {contact.department && contact.title && (
+                    <span style={{ color: 'var(--color-obs-text-subtle)', opacity: 0.5 }}>/</span>
+                  )}
+                  {contact.title && (
+                    <span style={{ color: 'var(--color-obs-text-muted)' }}>{contact.title}</span>
+                  )}
                 </div>
               </div>
 
-              {/* 編集ボタン */}
+              {/* 編集ボタン (Ghost) */}
               <motion.button
                 whileTap={{ scale: 0.95 }}
-                whileHover={{ filter: 'brightness(1.15)' }}
                 onClick={() => setShowEditModal(true)}
-                className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-bold rounded-[8px] shrink-0 transition-all"
+                className="flex items-center gap-1.5 px-3 py-2 text-[12px] font-medium rounded-[8px] shrink-0 transition-colors hover:bg-[var(--color-obs-surface-high)]"
                 style={{
-                  background: 'rgba(136,187,255,0.10)',
-                  border: '1px solid rgba(136,187,255,0.4)',
-                  color: '#88BBFF',
-                  boxShadow: '0 0 8px rgba(136,187,255,0.15)',
+                  background: 'transparent',
+                  color: 'var(--color-obs-text-muted)',
                 }}
                 title="コンタクトを編集"
               >
-                <Pencil size={12} strokeWidth={2.5} />
+                <Pencil size={12} strokeWidth={2.2} />
                 編集
               </motion.button>
             </div>
 
             {/* Contact Details */}
-            <div className="flex items-center gap-4 mt-4 pt-4" style={{ borderTop: '1px solid rgba(34,68,170,0.25)' }}>
+            <div
+              className="flex items-center gap-4 mt-4 pt-4"
+              style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.15)' }}
+            >
               <a
                 href={`mailto:${contact.email}`}
-                className="flex items-center gap-1.5 text-sm text-[#CCDDF0] hover:text-[#88BBFF] transition-colors"
+                className="flex items-center gap-1.5 text-sm transition-colors hover:!text-[color:var(--color-obs-primary)]"
+                style={{ color: 'var(--color-obs-text-muted)' }}
               >
                 <Mail size={13} />
                 {contact.email}
               </a>
-              <span className="w-px h-3" style={{ background: '#2244AA' }} />
+              <span className="w-px h-3" style={{ background: 'rgba(109,106,111,0.25)' }} />
               <a
                 href={`tel:${contact.phone}`}
-                className="flex items-center gap-1.5 text-sm text-[#CCDDF0] hover:text-[#88BBFF] transition-colors"
+                className="flex items-center gap-1.5 text-sm transition-colors hover:!text-[color:var(--color-obs-primary)]"
+                style={{ color: 'var(--color-obs-text-muted)' }}
               >
                 <Phone size={13} />
                 {contact.phone}
@@ -1040,9 +1220,18 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             style={CARD_STYLE}
           >
             {/* Tab Header */}
-            <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid rgba(34,68,170,0.25)' }}>
-              <h2 className="text-sm font-semibold text-[#EEEEFF]">アクティビティ</h2>
-              <div className="flex items-center gap-1 rounded-[8px] p-0.5" style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}>
+            <div
+              className="px-5 py-3 flex items-center justify-between"
+              style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.15)' }}
+            >
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-obs-text)' }}>アクティビティ</h2>
+              <div
+                className="flex items-center gap-1 rounded-[8px] p-0.5"
+                style={{
+                  background: 'var(--color-obs-surface-low)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
+                }}
+              >
                 {(['all', 'call', 'email', 'note'] as const).map(tab => (
                   <button
                     key={tab}
@@ -1051,11 +1240,10 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                     style={
                       activityTab === tab
                         ? {
-                            background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)',
-                            color: '#FFFFFF',
-                            boxShadow: '0 1px 4px rgba(34,68,170,0.4)',
+                            background: 'var(--color-obs-surface-highest)',
+                            color: 'var(--color-obs-text)',
                           }
-                        : { color: '#99AACC' }
+                        : { color: 'var(--color-obs-text-muted)' }
                     }
                   >
                     {{ all: '全件', call: 'コール', email: 'メール', note: 'ノート' }[tab]}
@@ -1080,7 +1268,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                       hidden: { opacity: 0, y: 8 },
                       visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                     }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-colors hover:bg-[rgba(136,187,255,0.04)]"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-colors hover:bg-[rgba(171,199,255,0.05)]"
                   >
                     {/* Icon */}
                     <ActivityIcon type={activity.type} />
@@ -1088,25 +1276,56 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                     {/* Content (1行) */}
                     <div className="flex-1 min-w-0 flex items-center gap-2">
                       {activity.description ? (
-                        <p className="text-[13px] text-[#EEEEFF] truncate">{activity.description}</p>
+                        <p className="text-[13px] truncate" style={{ color: 'var(--color-obs-text)' }}>{activity.description}</p>
                       ) : (
-                        <p className="text-[13px] text-[#CCDDF0] truncate">{activity.title}</p>
+                        <p className="text-[13px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>{activity.title}</p>
                       )}
                       {activity.result && (
                         <span className="shrink-0">
-                          <StatusGameBadge status={activity.result} size="sm" />
+                          <StatusObsBadge status={activity.result} size="sm" />
                         </span>
                       )}
                       {activity.durationSec !== undefined && activity.durationSec > 0 && (
-                        <span className="text-[11px] text-[#99AACC] tabular-nums shrink-0">{formatDuration(activity.durationSec)}</span>
+                        <span
+                          className="text-[11px] tabular-nums shrink-0"
+                          style={{ color: 'var(--color-obs-text-muted)' }}
+                        >
+                          {formatDuration(activity.durationSec)}
+                        </span>
                       )}
                     </div>
 
                     {/* 日時 */}
-                    <span className="text-[11px] text-[#99AACC] tabular-nums shrink-0">{formatDateTime(activity.timestamp)}</span>
+                    <span
+                      className="text-[11px] tabular-nums shrink-0"
+                      style={{ color: 'var(--color-obs-text-muted)' }}
+                    >
+                      {formatDateTime(activity.timestamp)}
+                    </span>
                   </motion.div>
                 ))}
               </motion.div>
+            </div>
+          </motion.div>
+
+          {/* ─── Google 連携タイムライン（メール/会議） ─── */}
+          <motion.div
+            initial={{ opacity: 0, y: 12 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.3, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-[12px] overflow-hidden"
+            style={CARD_STYLE}
+          >
+            <div
+              className="px-5 py-3 flex items-center gap-2"
+              style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.15)' }}
+            >
+              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-obs-text)' }}>
+                Gmail / Meet 履歴
+              </h2>
+            </div>
+            <div className="px-5 py-4">
+              <GoogleTimeline scope="contact" id={id} />
             </div>
           </motion.div>
         </div>
@@ -1122,7 +1341,10 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             className="rounded-[12px] p-5"
             style={CARD_STYLE}
           >
-            <h3 className="text-xs font-semibold text-[#99AACC] uppercase tracking-[0.06em] mb-3">
+            <h3
+              className="text-xs font-semibold uppercase tracking-[0.06em] mb-3"
+              style={{ color: 'var(--color-obs-text-muted)' }}
+            >
               ステータス
             </h3>
             <motion.div
@@ -1137,67 +1359,45 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                 />
               </ISFieldRow>
 
-              <ISFieldRow label="温度感" editable>
-                <div className="relative">
-                  <select
-                    value={contact.signal}
-                    onChange={e => setContact(c => ({ ...c, signal: e.target.value as Signal }))}
-                    className="h-[28px] px-2 pr-6 text-[12px] font-bold rounded-[6px] text-[#EEEEFF] appearance-none cursor-pointer outline-none"
-                    style={{ background: 'rgba(16,16,40,0.8)', border: '1px dashed rgba(136,187,255,0.4)' }}
-                  >
-                    {SIGNAL_OPTIONS.map(s => (
-                      <option key={s} value={s}>{SIGNAL_LABEL[s]}（{s}）</option>
-                    ))}
-                  </select>
-                </div>
-              </ISFieldRow>
-
-              <ISFieldRow label="職位" editable>
-                <PersonRoleSelector
-                  value={contact.personRole}
-                  onChange={v => setContact(c => ({ ...c, personRole: v }))}
+              <ISFieldRow label="リード経由元" editable vertical>
+                <LeadSourceSelector
+                  value={contact.leadSource}
+                  onChange={v => setContact(c => ({ ...c, leadSource: v }))}
                 />
-              </ISFieldRow>
-
-              <ISFieldRow label="部門">
-                <span className="text-sm text-[#EEEEFF]">{contact.department || '—'}</span>
-              </ISFieldRow>
-
-              <ISFieldRow label="役職">
-                <span className="text-sm text-[#EEEEFF]">{contact.title || '—'}</span>
               </ISFieldRow>
 
               <ISFieldRow label="コール試行">
                 <div className="flex items-center gap-1.5 justify-end">
-                  <PhoneCall size={12} className="text-[#99AACC]" />
-                  <span className="text-sm font-medium text-[#EEEEFF]">{contact.callAttempts}回</span>
+                  <PhoneCall size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--color-obs-text)' }}>{contact.callAttempts}回</span>
                 </div>
               </ISFieldRow>
             </motion.div>
 
             {/* メモ */}
-            <div className="mt-4 pt-3" style={{ borderTop: '1px solid rgba(34,68,170,0.25)' }}>
-              <label className="text-[10px] font-bold text-[#88BBFF] uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1">
+            <div
+              className="mt-4 pt-3"
+              style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.15)' }}
+            >
+              <label
+                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 メモ
-                <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
+                <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
               </label>
               <textarea
                 value={contact.statusMemo}
                 onChange={e => setContact(c => ({ ...c, statusMemo: e.target.value }))}
                 placeholder="ステータスに関するメモを入力..."
                 rows={3}
-                className="w-full px-3 py-2 text-[12px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none rounded-[8px] resize-none transition-all"
-                style={{
-                  background: 'rgba(16,16,40,0.8)',
-                  border: '1px dashed rgba(136,187,255,0.4)',
-                }}
+                className="w-full px-3 py-2 text-[12px] outline-none rounded-[8px] resize-none transition-all"
+                style={{ ...nestedInputStyle, color: 'var(--color-obs-text)' }}
                 onFocus={e => {
-                  e.currentTarget.style.border = '1px solid #5577DD'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(85,119,221,0.2)'
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
                 }}
                 onBlur={e => {
-                  e.currentTarget.style.border = '1px dashed rgba(136,187,255,0.4)'
-                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
                 }}
               />
             </div>
@@ -1212,17 +1412,19 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             style={CARD_STYLE}
           >
             <div className="flex items-center justify-between mb-3">
-              <h3 className="text-xs font-semibold text-[#99AACC] uppercase tracking-[0.06em] flex items-center gap-1.5">
-                <CalendarClock size={12} style={{ color: '#88BBFF' }} />
+              <h3
+                className="text-xs font-semibold uppercase tracking-[0.06em] flex items-center gap-1.5"
+                style={{ color: 'var(--color-obs-text-muted)' }}
+              >
+                <CalendarClock size={12} style={{ color: 'var(--color-obs-primary)' }} />
                 ネクストアクション
               </h3>
               <span
-                className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[9px] font-bold whitespace-nowrap"
+                className="inline-flex items-center gap-1 px-2 py-[2px] rounded-full text-[9px] font-semibold whitespace-nowrap"
                 style={{
-                  background: 'linear-gradient(135deg, rgba(136,187,255,0.18) 0%, rgba(85,119,221,0.12) 100%)',
-                  color: '#88BBFF',
-                  border: '1px solid rgba(136,187,255,0.35)',
-                  boxShadow: '0 0 8px rgba(136,187,255,0.2)',
+                  background: 'rgba(171,199,255,0.12)',
+                  color: 'var(--color-obs-primary)',
+                  boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.3)',
                 }}
                 title="このネクストアクションは自動的にタスクとして登録されます"
               >
@@ -1233,9 +1435,12 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
             {/* アクション種別 */}
             <div className="mb-3">
-              <label className="text-[10px] font-bold text-[#88BBFF] uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1">
+              <label
+                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 種別
-                <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
+                <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
               </label>
               <NextActionSelector
                 value={contact.nextAction}
@@ -1245,16 +1450,20 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
 
             {/* 実施予定日 */}
             <div>
-              <label className="text-[10px] font-bold text-[#88BBFF] uppercase tracking-[0.04em] mb-1.5 flex items-center justify-between">
+              <label
+                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center justify-between"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 <span className="flex items-center gap-1">
                   実施予定日
-                  <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
+                  <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
                 </span>
                 {contact.nextActionAt && (
                   <button
                     type="button"
                     onClick={() => setContact(c => ({ ...c, nextActionAt: null }))}
-                    className="inline-flex items-center gap-0.5 text-[10px] font-bold text-[#99AACC] hover:text-[#FF8A82] transition-colors normal-case tracking-normal"
+                    className="inline-flex items-center gap-0.5 text-[10px] font-semibold transition-colors normal-case tracking-normal hover:!text-[color:var(--color-obs-hot)]"
+                    style={{ color: 'var(--color-obs-text-muted)' }}
                     title="日付をクリア"
                   >
                     <X size={10} />
@@ -1264,57 +1473,53 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
               </label>
               <div
                 className="relative rounded-[8px] transition-all"
-                style={{
-                  background: 'rgba(16,16,40,0.8)',
-                  border: '1px dashed rgba(136,187,255,0.4)',
-                }}
+                style={nestedInputStyle}
               >
                 <input
                   type="date"
                   value={contact.nextActionAt ?? ''}
                   onChange={e => setContact(c => ({ ...c, nextActionAt: e.target.value || null }))}
-                  className="w-full h-[36px] px-3 pr-9 text-[13px] font-medium text-[#EEEEFF] outline-none bg-transparent cursor-pointer"
-                  style={{ colorScheme: 'dark' }}
+                  className="w-full h-[36px] px-3 pr-9 text-[13px] font-medium outline-none bg-transparent cursor-pointer"
+                  style={{ colorScheme: 'dark', color: 'var(--color-obs-text)' }}
                   onFocus={e => {
-                    e.currentTarget.parentElement!.style.border = '1px solid #5577DD'
-                    e.currentTarget.parentElement!.style.boxShadow = '0 0 0 3px rgba(85,119,221,0.2)'
+                    e.currentTarget.parentElement!.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
                   }}
                   onBlur={e => {
-                    e.currentTarget.parentElement!.style.border = '1px dashed rgba(136,187,255,0.4)'
-                    e.currentTarget.parentElement!.style.boxShadow = 'none'
+                    e.currentTarget.parentElement!.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
                   }}
                 />
                 <Pencil
                   size={11}
                   className="absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none"
-                  style={{ color: '#7799CC' }}
+                  style={{ color: 'var(--color-obs-text-muted)' }}
                 />
               </div>
             </div>
 
             {/* メモ */}
-            <div className="mt-3 pt-3" style={{ borderTop: '1px solid rgba(34,68,170,0.25)' }}>
-              <label className="text-[10px] font-bold text-[#88BBFF] uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1">
+            <div
+              className="mt-3 pt-3"
+              style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.15)' }}
+            >
+              <label
+                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
                 メモ
-                <Pencil size={9} style={{ color: '#88BBFF', opacity: 0.7 }} />
+                <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
               </label>
               <textarea
                 value={contact.nextActionMemo}
                 onChange={e => setContact(c => ({ ...c, nextActionMemo: e.target.value }))}
                 placeholder="次回アクションに関するメモを入力..."
                 rows={3}
-                className="w-full px-3 py-2 text-[12px] text-[#EEEEFF] placeholder:text-[#7799CC] outline-none rounded-[8px] resize-none transition-all"
-                style={{
-                  background: 'rgba(16,16,40,0.8)',
-                  border: '1px dashed rgba(136,187,255,0.4)',
-                }}
+                className="w-full px-3 py-2 text-[12px] outline-none rounded-[8px] resize-none transition-all"
+                style={{ ...nestedInputStyle, color: 'var(--color-obs-text)' }}
                 onFocus={e => {
-                  e.currentTarget.style.border = '1px solid #5577DD'
-                  e.currentTarget.style.boxShadow = '0 0 0 3px rgba(85,119,221,0.2)'
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
                 }}
                 onBlur={e => {
-                  e.currentTarget.style.border = '1px dashed rgba(136,187,255,0.4)'
-                  e.currentTarget.style.boxShadow = 'none'
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
                 }}
               />
             </div>

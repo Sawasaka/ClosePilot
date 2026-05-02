@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="ja"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>BGM Pipeline - Obsidian Nebula</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@300;400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+          darkMode: "class",
+          theme: {
+            extend: {
+              "colors": {
+                      "on-primary-fixed": "#001b3f",
+                      "outline-variant": "#414753",
+                      "outline": "#8b919f",
+                      "tertiary": "#c6c6c8",
+                      "on-primary": "#002f66",
+                      "error-container": "#93000a",
+                      "surface-bright": "#39393b",
+                      "secondary": "#c8c6c8",
+                      "surface-container-highest": "#353437",
+                      "on-tertiary-container": "#fbfbfd",
+                      "tertiary-container": "#727476",
+                      "secondary-fixed": "#e4e2e4",
+                      "on-tertiary-fixed-variant": "#454749",
+                      "tertiary-fixed-dim": "#c6c6c8",
+                      "on-secondary-fixed-variant": "#474649",
+                      "surface-container-low": "#1b1b1d",
+                      "surface-variant": "#353437",
+                      "on-secondary-container": "#b6b4b7",
+                      "on-tertiary-fixed": "#1a1c1d",
+                      "tertiary-fixed": "#e2e2e4",
+                      "inverse-primary": "#005cbb",
+                      "inverse-surface": "#e4e2e4",
+                      "on-tertiary": "#2f3132",
+                      "on-surface-variant": "#c1c6d6",
+                      "secondary-fixed-dim": "#c8c6c8",
+                      "background": "#131315",
+                      "surface": "#131315",
+                      "inverse-on-surface": "#303032",
+                      "on-primary-container": "#fcfbff",
+                      "surface-container-lowest": "#0e0e10",
+                      "primary-fixed-dim": "#abc7ff",
+                      "on-error": "#690005",
+                      "on-secondary": "#303032",
+                      "primary-fixed": "#d7e2ff",
+                      "surface-container-high": "#2a2a2c",
+                      "primary": "#abc7ff",
+                      "surface-container": "#1f1f21",
+                      "on-primary-fixed-variant": "#00458f",
+                      "on-error-container": "#ffdad6",
+                      "primary-container": "#0071e3",
+                      "on-background": "#e4e2e4",
+                      "on-surface": "#e4e2e4",
+                      "secondary-container": "#474649",
+                      "surface-tint": "#abc7ff",
+                      "error": "#ffb4ab",
+                      "on-secondary-fixed": "#1b1b1d",
+                      "surface-dim": "#131315"
+              },
+              "borderRadius": {
+                      "DEFAULT": "0.25rem",
+                      "lg": "0.5rem",
+                      "xl": "0.75rem",
+                      "full": "9999px"
+              },
+              "fontFamily": {
+                      "headline": ["Plus Jakarta Sans"],
+                      "body": ["Inter"],
+                      "label": ["Plus Jakarta Sans"]
+              }
+            },
+          },
+        }
+    </script>
+<style>
+        body {
+            background-color: #131315;
+            background-image: radial-gradient(rgba(0, 113, 227, 0.15) 1px, transparent 1px);
+            background-size: 24px 24px;
+            color: #e4e2e4;
+            font-family: 'Inter', sans-serif;
+        }
+        .glass-panel {
+            background: rgba(53, 52, 55, 0.6);
+            backdrop-filter: blur(20px);
+            -webkit-backdrop-filter: blur(20px);
+        }
+        .glow-border {
+            box-shadow: 0 0 15px rgba(0, 113, 227, 0.1);
+            border: 1px solid rgba(171, 199, 255, 0.15);
+        }
+        .pipeline-scroll::-webkit-scrollbar {
+            height: 6px;
+        }
+        .pipeline-scroll::-webkit-scrollbar-track {
+            background: rgba(65, 71, 83, 0.05);
+        }
+        .pipeline-scroll::-webkit-scrollbar-thumb {
+            background: rgba(0, 113, 227, 0.3);
+            border-radius: 10px;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+</head>
+<body class="min-h-screen">
+<!-- SideNavBar -->
+<aside class="fixed left-0 top-0 h-full w-20 hover:w-64 transition-all duration-500 z-50 bg-[#0e0e10]/90 backdrop-blur-xl border-r border-[#414753]/15 shadow-2xl flex flex-col items-center py-6 gap-8 group">
+<div class="flex flex-col items-center gap-2 mb-4">
+<div class="w-12 h-12 bg-primary-container rounded-xl flex items-center justify-center shadow-[0_0_20px_rgba(0,113,227,0.4)]">
+<span class="material-symbols-outlined text-on-primary-container" style="font-variation-settings: 'FILL' 1;">rocket_launch</span>
+</div>
+<div class="hidden group-hover:block text-center mt-2 overflow-hidden whitespace-nowrap">
+<p class="text-[10px] font-medium uppercase tracking-[0.1em] text-primary">Obsidian</p>
+<p class="text-[8px] font-medium uppercase tracking-[0.2em] text-on-surface-variant">Nebula Engine</p>
+</div>
+</div>
+<nav class="flex-1 flex flex-col gap-2 w-full px-3">
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#c1c6d6] opacity-60 hover:opacity-100 hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">dashboard</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Dashboard</span>
+</div>
+<!-- Active State: Pipeline -->
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#abc7ff] bg-[#1b1b1d] border-r-2 border-[#0071E3] shadow-[0_0_15px_rgba(0,113,227,0.1)] transition-all duration-300">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">account_tree</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Pipeline</span>
+</div>
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#c1c6d6] opacity-60 hover:opacity-100 hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">insights</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Analytics</span>
+</div>
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#c1c6d6] opacity-60 hover:opacity-100 hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">group</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Contacts</span>
+</div>
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#c1c6d6] opacity-60 hover:opacity-100 hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">bolt</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Automation</span>
+</div>
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#c1c6d6] opacity-60 hover:opacity-100 hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">description</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Reports</span>
+</div>
+</nav>
+<div class="w-full px-3 flex flex-col gap-2 border-t border-[#414753]/15 pt-6">
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#c1c6d6] opacity-60 hover:opacity-100 hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">contact_support</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Support</span>
+</div>
+<div class="flex items-center gap-4 p-3 rounded-lg text-[#c1c6d6] opacity-60 hover:opacity-100 hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">person</span>
+<span class="hidden group-hover:block text-xs font-semibold tracking-wide">Account</span>
+</div>
+</div>
+</aside>
+<!-- TopNavBar -->
+<header class="fixed top-0 w-full z-40 bg-[#131315]/80 backdrop-blur-xl border-b border-[#414753]/15 shadow-[0_20px_40px_-10px_rgba(228,226,228,0.04)]">
+<div class="flex justify-between items-center px-6 py-3 ml-20 h-16">
+<div class="flex items-center gap-8">
+<h1 class="text-xl font-extrabold text-[#abc7ff] tracking-tighter font-['Plus_Jakarta_Sans']">BGM Pipeline</h1>
+<div class="relative hidden lg:block">
+<div class="absolute -inset-1 bg-primary-container/20 blur-xl opacity-0 group-focus-within:opacity-100 transition-opacity"></div>
+<div class="relative flex items-center bg-surface-container-low border border-outline-variant/30 rounded-full px-4 py-1.5 w-96 glow-border">
+<span class="material-symbols-outlined text-outline text-sm">search</span>
+<input class="bg-transparent border-none focus:ring-0 text-sm text-on-surface ml-2 w-full placeholder:text-outline/50" placeholder="Search enterprise pipeline..." type="text"/>
+</div>
+</div>
+</div>
+<div class="flex items-center gap-4">
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-[#c1c6d6] hover:text-[#abc7ff] hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">notifications</span>
+</button>
+<button class="w-10 h-10 flex items-center justify-center rounded-full text-[#c1c6d6] hover:text-[#abc7ff] hover:bg-[#1b1b1d] transition-all duration-300">
+<span class="material-symbols-outlined">settings</span>
+</button>
+<div class="h-8 w-[1px] bg-[#414753]/30 mx-2"></div>
+<div class="flex items-center gap-3 pl-2">
+<img class="w-8 h-8 rounded-full border border-primary/30 object-cover" data-alt="close-up portrait of a professional male executive with a confident expression in a dimly lit modern office" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBpLD3EpqGQ8w5fQU619PTozf0tm0cRe8Aw6xmtk-q6Xy6TeffWbv9qCo9ulQDPG0S5GuK9oQZ5WU2p0Yxe6F0lDiLBbwCASCy9sj9Dl1b2gGNYmEQdmUaXfqGRqPWxTOvPPa3wR_Bgxp26706OgVCWC0SBfn_oEs9fnX-5myQALHaduiUl8fOBowsBXjk05PLL3-hQR3j4xoA4lx54DQCWspxUR-1TNsffNY1a00vRiiInyeNTOImPJN2xqpKJbgluC8iIjpHaXSY"/>
+<div class="hidden md:block">
+<p class="text-[10px] font-bold text-on-surface uppercase tracking-wider">Executive Admin</p>
+<p class="text-[8px] text-primary/70 font-medium">BGM ENTERPRISE</p>
+</div>
+</div>
+</div>
+</div>
+</header>
+<!-- Main Content Canvas -->
+<main class="ml-20 pt-24 pb-12 px-8">
+<!-- Hero Header -->
+<div class="mb-10 max-w-5xl">
+<div class="flex items-center gap-3 mb-4">
+<span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-[0.15em] bg-primary-container/20 text-primary border border-primary/20">Beta Protocol</span>
+<span class="text-on-surface-variant text-[10px] tracking-widest uppercase">/ Enterprise Grid v2.4</span>
+</div>
+<h2 class="text-5xl font-extrabold tracking-tighter mb-4 bg-gradient-to-r from-[#fcfbff] to-[#abc7ff] bg-clip-text text-transparent">
+                Pipeline Evolution
+            </h2>
+<p class="text-on-surface-variant max-w-2xl font-light leading-relaxed">
+                Real-time architectural overview of BGM's current negotiation sequences and project lifecycle stages. Orchestrated by Obsidian AI.
+            </p>
+</div>
+<!-- Horizontal Pipeline Container -->
+<div class="flex gap-6 overflow-x-auto pb-8 pipeline-scroll select-none">
+<!-- Column: IS -->
+<div class="flex-none w-80">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_#abc7ff]"></div>
+<h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#abc7ff]">IS</h3>
+<span class="text-[10px] text-on-surface-variant/50 ml-2">12 Leads</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/30 text-sm">more_horiz</span>
+</div>
+<div class="flex flex-col gap-4">
+<!-- Card 1 -->
+<div class="glass-panel p-4 rounded-xl glow-border group cursor-pointer hover:bg-[#252427] transition-all duration-300">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase bg-error-container/30 text-error border border-error/20">高 (High)</span>
+<span class="text-[8px] text-on-surface-variant/60 font-mono">ID: BGM-0842</span>
+</div>
+<h4 class="text-sm font-semibold mb-2 group-hover:text-primary transition-colors">グローバルERP統合計画</h4>
+<div class="flex items-center gap-3 mb-4">
+<img class="w-5 h-5 rounded-full border border-outline-variant/30" data-alt="professional male profile avatar headshot for enterprise software user interface" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDsfuxuAUQw7HUMV4l-_0aiW8kNFIjD95wlqCif5xo839_aEpNNci8lbnMb4x0MkYPguDfmSuksiFZ0uUe36TwGDxgQ8GhLg01Tu5eSWGCi4N_l0vBIQzeRwsHPy41bvOIXkUhTxAVRkqozHWH5_3pJvrt3aFLLJY1wBB7KLrBVVgZKOeiKS7YHbnnuK-sZt54KjMVakZUiYl-UF1imps5o6EhMVOtzfeOMDl7Os6egPayllHzBOIVlQOTdiAqsqYMP0Lf4V89cKLI"/>
+<div class="h-1 flex-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary shadow-[0_0_10px_rgba(0,113,227,0.5)]" style="width: 35%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center text-[10px] text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+<span>14 Oct</span>
+</div>
+<span class="font-bold">¥12.5M</span>
+</div>
+</div>
+<!-- Card 2 -->
+<div class="glass-panel p-4 rounded-xl glow-border group cursor-pointer hover:bg-[#252427] transition-all duration-300">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase bg-primary-container/20 text-primary border border-primary/20">低 (Low)</span>
+<span class="text-[8px] text-on-surface-variant/60 font-mono">ID: BGM-1209</span>
+</div>
+<h4 class="text-sm font-semibold mb-2 group-hover:text-primary transition-colors">マーケティングHub連携</h4>
+<div class="flex items-center gap-3 mb-4">
+<img class="w-5 h-5 rounded-full border border-outline-variant/30" data-alt="smiling female corporate lead portrait for internal project management dashboard" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCr8IshB7-WCcezjQESJe-Ij9iDxjE6PEGkgPRDvbW1hLKF6HcQNeJPDLNjGsJSvFhXJH7rgyPiLa4zoEf_URqFZqLrgM2LjO2P3s7kw85Gwbr29VVLkn09mLqjiWXr2O4mocdeMpSH2p8tXPiC5kenHIj0rAdftxDyJYDgmBcBtSDKDbZ4IKDUZ-C81OazRgmFXUumwV1EWbERYLhQugq3wx2rBinHcl1-aHDITSDM-TVwKlJMaAXV8KvX47mxnXqYg6pXQTdRewI"/>
+<div class="h-1 flex-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary shadow-[0_0_10px_rgba(0,113,227,0.5)]" style="width: 15%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center text-[10px] text-on-surface-variant">
+<div class="flex items-center gap-1">
+<span class="material-symbols-outlined text-[14px]">calendar_today</span>
+<span>21 Oct</span>
+</div>
+<span class="font-bold">¥2.1M</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: ナーチャリング -->
+<div class="flex-none w-80">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-outline shadow-[0_0_8px_#8b919f]"></div>
+<h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#c1c6d6]">ナーチャリング</h3>
+<span class="text-[10px] text-on-surface-variant/50 ml-2">8 leads</span>
+</div>
+<span class="material-symbols-outlined text-on-surface-variant/30 text-sm">more_horiz</span>
+</div>
+<div class="flex flex-col gap-4">
+<div class="glass-panel p-4 rounded-xl glow-border group cursor-pointer hover:bg-[#252427] transition-all duration-300">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase bg-error-container/30 text-error border border-error/20">高 (High)</span>
+<span class="text-[8px] text-on-surface-variant/60 font-mono">ID: BGM-0992</span>
+</div>
+<h4 class="text-sm font-semibold mb-2 group-hover:text-primary transition-colors">次世代CRM導入検討</h4>
+<div class="flex items-center gap-3 mb-4">
+<img class="w-5 h-5 rounded-full border border-outline-variant/30" data-alt="professional male headshot with modern aesthetic for contact management UI" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMzopyYzXBWQyMWAu27PiJWS82I_yAbGP7IbNV_TpFgpWCJXJbTS5h4X5m5xp90pCOm5ZaPHrMTNZRk7ESvdpC4M-JA3sUskVN5vc9gXDF__7MfEDVAgFH-Ajp10VA-HzHsVNFF7VaolqziRvcCFkiW0FM88zc18JbvUXgHAzd8XZmrZRl0r4vItfoljNVjj4QXphsAU6qWNQ5k2G9zNwM51YZ9aeF9suKZwtlgB0-l-ebId1z_hpXsgQlIVSQAMN9RZtJubY3OE4"/>
+<div class="h-1 flex-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary shadow-[0_0_10px_rgba(0,113,227,0.5)]" style="width: 48%"></div>
+</div>
+</div>
+<div class="flex justify-between items-center text-[10px] text-on-surface-variant">
+<div class="flex items-center gap-1 text-primary">
+<span class="material-symbols-outlined text-[14px]">history</span>
+<span>Last contacted: 2h ago</span>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: 商談予定 -->
+<div class="flex-none w-80">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_#abc7ff]"></div>
+<h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#abc7ff]">商談予定</h3>
+<span class="text-[10px] text-on-surface-variant/50 ml-2">5 appts</span>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="glass-panel p-4 rounded-xl border border-primary/20 bg-primary/5 shadow-[0_0_20px_rgba(0,113,227,0.05)] group cursor-pointer">
+<div class="flex justify-between items-start mb-3">
+<span class="px-2 py-0.5 rounded-sm text-[8px] font-bold uppercase bg-primary-container text-on-primary-container">Scheduled</span>
+<span class="text-[8px] text-primary/70 font-mono">15:00 JST</span>
+</div>
+<h4 class="text-sm font-bold mb-2 text-primary">SFA刷新案件 - A社</h4>
+<div class="flex items-center gap-3 mb-4">
+<div class="flex -space-x-2">
+<img class="w-5 h-5 rounded-full border border-background" data-alt="team member avatar profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDk42_P7xKND7PzIphm6Zs2pGAahynyJT5Cf47J5jfHzOkNjSEFEmfsHqeRqgeR0i_FQ4gzBuAr5beuAOSK6-kopG6qmahLgDFUbWjx5qPrlCPdchzPloeHJsCdMj4iK2Gmqy8MFZcea3FGvr6cxsuxJce1XwqAVj_3baHQ8WelZ6RPGWh8pc7q1I2oo2tu2SCrVKyFNisFT6iLPk5Q3UfGZ3vqLc7-MwIpfkdEJ_al-OM-H0g_RO4ttsNuKmmedUBCWgmvwMgHQ48"/>
+<img class="w-5 h-5 rounded-full border border-background" data-alt="team member avatar profile photo" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAMtE9YaycxIS534dCoOJaCR72wY1xycFbuVpRZp5YuG47w4tpNWKsAeV3hy9fvDFV5f629cz-y48CellNcNCV6WckF-ltyR9SaG1zvVPH3YkjGGc0vLbpKY0kiWIKba1eV-j6a7NYod7y5Fsa7ew7TqSQEowJbUiVPlQuNsqyr3USoN4mOPMKiJt_hvpIQz25Goe5g_I6DkLQqsrIZIWcQ7YWL1mV_8b5OZxY9Lr95f8Fd1R3rwT5UD_tAiuckhfhxXBMuCCmX90c"/>
+</div>
+<div class="h-1 flex-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 65%"></div>
+</div>
+</div>
+<button class="w-full py-1.5 rounded bg-primary-container text-on-primary-container text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2">
+<span class="material-symbols-outlined text-[14px]" style="font-variation-settings: 'FILL' 1;">videocam</span>
+                            Enter Room
+                        </button>
+</div>
+</div>
+</div>
+<!-- Column: 商談済み -->
+<div class="flex-none w-80">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-secondary shadow-[0_0_8px_#c8c6c8]"></div>
+<h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">商談済み</h3>
+<span class="text-[10px] text-on-surface-variant/50 ml-2">15 done</span>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="glass-panel p-4 rounded-xl glow-border opacity-80 hover:opacity-100 transition-all">
+<h4 class="text-sm font-semibold mb-2">物流最適化ソリューション</h4>
+<div class="flex items-center gap-3 mb-3">
+<img class="w-5 h-5 rounded-full" data-alt="professional person profile image" src="https://lh3.googleusercontent.com/aida-public/AB6AXuC5I_buynvkaCEK1P--HI5Bb0N5o0ibblCLSV2JlC2VKdag25EmZUw9rPMlSvR8wAAJZ54a22R_FxDm53c9n-EMz_jg_MOILR6KzWdy9G2HHkJjdUXg2jFUIZ2qlIQ2ClZHGCP3nGW8l76mtVC0jjkid6jurWJ-WO9KFRj7C0IilsBhtFTtWX-5tQK1zveIF7foV-f6aBdfsr12AvMxUGdtSTychGTxWQ0qm2-npKvegnv4kzWo1CU8ksmV5ha9VNyMnVdPD8vB-M4"/>
+<div class="h-1 flex-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 80%"></div>
+</div>
+</div>
+<div class="flex gap-2">
+<span class="px-1.5 py-0.5 rounded-full text-[7px] border border-outline/30 text-outline">Negotiation Over</span>
+<span class="px-1.5 py-0.5 rounded-full text-[7px] border border-outline/30 text-outline">MOU Pending</span>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: PJ化予定あり -->
+<div class="flex-none w-80">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-tertiary shadow-[0_0_8px_#c6c6c8]"></div>
+<h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#abc7ff]">PJ化予定あり</h3>
+<span class="text-[10px] text-on-surface-variant/50 ml-2">4 projects</span>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="glass-panel p-4 rounded-xl glow-border border-l-4 border-l-primary">
+<h4 class="text-sm font-semibold mb-2">基幹システムクラウド移行</h4>
+<div class="flex items-center gap-2 mb-3">
+<span class="material-symbols-outlined text-primary text-sm" style="font-variation-settings: 'FILL' 1;">star</span>
+<span class="text-[9px] font-bold text-primary">PRIORITY Q4</span>
+</div>
+<div class="h-1.5 w-full bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 92%"></div>
+</div>
+</div>
+</div>
+</div>
+<!-- Column: 複数商談済み -->
+<div class="flex-none w-80">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-on-tertiary-fixed-variant"></div>
+<h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-on-surface-variant">複数商談済み</h3>
+</div>
+</div>
+</div>
+<!-- Column: POC -->
+<div class="flex-none w-80">
+<div class="flex items-center justify-between mb-4 px-2">
+<div class="flex items-center gap-2">
+<div class="w-1.5 h-1.5 rounded-full bg-[#0071E3] shadow-[0_0_12px_#0071E3]"></div>
+<h3 class="text-[10px] font-bold uppercase tracking-[0.15em] text-[#abc7ff]">POC</h3>
+<span class="text-[10px] text-on-surface-variant/50 ml-2">2 active</span>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<div class="glass-panel p-4 rounded-xl glow-border border-2 border-primary/40 relative overflow-hidden">
+<div class="absolute top-0 right-0 w-12 h-12 bg-primary/10 blur-2xl"></div>
+<h4 class="text-sm font-bold mb-1">AI解析エンジン検証</h4>
+<p class="text-[9px] text-on-surface-variant mb-4">Phase: Model Validation</p>
+<div class="flex items-center gap-3">
+<span class="text-[14px] material-symbols-outlined text-primary">science</span>
+<div class="h-2 flex-1 bg-surface-container rounded-full overflow-hidden">
+<div class="h-full bg-primary" style="width: 70%"></div>
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+<!-- Metric Bento Grid -->
+<div class="grid grid-cols-1 md:grid-cols-4 gap-6 mt-12">
+<div class="glass-panel p-6 rounded-xl glow-border col-span-1 md:col-span-2">
+<div class="flex justify-between items-start mb-6">
+<div>
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Efficiency Matrix</p>
+<h4 class="text-xl font-bold mt-1">Velocity Performance</h4>
+</div>
+<span class="material-symbols-outlined text-primary">trending_up</span>
+</div>
+<div class="h-32 flex items-end gap-2">
+<div class="flex-1 bg-primary/20 rounded-t h-[40%]"></div>
+<div class="flex-1 bg-primary/20 rounded-t h-[60%]"></div>
+<div class="flex-1 bg-primary/20 rounded-t h-[45%]"></div>
+<div class="flex-1 bg-primary/40 rounded-t h-[80%] glow-border"></div>
+<div class="flex-1 bg-primary/20 rounded-t h-[55%]"></div>
+<div class="flex-1 bg-primary/20 rounded-t h-[70%]"></div>
+<div class="flex-1 bg-primary/20 rounded-t h-[90%]"></div>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-xl glow-border">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Pipeline Value</p>
+<p class="text-3xl font-extrabold text-primary mb-2">¥428.5M</p>
+<div class="flex items-center gap-2 text-[10px] text-green-400">
+<span class="material-symbols-outlined text-[12px]">arrow_upward</span>
+<span>12.5% vs last month</span>
+</div>
+</div>
+<div class="glass-panel p-6 rounded-xl glow-border">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant mb-1">Active POCs</p>
+<p class="text-3xl font-extrabold text-primary mb-2">07</p>
+<div class="flex items-center gap-2 text-[10px] text-on-surface-variant">
+<span class="material-symbols-outlined text-[12px]">check_circle</span>
+<span>3 closing this week</span>
+</div>
+</div>
+</div>
+</main>
+<!-- FAB (Suppressed on this data-heavy view, but included as per design system guidelines for primary action) -->
+<button class="fixed bottom-8 right-8 w-14 h-14 bg-primary-container text-on-primary-container rounded-full shadow-[0_0_25px_rgba(0,113,227,0.4)] flex items-center justify-center group hover:scale-110 transition-transform duration-300 z-50">
+<span class="material-symbols-outlined text-2xl group-hover:rotate-90 transition-transform">add</span>
+</button>
+</body></html>

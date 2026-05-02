@@ -3,8 +3,18 @@
 import { useState, useMemo } from 'react'
 import { useRouter } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
-import { Search, Plus, Mail, Clock, GitBranch, CheckSquare, Play, Pause, X, Users, MailOpen, MousePointerClick, Reply } from 'lucide-react'
+import { Search, Plus, Mail, Clock, GitBranch, CheckSquare, Play, X, Users, MailOpen, MousePointerClick, Reply } from 'lucide-react'
 import type { Sequence, SequenceStatus } from '@/types/crm'
+import {
+  ObsButton,
+  ObsCard,
+  ObsChip,
+  ObsHero,
+  ObsInput,
+  ObsPageShell,
+} from '@/components/obsidian'
+
+type ChipTone = 'neutral' | 'hot' | 'middle' | 'low' | 'primary'
 
 // ─── Mock Data ───────────────────────────────────────────────────────────────
 
@@ -104,38 +114,22 @@ const APPROACH_OPTIONS = ['未着手', '不通', '不在', '接続済み', 'コ�
 const PHASE_OPTIONS = ['リード', '商談中', '顧客', '休眠', '失注']
 const PIPELINE_OPTIONS = ['IS', '商談済み', 'PJ化予定あり', 'POC実施中', '決裁者合意済み', '受注', 'ナーチャリング', '失注', 'チャーン', 'ロスト']
 
-interface SeqGameStyle {
-  gradient: string
-  glow: string
-  color: string
-  dotColor: string
-  borderColor: string
-  textShadow: string
-  label: string
+// ステータス → ObsChip tone へのマッピング
+const STATUS_TONE: Record<SequenceStatus, { tone: ChipTone; label: string }> = {
+  active:  { tone: 'low',     label: 'アクティブ' }, // 緑系 → neutralな低強度の low
+  paused:  { tone: 'middle',  label: '一時停止' },
+  draft:   { tone: 'neutral', label: '下書き' },
 }
 
-const STATUS_STYLES: Record<SequenceStatus, SeqGameStyle> = {
-  active: {
-    gradient: 'linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 30%, #34C759 65%, #00874D 100%)',
-    glow: '0 0 14px rgba(52,199,89,0.85), 0 0 5px rgba(167,243,208,0.95), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#053D24', dotColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-    label: 'アクティブ',
-  },
-  paused: {
-    gradient: 'linear-gradient(135deg, #FFE5A8 0%, #FFCC66 30%, #FF9F0A 70%, #E07700 100%)',
-    glow: '0 0 14px rgba(255,159,10,0.85), 0 0 5px rgba(255,204,102,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-    color: '#5B2E00', dotColor: '#FFFFFF', borderColor: 'rgba(255,255,255,0.4)', textShadow: 'none',
-    label: '一時停止',
-  },
-  draft: {
-    gradient: 'linear-gradient(135deg, #E5E5EA 0%, #C7C7CC 35%, #AEAEB2 70%, #8E8E93 100%)',
-    glow: '0 0 12px rgba(174,174,178,0.55), inset 0 1px 0 rgba(255,255,255,0.4)',
-    color: '#2C2C2E', dotColor: '#48484A', borderColor: 'rgba(255,255,255,0.35)', textShadow: 'none',
-    label: '下書き',
-  },
-}
 const STEP_ICONS: Record<string, React.ElementType> = { wait: Clock, email: Mail, condition: GitBranch, task: CheckSquare }
-const CARD_SHADOW = '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)'
+
+// ステップタイプ → ObsChip tone
+const STEP_TONE: Record<string, ChipTone> = {
+  email: 'primary',
+  condition: 'middle',
+  task: 'low',
+  wait: 'neutral',
+}
 
 // ─── Page ────────────────────────────────────────────────────────────────────
 
@@ -170,134 +164,231 @@ export default function AutomationPage() {
     router.push(`/automation/${newSeq.id}`)
   }
 
+  const kpis: Array<{ label: string; value: string | number; icon: React.ElementType; tone: ChipTone }> = [
+    { label: 'アクティブ',       value: activeCount,     icon: Play,     tone: 'low' },
+    { label: '登録中コンタクト', value: totalEnrolled,   icon: Users,    tone: 'primary' },
+    { label: 'メール送信数',     value: totalSent,       icon: Mail,     tone: 'primary' },
+    { label: '平均開封率',       value: `${avgOpen}%`,   icon: MailOpen, tone: 'middle' },
+  ]
+
+  const kpiIconColor = (tone: ChipTone): string => {
+    if (tone === 'hot') return 'var(--color-obs-hot)'
+    if (tone === 'middle') return 'var(--color-obs-middle)'
+    if (tone === 'low') return 'var(--color-obs-low)'
+    if (tone === 'primary') return 'var(--color-obs-primary)'
+    return 'var(--color-obs-text-muted)'
+  }
+
   return (
-    <div className="space-y-5">
-      {/* Header */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3, ease: [0.16, 1, 0.3, 1] }}>
-        <h1 className="text-[21px] font-semibold text-[#EEEEFF] tracking-[-0.03em]">オートメーション</h1>
-        <p className="text-[13px] text-[#CCDDF0] mt-0.5">シーケンスによるメール自動配信・タスク自動生成</p>
-      </motion.div>
+    <ObsPageShell>
+      <div className="w-full px-8 xl:px-12 2xl:px-16 pb-16">
 
-      {/* KPI */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: 'アクティブ', value: activeCount, color: '#34C759', icon: Play },
-          { label: '登録中コンタクト', value: totalEnrolled, color: '#0071E3', icon: Users },
-          { label: 'メール送信数', value: totalSent, color: '#5E5CE6', icon: Mail },
-          { label: '平均開封率', value: `${avgOpen}%`, color: '#FF9F0A', icon: MailOpen },
-        ].map((kpi, i) => (
-          <motion.div key={kpi.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-            className="bg-[#0c1028] rounded-[8px] p-4 relative overflow-hidden" style={{ boxShadow: CARD_SHADOW }}>
-            <div className="absolute -top-4 -right-4 w-16 h-16 rounded-full pointer-events-none" style={{ background: `radial-gradient(circle, ${kpi.color}25 0%, transparent 70%)` }} />
-            <div className="flex items-center gap-2 mb-2">
-              <kpi.icon size={14} style={{ color: kpi.color }} />
-              <span className="text-[11px] text-[#99AACC] font-medium uppercase tracking-[0.04em]">{kpi.label}</span>
-            </div>
-            <p className="text-[24px] font-bold tracking-[-0.04em]" style={{ color: kpi.color }}>{kpi.value}</p>
-          </motion.div>
-        ))}
-      </div>
+        {/* ── Hero ── */}
+        <ObsHero
+          eyebrow="Automation"
+          title="オートメーション"
+          caption="シーケンスによるメール自動配信・タスク自動生成でアプローチを効率化。"
+          action={
+            <ObsButton variant="primary" size="md" onClick={() => setShowCreate(true)}>
+              <Plus size={14} className="mr-1.5 inline" strokeWidth={2.5} />
+              新規シーケンス
+            </ObsButton>
+          }
+        />
 
-      {/* Toolbar */}
-      <div className="flex items-center gap-3">
-        <div className="relative flex-1 max-w-[280px]">
-          <Search size={13} className="absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: '#99AACC' }} />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="シーケンス名で検索..."
-            className="h-[32px] w-full pl-8 pr-3 text-[13px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
-            style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }} />
-        </div>
-        <div className="flex items-center gap-1.5">
-          {[{ key: 'all' as const, label: '全て' }, { key: 'active' as const, label: 'アクティブ' }, { key: 'paused' as const, label: '一時停止' }, { key: 'draft' as const, label: '下書き' }].map(f => (
-            <button key={f.key} onClick={() => setStatusFilter(f.key)}
-              className="h-[28px] px-3 text-[12px] font-medium rounded-full transition-all"
-              style={{ background: statusFilter === f.key ? '#2244AA' : 'rgba(136,187,255,0.06)', color: statusFilter === f.key ? '#FFF' : '#88BBFF' }}>
-              {f.label}
-            </button>
+        {/* KPI */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-8">
+          {kpis.map((kpi, i) => (
+            <motion.div
+              key={kpi.label}
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+            >
+              <ObsCard depth="high" padding="lg" radius="xl">
+                <div className="flex items-center gap-2 mb-3">
+                  <kpi.icon size={13} style={{ color: 'var(--color-obs-text-subtle)' }} />
+                  <span
+                    className="text-[11px] font-medium uppercase tracking-[0.1em]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    {kpi.label}
+                  </span>
+                </div>
+                <p
+                  className="font-[family-name:var(--font-display)] text-[32px] font-semibold tracking-[-0.035em] tabular-nums leading-none"
+                  style={{ color: 'var(--color-obs-text)' }}
+                >
+                  {kpi.value}
+                </p>
+              </ObsCard>
+            </motion.div>
           ))}
         </div>
-        <button onClick={() => setShowCreate(true)}
-          className="h-[32px] px-3 flex items-center gap-1.5 text-[13px] font-medium text-white rounded-[8px] ml-auto"
-          style={{ background: 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)', boxShadow: '0 2px 8px rgba(34,68,170,0.4)' }}>
-          <Plus size={13} />新規シーケンス
-        </button>
-      </div>
 
-      {/* Sequence cards */}
-      <div className="grid grid-cols-2 gap-4">
-        {filtered.map((seq, i) => {
-          const st = STATUS_STYLES[seq.status]
-          return (
-            <motion.div key={seq.id} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }}
-              transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
-              className="bg-[#0c1028] rounded-[8px] p-5 cursor-pointer" style={{ boxShadow: CARD_SHADOW }}
-              onClick={() => router.push(`/automation/${seq.id}`)}>
-              {/* Header */}
-              <div className="flex items-start justify-between mb-3">
-                <div className="flex-1 min-w-0">
-                  <h3 className="text-[15px] font-semibold text-[#EEEEFF] truncate">{seq.name}</h3>
-                  <p className="text-[12px] text-[#CCDDF0] mt-0.5 truncate">{seq.description}</p>
-                </div>
-                <span
-                  className="shrink-0 ml-3 inline-flex items-center gap-1.5 px-2.5 py-[3px] rounded-full text-[11px] font-bold"
-                  style={{
-                    background: st.gradient,
-                    boxShadow: st.glow,
-                    color: st.color,
-                    border: `1px solid ${st.borderColor}`,
-                    textShadow: st.textShadow,
-                    letterSpacing: '0.01em',
-                  }}>
-                  <span className="rounded-full" style={{ width: 6, height: 6, background: st.dotColor, boxShadow: `0 0 4px ${st.dotColor}cc` }} />
-                  {st.label}
-                </span>
-              </div>
+        {/* Toolbar */}
+        <div className="flex items-center gap-2 mb-6 flex-wrap">
+          <div className="relative flex-1 max-w-[320px] min-w-[240px]">
+            <Search
+              size={14}
+              className="absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none"
+              style={{ color: 'var(--color-obs-text-subtle)' }}
+            />
+            <ObsInput
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              placeholder="シーケンス名で検索..."
+              className="pl-9"
+            />
+          </div>
+          <div className="flex items-center gap-1.5">
+            {[
+              { key: 'all' as const, label: '全て' },
+              { key: 'active' as const, label: 'アクティブ' },
+              { key: 'paused' as const, label: '一時停止' },
+              { key: 'draft' as const, label: '下書き' },
+            ].map(f => {
+              const active = statusFilter === f.key
+              return (
+                <ObsButton
+                  key={f.key}
+                  variant={active ? 'primary' : 'ghost'}
+                  size="sm"
+                  onClick={() => setStatusFilter(f.key)}
+                >
+                  {f.label}
+                </ObsButton>
+              )
+            })}
+          </div>
+        </div>
 
-              {/* Trigger */}
-              <div className="flex items-center gap-1.5 mb-3">
-                <span className="text-[11px] font-medium text-[#99AACC]">トリガー:</span>
-                <span className="text-[12px] font-medium px-2 py-0.5 rounded-[4px] bg-[rgba(0,85,255,0.08)] text-[#0055FF]">{seq.triggerLabel}</span>
-              </div>
-
-              {/* Steps preview */}
-              <div className="flex items-center gap-1 mb-4">
-                {seq.steps.map((step, si) => {
-                  const StepIcon = STEP_ICONS[step.type] || Clock
-                  return (
-                    <div key={si} className="flex items-center gap-1">
-                      {si > 0 && <div className="w-3 h-px bg-[rgba(0,0,0,0.1)]" />}
-                      <div className="w-[24px] h-[24px] rounded-[6px] flex items-center justify-center" style={{
-                        background: step.type === 'email' ? 'rgba(94,92,230,0.1)' : step.type === 'condition' ? 'rgba(255,159,10,0.1)' : step.type === 'task' ? 'rgba(52,199,89,0.1)' : 'rgba(0,0,0,0.04)',
-                      }}>
-                        <StepIcon size={11} style={{
-                          color: step.type === 'email' ? '#AA88FF' : step.type === 'condition' ? '#FFDD44' : step.type === 'task' ? '#44FF88' : '#7788AA',
-                        }} />
-                      </div>
+        {/* Sequence cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-4">
+          {filtered.map((seq, i) => {
+            const st = STATUS_TONE[seq.status]
+            return (
+              <motion.div
+                key={seq.id}
+                initial={{ opacity: 0, y: 8 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.28, delay: i * 0.05, ease: [0.16, 1, 0.3, 1] }}
+              >
+                <ObsCard
+                  depth="high"
+                  padding="lg"
+                  radius="xl"
+                  onClick={() => router.push(`/automation/${seq.id}`)}
+                >
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4 gap-3">
+                    <div className="flex-1 min-w-0">
+                      <h3
+                        className="font-[family-name:var(--font-display)] text-[16px] font-semibold truncate tracking-[-0.02em]"
+                        style={{ color: 'var(--color-obs-text)' }}
+                      >
+                        {seq.name}
+                      </h3>
+                      <p className="text-[12px] mt-1 line-clamp-2" style={{ color: 'var(--color-obs-text-muted)' }}>
+                        {seq.description}
+                      </p>
                     </div>
-                  )
-                })}
-                <span className="text-[11px] text-[#99AACC] ml-1">{seq.steps.length}ステップ</span>
-              </div>
+                    <ObsChip tone={st.tone} className="shrink-0">
+                      {st.label}
+                    </ObsChip>
+                  </div>
 
-              {/* Stats */}
-              <div className="flex items-center gap-4 pt-3" style={{ borderTop: '1px solid rgba(0,0,0,0.05)' }}>
-                <div className="flex items-center gap-1"><Users size={11} style={{ color: '#0071E3' }} /><span className="text-[12px] text-[#CCDDF0]">{seq.enrolledCount}名</span></div>
-                <div className="flex items-center gap-1"><MailOpen size={11} style={{ color: '#5E5CE6' }} /><span className="text-[12px] text-[#CCDDF0]">開封{seq.openRate}%</span></div>
-                <div className="flex items-center gap-1"><MousePointerClick size={11} style={{ color: '#FF9F0A' }} /><span className="text-[12px] text-[#CCDDF0]">クリック{seq.clickRate}%</span></div>
-                <div className="flex items-center gap-1"><Reply size={11} style={{ color: '#34C759' }} /><span className="text-[12px] text-[#CCDDF0]">返信{seq.replyRate}%</span></div>
-              </div>
-            </motion.div>
-          )
-        })}
+                  {/* Trigger */}
+                  <div className="flex items-center gap-2 mb-4">
+                    <span
+                      className="text-[11px] font-medium uppercase tracking-[0.08em]"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      トリガー
+                    </span>
+                    <ObsChip tone="primary">{seq.triggerLabel}</ObsChip>
+                  </div>
+
+                  {/* Steps preview — monotone editorial */}
+                  <div className="flex items-center gap-1.5 mb-5 flex-wrap">
+                    {seq.steps.map((step, si) => {
+                      const StepIcon = STEP_ICONS[step.type] || Clock
+                      // email だけ primary 微アクセント、残りは muted
+                      const isEmail = step.type === 'email'
+                      return (
+                        <div key={si} className="flex items-center gap-1.5">
+                          {si > 0 && (
+                            <div
+                              className="w-2 h-px"
+                              style={{ backgroundColor: 'var(--color-obs-outline-variant)', opacity: 0.4 }}
+                            />
+                          )}
+                          <div
+                            className="w-[26px] h-[26px] rounded-[var(--radius-obs-sm)] flex items-center justify-center"
+                            style={{ backgroundColor: 'var(--color-obs-surface-highest)' }}
+                          >
+                            <StepIcon
+                              size={12}
+                              style={{
+                                color: isEmail
+                                  ? 'var(--color-obs-primary-dim)'
+                                  : 'var(--color-obs-text-subtle)',
+                              }}
+                            />
+                          </div>
+                        </div>
+                      )
+                    })}
+                    <span className="text-[11px] ml-1.5 font-medium" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                      {seq.steps.length}ステップ
+                    </span>
+                  </div>
+
+                  {/* Stats — tonal only, no color jump */}
+                  <div className="grid grid-cols-4 gap-4 pt-5 mt-1" style={{ boxShadow: 'inset 0 1px 0 0 var(--color-obs-surface-lowest)' }}>
+                    {[
+                      { label: '登録', value: `${seq.enrolledCount}`, suffix: '名' },
+                      { label: '開封', value: `${seq.openRate}`, suffix: '%' },
+                      { label: 'クリック', value: `${seq.clickRate}`, suffix: '%' },
+                      { label: '返信', value: `${seq.replyRate}`, suffix: '%' },
+                    ].map((s) => (
+                      <div key={s.label} className="flex flex-col gap-1">
+                        <span
+                          className="text-[10px] uppercase tracking-[0.08em] font-medium"
+                          style={{ color: 'var(--color-obs-text-subtle)' }}
+                        >
+                          {s.label}
+                        </span>
+                        <span
+                          className="font-[family-name:var(--font-display)] text-[17px] font-semibold tracking-[-0.02em] tabular-nums"
+                          style={{ color: 'var(--color-obs-text)' }}
+                        >
+                          {s.value}
+                          <span className="text-[11px] font-medium ml-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                            {s.suffix}
+                          </span>
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </ObsCard>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {filtered.length === 0 && (
+          <div className="text-center py-16">
+            <p className="text-[14px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+              シーケンスが見つかりません
+            </p>
+          </div>
+        )}
+
+        {/* Create Sequence Modal */}
+        <CreateSequenceModal open={showCreate} onClose={() => setShowCreate(false)} onCreate={handleCreateSequence} />
       </div>
-
-      {filtered.length === 0 && (
-        <div className="text-center py-16"><p className="text-[14px] text-[#99AACC]">シーケンスが見つかりません</p></div>
-      )}
-
-      {/* Create Sequence Modal */}
-      <CreateSequenceModal open={showCreate} onClose={() => setShowCreate(false)} onCreate={handleCreateSequence} />
-    </div>
+    </ObsPageShell>
   )
 }
 
@@ -335,106 +426,176 @@ function CreateSequenceModal({ open, onClose, onCreate }: {
   return (
     <AnimatePresence>
       {open && (
-        <motion.div className="fixed inset-0 z-50 flex items-center justify-center" initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
-          <div className="absolute inset-0 bg-black/40" onClick={onClose} />
-          <motion.div className="relative w-[520px] max-h-[85vh] overflow-y-auto rounded-[16px] p-6"
-            style={{ background: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)', boxShadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)' }}
-            initial={{ opacity: 0, scale: 0.96, y: 8 }} animate={{ opacity: 1, scale: 1, y: 0 }} exit={{ opacity: 0, scale: 0.96, y: 8 }}
-            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}>
-
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-[17px] font-semibold text-[#EEEEFF]">新規シーケンス作成</h2>
-              <button onClick={onClose} className="p-1 rounded-full hover:bg-[rgba(136,187,255,0.06)]"><X size={16} style={{ color: '#CCDDF0' }} /></button>
+        <motion.div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+        >
+          <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" onClick={onClose} />
+          <motion.div
+            className="relative w-full max-w-[540px] max-h-[85vh] overflow-hidden flex flex-col rounded-[var(--radius-obs-xl)]"
+            style={{
+              backgroundColor: 'var(--color-obs-surface-highest)',
+              boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
+            }}
+            initial={{ opacity: 0, scale: 0.96, y: 8 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.96, y: 8 }}
+            transition={{ duration: 0.22, ease: [0.16, 1, 0.3, 1] }}
+          >
+            {/* Header */}
+            <div
+              className="flex items-center justify-between px-6 py-4"
+              style={{ boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface-low)' }}
+            >
+              <h2 className="text-[16px] font-bold" style={{ color: 'var(--color-obs-text)' }}>
+                新規シーケンス作成
+              </h2>
+              <button
+                onClick={onClose}
+                className="w-7 h-7 rounded-full flex items-center justify-center transition-colors"
+                onMouseOver={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                }}
+                onMouseOut={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                }}
+              >
+                <X size={15} style={{ color: 'var(--color-obs-text-muted)' }} />
+              </button>
             </div>
 
-            <div className="space-y-5">
-              {/* Name */}
-              <div>
-                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em]">シーケンス名 *</label>
-                <input value={name} onChange={e => setName(e.target.value)} placeholder="例: 未着手 → 初回接触"
-                  className="mt-1.5 w-full h-[38px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
-                  style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
-                  onFocus={e => { e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.1)' }}
-                  onBlur={e => { e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }} />
-              </div>
-
-              {/* Description */}
-              <div>
-                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em]">説明</label>
-                <input value={description} onChange={e => setDescription(e.target.value)} placeholder="このシーケンスの目的を入力"
-                  className="mt-1.5 w-full h-[38px] px-3 text-[14px] rounded-[8px] text-[#EEEEFF] placeholder:text-[#99AACC] outline-none"
-                  style={{ background: 'rgba(16,16,40,0.6)', border: '1px solid #2244AA' }}
-                  onFocus={e => { e.currentTarget.style.border = '1px solid rgba(0,85,255,0.4)'; e.currentTarget.style.boxShadow = '0 0 0 3px rgba(0,85,255,0.1)' }}
-                  onBlur={e => { e.currentTarget.style.border = '1px solid transparent'; e.currentTarget.style.boxShadow = 'none' }} />
-              </div>
-
-              {/* Trigger type */}
-              <div>
-                <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em] mb-2 block">トリガー条件</label>
-                <div className="space-y-2">
-                  {TRIGGER_OPTIONS.map(opt => (
-                    <button key={opt.key} onClick={() => { setTriggerType(opt.key); setSelectedConditions([]) }}
-                      className="w-full flex items-start gap-3 p-3 rounded-[10px] text-left transition-all"
-                      style={{
-                        background: triggerType === opt.key ? 'rgba(0,85,255,0.06)' : 'rgba(0,0,0,0.02)',
-                        border: triggerType === opt.key ? '1px solid rgba(0,85,255,0.25)' : '1px solid #2244AA',
-                      }}>
-                      <div className="w-[16px] h-[16px] rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5"
-                        style={{ borderColor: triggerType === opt.key ? '#2244AA' : '#2244AA' }}>
-                        {triggerType === opt.key && <div className="w-[8px] h-[8px] rounded-full bg-[#0071E3]" />}
-                      </div>
-                      <div>
-                        <p className="text-[13px] font-medium" style={{ color: triggerType === opt.key ? '#88BBFF' : '#EEEEFF' }}>{opt.label}</p>
-                        <p className="text-[11px] text-[#CCDDF0] mt-0.5">{opt.description}</p>
-                      </div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {/* Condition values */}
-              {triggerType !== 'manual' && conditionOptions.length > 0 && (
+            {/* Body */}
+            <div className="px-6 py-5 overflow-y-auto flex-1">
+              <div className="space-y-5">
+                {/* Name */}
                 <div>
-                  <label className="text-[12px] font-medium text-[#CCDDF0] uppercase tracking-[0.04em] mb-2 block">
-                    対象ステータス（複数選択可）
+                  <label
+                    className="text-[11px] font-medium uppercase tracking-[0.08em] block mb-1.5"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    シーケンス名 <span style={{ color: 'var(--color-obs-hot)' }}>*</span>
                   </label>
-                  <div className="flex flex-wrap gap-2">
-                    {conditionOptions.map(c => {
-                      const selected = selectedConditions.includes(c)
+                  <ObsInput
+                    value={name}
+                    onChange={e => setName(e.target.value)}
+                    placeholder="例: 未着手 → 初回接触"
+                  />
+                </div>
+
+                {/* Description */}
+                <div>
+                  <label
+                    className="text-[11px] font-medium uppercase tracking-[0.08em] block mb-1.5"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    説明
+                  </label>
+                  <ObsInput
+                    value={description}
+                    onChange={e => setDescription(e.target.value)}
+                    placeholder="このシーケンスの目的を入力"
+                  />
+                </div>
+
+                {/* Trigger type */}
+                <div>
+                  <label
+                    className="text-[11px] font-medium uppercase tracking-[0.08em] mb-2 block"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    トリガー条件
+                  </label>
+                  <div className="space-y-2">
+                    {TRIGGER_OPTIONS.map(opt => {
+                      const active = triggerType === opt.key
                       return (
-                        <button key={c} onClick={() => toggleCondition(c)}
-                          className="h-[30px] px-3 text-[12px] font-medium rounded-full transition-all"
+                        <button
+                          key={opt.key}
+                          onClick={() => { setTriggerType(opt.key); setSelectedConditions([]) }}
+                          className="w-full flex items-start gap-3 p-3 rounded-[var(--radius-obs-md)] text-left transition-colors"
                           style={{
-                            background: selected ? '#0071E3' : 'rgba(0,0,0,0.04)',
-                            color: selected ? '#FFF' : '#88BBFF',
-                            boxShadow: selected ? '0 1px 4px rgba(0,113,227,0.3)' : 'none',
-                          }}>
-                          {c}
+                            backgroundColor: active ? 'var(--color-obs-surface-low)' : 'var(--color-obs-surface-high)',
+                          }}
+                          onMouseOver={(e) => {
+                            if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-low)'
+                          }}
+                          onMouseOut={(e) => {
+                            if (!active) (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'var(--color-obs-surface-high)'
+                          }}
+                        >
+                          <div
+                            className="w-[16px] h-[16px] rounded-full flex items-center justify-center shrink-0 mt-0.5"
+                            style={{
+                              boxShadow: `inset 0 0 0 2px ${active ? 'var(--color-obs-primary)' : 'var(--color-obs-outline)'}`,
+                            }}
+                          >
+                            {active && (
+                              <div
+                                className="w-[8px] h-[8px] rounded-full"
+                                style={{ backgroundColor: 'var(--color-obs-primary)' }}
+                              />
+                            )}
+                          </div>
+                          <div>
+                            <p
+                              className="text-[13px] font-medium"
+                              style={{ color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text)' }}
+                            >
+                              {opt.label}
+                            </p>
+                            <p className="text-[11px] mt-0.5" style={{ color: 'var(--color-obs-text-muted)' }}>
+                              {opt.description}
+                            </p>
+                          </div>
                         </button>
                       )
                     })}
                   </div>
-                  {selectedConditions.length === 0 && (
-                    <p className="text-[11px] text-[#99AACC] mt-1.5">選択なしの場合、すべての変更で発動します</p>
-                  )}
                 </div>
-              )}
+
+                {/* Condition values */}
+                {triggerType !== 'manual' && conditionOptions.length > 0 && (
+                  <div>
+                    <label
+                      className="text-[11px] font-medium uppercase tracking-[0.08em] mb-2 block"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      対象ステータス（複数選択可）
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      {conditionOptions.map(c => {
+                        const selected = selectedConditions.includes(c)
+                        return (
+                          <ObsButton
+                            key={c}
+                            variant={selected ? 'primary' : 'ghost'}
+                            size="sm"
+                            onClick={() => toggleCondition(c)}
+                          >
+                            {c}
+                          </ObsButton>
+                        )
+                      })}
+                    </div>
+                    {selectedConditions.length === 0 && (
+                      <p className="text-[11px] mt-2" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                        選択なしの場合、すべての変更で発動します
+                      </p>
+                    )}
+                  </div>
+                )}
+              </div>
             </div>
 
             {/* Footer */}
-            <div className="flex justify-end gap-2 mt-6 pt-4" style={{ borderTop: '1px solid #2244AA' }}>
-              <button onClick={onClose} className="h-[34px] px-4 text-[13px] font-medium text-[#CCDDF0] rounded-[8px] hover:bg-[rgba(136,187,255,0.06)]">
-                キャンセル
-              </button>
-              <button onClick={handleSubmit} disabled={!name.trim()}
-                className="h-[34px] px-4 text-[13px] font-semibold text-white rounded-[8px] transition-all"
-                style={{
-                  background: name.trim() ? 'linear-gradient(180deg, #2244AA 0%, #1a3388 100%)' : 'rgba(34,68,170,0.3)',
-                  boxShadow: name.trim() ? '0 2px 8px rgba(255,59,48,0.35)' : 'none',
-                  cursor: name.trim() ? 'pointer' : 'not-allowed',
-                }}>
+            <div
+              className="flex justify-end gap-2 px-6 py-4"
+              style={{ boxShadow: 'inset 0 1px 0 0 var(--color-obs-surface-low)' }}
+            >
+              <ObsButton variant="ghost" onClick={onClose}>キャンセル</ObsButton>
+              <ObsButton variant="primary" onClick={handleSubmit} disabled={!name.trim()}>
                 作成してビルダーへ
-              </button>
+              </ObsButton>
             </div>
           </motion.div>
         </motion.div>

@@ -1,25 +1,42 @@
 import type { Metadata } from 'next'
-import { DM_Sans } from 'next/font/google'
+import { DM_Sans, Inter, Plus_Jakarta_Sans } from 'next/font/google'
 import { SessionProvider } from 'next-auth/react'
 import { TRPCProvider } from '@/lib/trpc/provider'
 import './globals.css'
 
+// Legacy（既存UI互換）
 const dmSans = DM_Sans({
   subsets: ['latin'],
-  variable: '--font-sans',
+  variable: '--font-sans-legacy',
   display: 'swap',
   weight: ['300', '400', '500', '600', '700'],
 })
 
+// Liquid Obsidian — body/UI
+const inter = Inter({
+  subsets: ['latin'],
+  variable: '--font-body',
+  display: 'swap',
+  weight: ['400', '500', '600', '700'],
+})
+
+// Liquid Obsidian — display/headline
+const plusJakarta = Plus_Jakarta_Sans({
+  subsets: ['latin'],
+  variable: '--font-display',
+  display: 'swap',
+  weight: ['500', '600', '700', '800'],
+})
+
 export const metadata: Metadata = {
-  title: 'Intent Force — for First-Party CRM',
-  description: '優秀な営業マネージャーの判断ロジックをシステムに内包する受注実行基盤',
+  title: 'BGM — Business Growth Management',
+  description: 'PDM視点CRM × 企業マスター — 顧客の声をプロダクトに還元する受注実行基盤',
 }
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="ja" suppressHydrationWarning>
-      <body className={dmSans.variable}>
+      <body className={`${dmSans.variable} ${inter.variable} ${plusJakarta.variable}`}>
         <SessionProvider>
           <TRPCProvider>
             {children}

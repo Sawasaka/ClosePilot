@@ -1,0 +1,722 @@
+{
+  "meta": {
+    "category": "営業ヒアリング / クオリフィケーション",
+    "total_frameworks": 20
+  },
+  "frameworks": [
+    {
+      "id": "F-BANT",
+      "name": "BANT",
+      "name_ja": "バント",
+      "category": "qualification",
+      "origin": "IBM",
+      "purpose": "初回で「買えるか」を最短で仕分ける",
+      "elements": [
+        {
+          "key": "Budget",
+          "ja": "予算"
+        },
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Need",
+          "ja": "必要性"
+        },
+        {
+          "key": "Timeline",
+          "ja": "時期"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "初回で踏み込みすぎると関係が硬くなる",
+      "combo": [
+        "F-SPIN",
+        "F-CHAMP"
+      ]
+    },
+    {
+      "id": "F-ANUM",
+      "name": "ANUM",
+      "name_ja": "エーナム",
+      "category": "qualification",
+      "origin": "Ken Krogue",
+      "purpose": "エンプラ向け — 決裁者を最初に押さえて空振りを減らす",
+      "elements": [
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Need",
+          "ja": "必要性"
+        },
+        {
+          "key": "Urgency",
+          "ja": "緊急度"
+        },
+        {
+          "key": "Money",
+          "ja": "資金"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "決裁者アプローチが強引になりやすい",
+      "combo": [
+        "F-BANT",
+        "F-MEDDIC"
+      ]
+    },
+    {
+      "id": "F-CHAMP",
+      "name": "CHAMP",
+      "name_ja": "チャンプ",
+      "category": "qualification",
+      "origin": "InsightSquared",
+      "purpose": "課題から入って確度を判定する — 顧客目線のBANT",
+      "elements": [
+        {
+          "key": "Challenges",
+          "ja": "課題"
+        },
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Money",
+          "ja": "予算"
+        },
+        {
+          "key": "Prioritization",
+          "ja": "優先度"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "課題ヒアリングが浅いと BANT と変わらなくなる",
+      "combo": [
+        "F-BANT",
+        "F-SPIN"
+      ]
+    },
+    {
+      "id": "F-FAINT",
+      "name": "FAINT",
+      "name_ja": "フェイント",
+      "category": "qualification",
+      "origin": "RAIN Group",
+      "purpose": "予算がなくても投資可能性で判定 — 新規市場向き",
+      "elements": [
+        {
+          "key": "Funds",
+          "ja": "資金力"
+        },
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Interest",
+          "ja": "関心度"
+        },
+        {
+          "key": "Need",
+          "ja": "必要性"
+        },
+        {
+          "key": "Timing",
+          "ja": "タイミング"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "『資金力あり＝買う』と早合点しがち",
+      "combo": [
+        "F-BANT",
+        "F-NEAT"
+      ]
+    },
+    {
+      "id": "F-NEAT",
+      "name": "NEAT Selling",
+      "name_ja": "ニート・セリング",
+      "category": "qualification",
+      "origin": "Harris Consulting / Richard Harris",
+      "purpose": "ROI軸で整理し経済インパクトで案件を評価する",
+      "elements": [
+        {
+          "key": "Need",
+          "ja": "必要性（コア課題）"
+        },
+        {
+          "key": "Economic Impact",
+          "ja": "経済的インパクト"
+        },
+        {
+          "key": "Access to Authority",
+          "ja": "決裁者へのアクセス"
+        },
+        {
+          "key": "Timeline",
+          "ja": "導入時期"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "ROI 試算の精度が低いと説得力が出ない",
+      "combo": [
+        "F-MEDDIC",
+        "F-SPIN"
+      ]
+    },
+    {
+      "id": "F-GPCTBA",
+      "name": "GPCTBA/C&I",
+      "name_ja": "ジーピーシーティービーエー",
+      "category": "qualification",
+      "origin": "HubSpot",
+      "purpose": "インバウンド向け — ゴールから逆算し網羅的に整理",
+      "elements": [
+        {
+          "key": "Goals",
+          "ja": "目標"
+        },
+        {
+          "key": "Plans",
+          "ja": "計画"
+        },
+        {
+          "key": "Challenges",
+          "ja": "課題"
+        },
+        {
+          "key": "Timeline",
+          "ja": "スケジュール"
+        },
+        {
+          "key": "Budget",
+          "ja": "予算"
+        },
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Consequences",
+          "ja": "未解決時の悪影響"
+        },
+        {
+          "key": "Implications",
+          "ja": "解決時の好影響"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "項目が多く、ヒアリングが尋問的になりやすい",
+      "combo": [
+        "F-SPIN",
+        "F-BANT"
+      ]
+    },
+    {
+      "id": "F-PACTT",
+      "name": "PACTT",
+      "name_ja": "パクト",
+      "category": "qualification",
+      "origin": "SalesHacker",
+      "purpose": "ICP（理想顧客像）適合を含めて判定する",
+      "elements": [
+        {
+          "key": "Pain",
+          "ja": "痛み（課題）"
+        },
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Consequence",
+          "ja": "放置した場合の結果"
+        },
+        {
+          "key": "Target Profile",
+          "ja": "ICP適合度"
+        },
+        {
+          "key": "Timing",
+          "ja": "タイミング"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "ICP が曖昧だとスコアリングが恣意的になる",
+      "combo": [
+        "F-CHAMP",
+        "F-MEDDIC"
+      ]
+    },
+    {
+      "id": "F-NOTE",
+      "name": "NOTE",
+      "name_ja": "ノート",
+      "category": "qualification",
+      "origin": "SalesLoft",
+      "purpose": "IT / エンジニアリング領域に特化した質問設計",
+      "elements": [
+        {
+          "key": "Need",
+          "ja": "必要性"
+        },
+        {
+          "key": "Opportunity",
+          "ja": "ビジネス機会"
+        },
+        {
+          "key": "Time",
+          "ja": "時間軸"
+        },
+        {
+          "key": "Expertise",
+          "ja": "専門性（技術要件）"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "技術寄りになりすぎてビジネス価値を見失う",
+      "combo": [
+        "F-BANT",
+        "F-SPIN"
+      ]
+    },
+    {
+      "id": "F-PANT",
+      "name": "PANT",
+      "name_ja": "パント",
+      "category": "qualification",
+      "origin": "BANT派生",
+      "purpose": "Budget を Priority に置換し優先度で仕分ける",
+      "elements": [
+        {
+          "key": "Priority",
+          "ja": "優先度"
+        },
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Need",
+          "ja": "必要性"
+        },
+        {
+          "key": "Timeline",
+          "ja": "時期"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "優先度の客観基準を持たないと属人判断になる",
+      "combo": [
+        "F-BANT",
+        "F-CHAMP"
+      ]
+    },
+    {
+      "id": "F-SPIN",
+      "name": "SPIN Selling",
+      "name_ja": "スピン・セリング",
+      "category": "discovery",
+      "origin": "Neil Rackham",
+      "purpose": "質問で顧客自身に課題と価値を言語化させる",
+      "elements": [
+        {
+          "key": "Situation",
+          "ja": "状況質問"
+        },
+        {
+          "key": "Problem",
+          "ja": "問題質問"
+        },
+        {
+          "key": "Implication",
+          "ja": "示唆質問"
+        },
+        {
+          "key": "Need-payoff",
+          "ja": "解決質問"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "S 質問が多すぎると退屈になる",
+      "combo": [
+        "F-BANT",
+        "F-MEDDIC"
+      ]
+    },
+    {
+      "id": "F-JTBD",
+      "name": "Jobs To Be Done",
+      "name_ja": "ジョブ理論",
+      "category": "discovery",
+      "origin": "Clayton Christensen",
+      "purpose": "顧客が『雇いたい仕事（ジョブ）』を明らかにする",
+      "elements": [
+        {
+          "key": "Job Statement",
+          "ja": "ジョブ定義（When / I want to / So I can）"
+        },
+        {
+          "key": "Functional Job",
+          "ja": "機能的ジョブ"
+        },
+        {
+          "key": "Emotional Job",
+          "ja": "感情的ジョブ"
+        },
+        {
+          "key": "Social Job",
+          "ja": "社会的ジョブ"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "ジョブの抽象度が高すぎると提案に落ちない",
+      "combo": [
+        "F-SPIN",
+        "F-GAP"
+      ],
+      "note": "リプレイス文脈では『現行品が解雇される理由』を問う形で F-NEADS と併用可"
+    },
+    {
+      "id": "F-GAP",
+      "name": "Gap Selling",
+      "name_ja": "ギャップ・セリング",
+      "category": "discovery",
+      "origin": "Keenan (A Sales Guy)",
+      "purpose": "現状→理想→ギャップで課題定義を明確化する",
+      "elements": [
+        {
+          "key": "Current State",
+          "ja": "現状"
+        },
+        {
+          "key": "Future State",
+          "ja": "理想の姿"
+        },
+        {
+          "key": "Gap",
+          "ja": "ギャップ（課題の大きさ）"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "理想像が顧客内で合意されていないと空転する",
+      "combo": [
+        "F-SPIN",
+        "F-MEDDIC"
+      ]
+    },
+    {
+      "id": "F-5WHYS",
+      "name": "5 Whys",
+      "name_ja": "なぜなぜ5回",
+      "category": "discovery",
+      "origin": "Toyota / 大野耐一",
+      "purpose": "なぜを5回繰り返して表面課題の根因に到達する",
+      "elements": [
+        {
+          "key": "Why 1",
+          "ja": "なぜ①（表層課題）"
+        },
+        {
+          "key": "Why 2",
+          "ja": "なぜ②"
+        },
+        {
+          "key": "Why 3",
+          "ja": "なぜ③"
+        },
+        {
+          "key": "Why 4",
+          "ja": "なぜ④"
+        },
+        {
+          "key": "Why 5",
+          "ja": "なぜ⑤（根本原因）"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "機械的に繰り返すと詰問になる — 共感を挟む",
+      "combo": [
+        "F-SPIN",
+        "F-GAP"
+      ]
+    },
+    {
+      "id": "F-MEDDIC",
+      "name": "MEDDIC",
+      "name_ja": "メディック",
+      "category": "complex_deal",
+      "origin": "PTC (Dick Dunkel / Jack Napoli)",
+      "purpose": "大型案件を構造的に管理し失注リスクを早期検知する",
+      "elements": [
+        {
+          "key": "Metrics",
+          "ja": "成功指標"
+        },
+        {
+          "key": "Economic Buyer",
+          "ja": "経済的意思決定者"
+        },
+        {
+          "key": "Decision Criteria",
+          "ja": "選定基準"
+        },
+        {
+          "key": "Decision Process",
+          "ja": "意思決定プロセス"
+        },
+        {
+          "key": "Identify Pain",
+          "ja": "課題の特定"
+        },
+        {
+          "key": "Champion",
+          "ja": "社内推進者"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "チャンピオン不在で進めると最終段階でひっくり返る",
+      "combo": [
+        "F-SPIN",
+        "F-GPCTBA"
+      ]
+    },
+    {
+      "id": "F-MEDDPICC",
+      "name": "MEDDPICC",
+      "name_ja": "メドピック",
+      "category": "complex_deal",
+      "origin": "MEDDIC拡張",
+      "purpose": "法務・調達が重い案件向け — 契約・競合プロセスを追加",
+      "elements": [
+        {
+          "key": "Metrics",
+          "ja": "成功指標"
+        },
+        {
+          "key": "Economic Buyer",
+          "ja": "経済的意思決定者"
+        },
+        {
+          "key": "Decision Criteria",
+          "ja": "選定基準"
+        },
+        {
+          "key": "Decision Process",
+          "ja": "意思決定プロセス"
+        },
+        {
+          "key": "Paper Process",
+          "ja": "契約・法務プロセス"
+        },
+        {
+          "key": "Identify Pain",
+          "ja": "課題の特定"
+        },
+        {
+          "key": "Champion",
+          "ja": "社内推進者"
+        },
+        {
+          "key": "Competition",
+          "ja": "競合状況"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "項目が多く更新が滞りがち — CRM 連携が前提",
+      "combo": [
+        "F-MEDDIC",
+        "F-SCOTSMAN"
+      ]
+    },
+    {
+      "id": "F-SPICED",
+      "name": "SPICED",
+      "name_ja": "スパイスド",
+      "category": "complex_deal",
+      "origin": "Winning by Design",
+      "purpose": "SaaS / CS前提 — Critical Event で受注タイミングを握る",
+      "elements": [
+        {
+          "key": "Situation",
+          "ja": "状況"
+        },
+        {
+          "key": "Pain",
+          "ja": "痛み"
+        },
+        {
+          "key": "Impact",
+          "ja": "インパクト"
+        },
+        {
+          "key": "Critical Event",
+          "ja": "決定的イベント"
+        },
+        {
+          "key": "Decision",
+          "ja": "意思決定基準"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Critical Event が存在しない案件では使いにくい",
+      "combo": [
+        "F-MEDDIC",
+        "F-GAP"
+      ],
+      "note": "リプレイス文脈では『現行ベンダーの契約更新日』を Critical Event に据えると効果的"
+    },
+    {
+      "id": "F-SCOTSMAN",
+      "name": "SCOTSMAN",
+      "name_ja": "スコッツマン",
+      "category": "complex_deal",
+      "origin": "Advanced Selling Skills (UK)",
+      "purpose": "案件の撤退基準を明確化し、リソースの無駄撃ちを防ぐ",
+      "elements": [
+        {
+          "key": "Solution",
+          "ja": "ソリューション適合"
+        },
+        {
+          "key": "Competition",
+          "ja": "競合状況"
+        },
+        {
+          "key": "Originality",
+          "ja": "独自性"
+        },
+        {
+          "key": "Timescale",
+          "ja": "時間軸"
+        },
+        {
+          "key": "Size",
+          "ja": "案件規模"
+        },
+        {
+          "key": "Money",
+          "ja": "予算"
+        },
+        {
+          "key": "Authority",
+          "ja": "決裁権"
+        },
+        {
+          "key": "Need",
+          "ja": "必要性"
+        }
+      ],
+      "level": "advanced",
+      "pitfall": "スコアが低い案件を機械的に切ると関係構築の芽も摘む",
+      "combo": [
+        "F-MEDDIC",
+        "F-BANT"
+      ]
+    },
+    {
+      "id": "F-NEADS",
+      "name": "NEADS",
+      "name_ja": "ニーズ",
+      "category": "replace",
+      "origin": "保険・リプレイス営業",
+      "purpose": "現行品リプレイス — 今の満足・不満から乗換動機を引き出す",
+      "elements": [
+        {
+          "key": "Now",
+          "ja": "現在の利用状況"
+        },
+        {
+          "key": "Enjoy",
+          "ja": "満足している点"
+        },
+        {
+          "key": "Alter",
+          "ja": "変えたい点"
+        },
+        {
+          "key": "Decision",
+          "ja": "意思決定者"
+        },
+        {
+          "key": "Solution",
+          "ja": "提案の方向性"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "Enjoy を聞かず不満だけ掘ると防御反応が出る",
+      "combo": [
+        "F-JTBD",
+        "F-SPICED"
+      ]
+    },
+    {
+      "id": "F-3C-PREP",
+      "name": "3C分析（商談準備）",
+      "name_ja": "スリーシー分析",
+      "category": "preparation",
+      "origin": "大前研一",
+      "purpose": "商談前に 3C で質問の方向性を設計しておく",
+      "elements": [
+        {
+          "key": "Customer",
+          "ja": "顧客（市場・課題仮説）"
+        },
+        {
+          "key": "Competitor",
+          "ja": "競合（代替手段・スイッチコスト）"
+        },
+        {
+          "key": "Company",
+          "ja": "自社（強み・提供価値）"
+        }
+      ],
+      "level": "beginner",
+      "pitfall": "自社分析に偏ると顧客不在のプレゼンになる",
+      "combo": [
+        "F-SPIN",
+        "F-SCOTSMAN"
+      ]
+    },
+    {
+      "id": "F-DMU-MAP",
+      "name": "DMU / Stakeholder Map",
+      "name_ja": "DMUマップ",
+      "category": "preparation",
+      "origin": "B2Bマーケティング一般",
+      "purpose": "決裁者・利用者・反対者の構造仮説を事前に描く",
+      "elements": [
+        {
+          "key": "Economic Buyer",
+          "ja": "経済的決裁者"
+        },
+        {
+          "key": "User Buyer",
+          "ja": "利用者"
+        },
+        {
+          "key": "Technical Buyer",
+          "ja": "技術評価者"
+        },
+        {
+          "key": "Coach / Champion",
+          "ja": "社内推進者"
+        },
+        {
+          "key": "Blocker",
+          "ja": "反対者・阻害者"
+        }
+      ],
+      "level": "intermediate",
+      "pitfall": "仮説に固執し現場の権力構造を見誤る",
+      "combo": [
+        "F-MEDDIC",
+        "F-ANUM"
+      ]
+    }
+  ]
+}

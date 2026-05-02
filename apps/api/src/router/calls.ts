@@ -1,12 +1,12 @@
 import { z } from 'zod'
 import { router, protectedProcedure } from '../middleware/trpc'
-import { criticalQueue, JOB_NAMES } from '@closepilot/queue'
+import { criticalQueue, JOB_NAMES } from '@bgm/queue'
 
 export const callsRouter = router({
   getToken: protectedProcedure
     .input(z.object({ contactId: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { generateBrowserToken } = await import('@closepilot/integrations-twilio')
+      const { generateBrowserToken } = await import('@bgm/integrations-twilio')
       const token = await generateBrowserToken(`user-${ctx.userId}`)
 
       await ctx.prisma.contact.update({

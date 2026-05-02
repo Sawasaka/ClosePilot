@@ -4,7 +4,7 @@ import type {
   LeadRank,
 } from '@prisma/client'
 
-export type ClosePilotEvent =
+export type BgmEvent =
   // リード
   | { type: 'lead.created'; payload: { companyId: string; rank: LeadRank } }
   | { type: 'lead.rank_changed'; payload: { companyId: string; from: LeadRank; to: LeadRank } }

@@ -51,7 +51,7 @@ jobs:
         run: pnpm exec playwright install --with-deps chromium
 
       - name: Generate Prisma Client
-        run: pnpm --filter @closepilot/db db:generate
+        run: pnpm --filter @bgm/db db:generate
 
       - name: Run intent crawl
         run: |

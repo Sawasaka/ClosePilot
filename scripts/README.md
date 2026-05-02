@@ -1,4 +1,4 @@
-# closepilot scripts
+# bgm scripts
 
 企業マスターの日次運用スクリプト集。
 
@@ -14,7 +14,7 @@
 
 | スクリプト | 用途 | 実行 |
 |---|---|---|
-| `packages/db/scripts/import-from-abm.ts` | abm-tool → closepilot 企業マスター移行 | 一回限り |
+| `packages/db/scripts/import-from-abm.ts` | abm-tool → bgm 企業マスター移行 | 一回限り |
 
 ## 全体フロー
 
@@ -62,19 +62,19 @@ ABM_SUPABASE_SERVICE_KEY="eyJ..."
 ```bash
 pnpm install
 pnpm exec playwright install chromium
-pnpm --filter @closepilot/db db:generate
+pnpm --filter @bgm/db db:generate
 ```
 
-### 3. 初回データ移行（abm-tool → closepilot）
+### 3. 初回データ移行（abm-tool → bgm）
 ```bash
 # ドライラン
-pnpm --filter @closepilot/db import:abm:dry
+pnpm --filter @bgm/db import:abm:dry
 
 # 少量テスト
 cd packages/db && tsx scripts/import-from-abm.ts --limit=100
 
 # 本番
-pnpm --filter @closepilot/db import:abm
+pnpm --filter @bgm/db import:abm
 ```
 
 ### 4. GitHub Actions secrets 登録

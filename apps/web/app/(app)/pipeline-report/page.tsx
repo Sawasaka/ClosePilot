@@ -2,275 +2,589 @@
 
 import { useState, useMemo } from 'react'
 import { motion } from 'framer-motion'
-import { TrendingUp, ArrowRight, AlertTriangle } from 'lucide-react'
+import { ChevronDown, Check, X } from 'lucide-react'
+import { ObsPageShell } from '@/components/obsidian'
 
 // ═══════════════════════════════════════════════════════════════════════════════
-// TYPES & DATA
+// TYPES & DATA — CEO Executive Summary 仕様
 // ═══════════════════════════════════════════════════════════════════════════════
 
-type Stage = 'IS' | '商談済み' | 'PJ化予定' | 'POC実施中' | '決裁者合意' | '受注'
+type Status = '有効商談' | 'PJ化予定あり' | 'PJ可能案件' | 'PJ進行' | '失注' | '契約'
 type Period = 'all' | '2026-03' | '2026-04'
 
-interface Deal {
+interface DealRow {
   id: string
   company: string
-  contact: string
-  stage: Stage
-  amount: number
-  owner: string
-  createdAt: string
-  closedAt: string | null
+  owners: string[]
+  partner?: boolean
+  status: Status
   note: string
+  period: '2026-03' | '2026-04'
 }
 
-const STAGES: { key: Stage; label: string; color: string }[] = [
-  { key: 'IS',        label: 'IS',           color: '#CCDDF0' },
-  { key: '商談済み',   label: '商談済み',      color: '#88BBFF' },
-  { key: 'PJ化予定',   label: 'PJ化予定',     color: '#AA88FF' },
-  { key: 'POC実施中',  label: 'POC実施中',    color: '#FFDD44' },
-  { key: '決裁者合意',  label: '決裁者合意',   color: '#FF8844' },
-  { key: '受注',       label: '受注',         color: '#44FF88' },
+const DEALS: DealRow[] = [
+  { id: '01', company: 'フォーティエンスコンサルティング株式会社', owners: ['名和', '沢坂', '菊池'], status: '失注', note: 'SKYSEAでログ活用をメインに使用し、デバイス管理もSKYSEAで一元管理が可能なため。', period: '2026-03' },
+  { id: '02', company: 'サンテミナ株式会社', owners: ['井之上', '沢坂'], status: 'PJ進行', note: 'Status：POC実施中。Next：① 運用状況の確認 ② 導入ご意向の確認。', period: '2026-03' },
+  { id: '03', company: 'フューチャーセキュアウェイブ株式会社', owners: ['名和', '菊池', '沢坂'], status: 'PJ進行', note: 'Status：POC中。Next：5月にセットアップ商談提案予定。', period: '2026-03' },
+  { id: '04', company: 'ユニソルホールディングス', owners: ['沢坂'], status: 'PJ進行', note: 'Status：POC中。Next：運用状況と導入ご意向の確認。', period: '2026-03' },
+  { id: '05', company: '株式会社ダイドウトランスプラネット', owners: ['後藤'], partner: true, status: 'PJ化予定あり', note: 'Status：M365導入待ち。Next：後藤さんからの連絡待ち → 資産管理＋AIヘルプデスク着手。', period: '2026-03' },
+  { id: '06', company: 'ボールトゥウィン株式会社', owners: ['井之上', '沢坂'], status: 'PJ化予定あり', note: 'Status：新規商談完了。Next：エージェント領域および部門ごとの閲覧制限完了次第、ご連絡。', period: '2026-03' },
+  { id: '07', company: '豊田スチールセンター株式会社', owners: ['新海', '沢坂'], status: 'PJ化予定あり', note: 'Status：親会社グローバル権限の承認待ち。Next：一度連絡しリマインド予定。', period: '2026-03' },
+  { id: '08', company: '株式会社MTG', owners: ['名和', '沢坂'], partner: true, status: 'PJ化予定あり', note: '3月分。Status：RFP対応中。Next：後藤さんからの連絡待ち。', period: '2026-03' },
+  { id: '09', company: '株式ガイアート', owners: ['沢坂', '新海'], status: 'PJ可能案件', note: '4月分。Status：PJ可能案件移行済み。Next：推進者含むステークホルダー全体商談。', period: '2026-04' },
+  { id: '10', company: 'トゥインクルワールド株式会社', owners: ['沢坂', '新海'], status: 'PJ進行', note: '4月分。Status：新規商談完了、5社コンペ中（ジョーシス含む）。Next：5月セットアップ商談実施 → コンペ最終企業として検討予定。', period: '2026-04' },
+  { id: '11', company: '株式会社ナビタイムジャパン', owners: ['名和', '沢坂'], status: 'PJ化予定あり', note: '4月分。資産管理：ニーズあり / AIヘルプデスク：内製化済みのためニーズなし。Next：エージェント領域が一段落後、最小限の再商談を検討。', period: '2026-04' },
+  { id: '12', company: '株式会社フレクト', owners: ['沢坂'], status: 'PJ化予定あり', note: '4月分。Status：既存案件掘り起こし商談完了、金額提案済み。Next：資産管理で前向き検討の場合、先方からの連絡待ち。', period: '2026-04' },
+  { id: '13', company: 'チームみらい', owners: ['名和', '沢坂'], status: 'PJ進行', note: '4月分。Status：商談完了、POC中。Next：導入ご意向の確認。', period: '2026-04' },
+  { id: '14', company: 'Aflac Ventures Japan', owners: ['名和', '沢坂'], status: 'PJ可能案件', note: '4月分。Status：商談完了、情シスの方をご紹介いただいている。Next：VCの連絡先を外し、GW明けにセットアップ商談の日程調整。', period: '2026-04' },
+  { id: '15', company: '株式会社DAY TO LIFE', owners: ['後藤'], partner: true, status: 'PJ可能案件', note: '4月分。Status：AIと資産管理領域で料金問い合わせまで完了。Next：後藤さんからの連絡待ち。', period: '2026-04' },
+  { id: '16', company: 'EMデバイス株式会社', owners: ['沢坂'], status: 'PJ可能案件', note: '4月分。Status：上長承認プロセス中、多数の複数コンペ案件。Next：4月24日までの連絡待ち（自分から連絡NG）。', period: '2026-04' },
 ]
 
-const DEALS: Deal[] = [
-  { id: 'd1',  company: '株式会社テクノリード',    contact: '田中 誠',    stage: '受注',      amount: 4800000, owner: '田中太郎', createdAt: '2026-01-10', closedAt: '2026-03-15', note: 'エンタープライズ契約（2期）' },
-  { id: 'd2',  company: '株式会社イノベーション',  contact: '佐々木 拓也', stage: '決裁者合意', amount: 6000000, owner: '田中太郎', createdAt: '2026-02-01', closedAt: null, note: '大型案件。口頭合意済み、契約書待ち' },
-  { id: 'd3',  company: '合同会社フューチャー',    contact: '山本 佳子',  stage: '商談済み',   amount: 2400000, owner: '鈴木花子', createdAt: '2026-02-15', closedAt: null, note: '初回商談完了。課題感あり' },
-  { id: 'd4',  company: '株式会社グロース',        contact: '中村 理恵',  stage: 'PJ化予定',  amount: 900000,  owner: '佐藤次郎', createdAt: '2026-02-20', closedAt: null, note: '2回目商談調整中' },
-  { id: 'd5',  company: '有限会社サクセス',        contact: '小林 健太',  stage: 'POC実施中', amount: 1800000, owner: '鈴木花子', createdAt: '2026-01-25', closedAt: null, note: 'PoC実施中。4月中に結論予定' },
-  { id: 'd6',  company: '株式会社ネクスト',        contact: '鈴木 美香',  stage: 'IS',        amount: 720000,  owner: '田中太郎', createdAt: '2026-03-01', closedAt: null, note: '初回コール済み。反応良好' },
-  { id: 'd7',  company: '株式会社デルタ',          contact: '木村 隆',    stage: 'PJ化予定',  amount: 2100000, owner: '佐藤次郎', createdAt: '2026-03-05', closedAt: null, note: 'エンプラ要件あり。SSO必須' },
-  { id: 'd8',  company: '合同会社ビジョン',        contact: '加藤 雄介',  stage: 'IS',        amount: 480000,  owner: '佐藤次郎', createdAt: '2026-03-10', closedAt: null, note: 'MA連携ニーズ' },
-  { id: 'd9',  company: '株式会社スタート',        contact: '吉田 千春',  stage: '商談済み',   amount: 600000,  owner: '佐藤次郎', createdAt: '2026-03-12', closedAt: null, note: '再提案。スタータープラン検討中' },
-  { id: 'd10', company: '株式会社アルファ',        contact: '渡辺 健二',  stage: 'POC実施中', amount: 1500000, owner: '鈴木花子', createdAt: '2026-04-01', closedAt: null, note: '4月開始。データ分析基盤構築' },
-  { id: 'd11', company: '合同会社ベータ',          contact: '佐藤 良子',  stage: '商談済み',   amount: 960000,  owner: '田中太郎', createdAt: '2026-04-03', closedAt: null, note: 'CS契約更新検討' },
-  { id: 'd12', company: 'フューチャーセキュアウェイブ', contact: '高橋 健一', stage: 'PJ化予定', amount: 3200000, owner: '田中太郎', createdAt: '2026-04-05', closedAt: null, note: '2回目商談完了。検証フェーズ移行中' },
-]
-
-const FF = {
-  card: 'linear-gradient(180deg, #101838 0%, #0c1028 100%)',
-  border: '1px solid #2244AA',
-  shadow: '0 2px 12px rgba(0,0,0,0.4), inset 0 1px 0 rgba(136,187,255,0.05)',
-}
-
-// ═══════════════════════════════════════════════════════════════════════════════
-// CALCULATIONS
-// ═══════════════════════════════════════════════════════════════════════════════
-
-function calcMetrics(deals: Deal[]) {
-  const byStage: Record<Stage, Deal[]> = { IS: [], '商談済み': [], 'PJ化予定': [], 'POC実施中': [], '決裁者合意': [], '受注': [] }
-  deals.forEach(d => byStage[d.stage].push(d))
-
-  const totalDeals = deals.length
-  const wonDeals = byStage['受注'].length
-  const totalAmount = deals.reduce((s, d) => s + d.amount, 0)
-  const wonAmount = byStage['受注'].reduce((s, d) => s + d.amount, 0)
-  const closeRate = totalDeals > 0 ? Math.round((wonDeals / totalDeals) * 100) : 0
-
-  // ステージ間の転換率
-  const stageKeys: Stage[] = ['IS', '商談済み', 'PJ化予定', 'POC実施中', '決裁者合意', '受注']
-  // 各ステージ以降に到達した案件数（累積）
-  const atOrBeyond = stageKeys.map((_, si) => {
-    return deals.filter(d => {
-      const di = stageKeys.indexOf(d.stage)
-      return di >= si
-    }).length
-  })
-
-  const conversionRates = stageKeys.map((_, si) => {
-    if (si === 0) return 100
-    return atOrBeyond[0] > 0 ? Math.round((atOrBeyond[si] / atOrBeyond[0]) * 100) : 0
-  })
-
-  // ステージ間の移行率
-  const stageTransitions = stageKeys.map((_, si) => {
-    if (si === 0) return 100
-    return atOrBeyond[si - 1] > 0 ? Math.round((atOrBeyond[si] / atOrBeyond[si - 1]) * 100) : 0
-  })
-
-  return { byStage, totalDeals, wonDeals, totalAmount, wonAmount, closeRate, atOrBeyond, conversionRates, stageTransitions }
-}
-
-function formatAmount(n: number): string {
-  if (n >= 1000000) return `¥${(n / 1000000).toFixed(1)}M`
-  if (n >= 1000) return `¥${(n / 1000).toFixed(0)}K`
-  return `¥${n.toLocaleString()}`
+// ステータスごとの色（Liquid Obsidian パレット）
+const STATUS_STYLES: Record<Status, { color: string; bg: string; label: string }> = {
+  '有効商談':    { color: '#e3c06b', bg: 'rgba(227, 192, 107, 0.14)', label: '有効商談' },
+  'PJ化予定あり': { color: '#e3c06b', bg: 'rgba(227, 192, 107, 0.14)', label: 'PJ化予定あり' },
+  'PJ可能案件':  { color: '#7ec6ff', bg: 'rgba(126, 198, 255, 0.14)', label: 'PJ可能案件' },
+  'PJ進行':      { color: '#6bd6a2', bg: 'rgba(107, 214, 162, 0.14)', label: 'PJ進行' },
+  '失注':        { color: '#ff6b6b', bg: 'rgba(255, 107, 107, 0.14)', label: '失注' },
+  '契約':        { color: '#6bd6a2', bg: 'rgba(107, 214, 162, 0.14)', label: '契約' },
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
 // PAGE
 // ═══════════════════════════════════════════════════════════════════════════════
 
-const PERIOD_OPTIONS: { key: Period; label: string }[] = [
-  { key: 'all', label: '全期間' },
+const PERIODS: { key: Period; label: string }[] = [
+  { key: 'all', label: '全体' },
   { key: '2026-03', label: '2026年3月' },
   { key: '2026-04', label: '2026年4月' },
 ]
 
+// 最深のネイビー背景（スクショ準拠）
+const PAGE_BG = '#0c1424'
+const CARD_BG = '#0f1a2e'
+const CARD_BG_DEEP = '#0a1422'
+
 export default function PipelineReportPage() {
   const [period, setPeriod] = useState<Period>('all')
+  const [conclusionOpen, setConclusionOpen] = useState(false)
+  const [conclusion, setConclusion] = useState('要注意')
 
-  const filtered = useMemo(() => {
+  const filteredDeals = useMemo(() => {
     if (period === 'all') return DEALS
-    return DEALS.filter(d => d.createdAt.startsWith(period))
+    return DEALS.filter(d => d.period === period)
   }, [period])
 
-  const m = useMemo(() => calcMetrics(filtered), [filtered])
+  // パイプラインのステージ別集計（有効商談 ⊇ PJ化予定 ⊇ PJ可能 ⊇ PJ進行）
+  const counts = useMemo(() => {
+    const isActive = (s: Status) => s !== '失注' && s !== '契約'
+    const valid = filteredDeals.filter(d => isActive(d.status)).length
+    const pjPlanned = filteredDeals.filter(d => ['PJ化予定あり', 'PJ可能案件', 'PJ進行'].includes(d.status)).length
+    const pjPossible = filteredDeals.filter(d => ['PJ可能案件', 'PJ進行'].includes(d.status)).length
+    const pjRunning = filteredDeals.filter(d => d.status === 'PJ進行').length
+    const lost = filteredDeals.filter(d => d.status === '失注').length
+    const contracted = filteredDeals.filter(d => d.status === '契約').length
+
+    const totalForRate = valid + lost // 失注も含めたファネル入口の件数
+    const finalRate = totalForRate > 0 ? Math.round((pjRunning / (totalForRate || 1)) * 100) : 0
+
+    return {
+      valid,
+      pjPlanned,
+      pjPossible,
+      pjRunning,
+      lost,
+      contracted,
+      finalRate,
+      plannedRate: valid > 0 ? Math.round((pjPlanned / valid) * 100) : 0,
+      possibleRate: pjPlanned > 0 ? Math.round((pjPossible / pjPlanned) * 100) : 0,
+      runningRate: pjPossible > 0 ? Math.round((pjRunning / pjPossible) * 100) : 0,
+      lostRate: pjRunning > 0 ? Math.round((lost / pjRunning) * 100) : 0,
+      contractRate: pjRunning > 0 ? Math.round((contracted / pjRunning) * 100) : 0,
+    }
+  }, [filteredDeals])
 
   return (
-    <div className="space-y-5">
-
-      {/* Header */}
-      <div className="flex items-end justify-between">
-        <div>
-          <h1 className="text-[21px] font-bold text-[#EEEEFF] tracking-[0.01em]">パイプラインレポート</h1>
-          <p className="text-[13px] text-[#AABBDD] mt-0.5">パーソナルパイプラインの転換率・案件化率を分析</p>
-        </div>
-        {/* Period tabs */}
-        <div className="flex gap-1.5">
-          {PERIOD_OPTIONS.map(p => (
-            <button key={p.key} onClick={() => setPeriod(p.key)}
-              className="h-[30px] px-3 text-[12px] font-medium rounded-[6px] transition-all"
-              style={{ background: period === p.key ? '#2244AA' : 'rgba(136,187,255,0.06)', color: period === p.key ? '#FFFFFF' : '#88BBFF', border: period === p.key ? '1px solid #3355CC' : '1px solid transparent' }}>
-              {p.label}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-4 gap-3">
-        {[
-          { label: '総案件数', value: `${m.totalDeals}`, sub: '件', color: '#88BBFF' },
-          { label: '受注数', value: `${m.wonDeals}`, sub: '件', color: '#44FF88' },
-          { label: 'クローズ率', value: `${m.closeRate}`, sub: '%', color: m.closeRate >= 20 ? '#44FF88' : '#FF8888' },
-          { label: '受注金額', value: formatAmount(m.wonAmount), sub: '', color: '#FFDD44' },
-        ].map((kpi, i) => (
-          <motion.div key={kpi.label} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.05 }}
-            className="rounded-[8px] p-4" style={{ background: FF.card, border: FF.border, boxShadow: FF.shadow }}>
-            <p className="text-[10px] font-bold text-[#99AACC] uppercase tracking-[0.08em]">{kpi.label}</p>
-            <p className="text-[28px] font-bold mt-1 tabular-nums" style={{ color: kpi.color }}>
-              {kpi.value}<span className="text-[14px] ml-0.5 font-semibold">{kpi.sub}</span>
-            </p>
-          </motion.div>
-        ))}
-      </div>
-
-      {/* ── ファネルフロー ── */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
-        className="rounded-[8px] p-5" style={{ background: FF.card, border: FF.border, boxShadow: FF.shadow }}>
-        <h3 className="text-[13px] font-bold text-[#EEEEFF] mb-5 tracking-[0.02em]">パイプラインファネル</h3>
-        <div className="flex items-center gap-0">
-          {STAGES.map((stage, si) => {
-            const count = m.atOrBeyond[si]
-            const convRate = m.conversionRates[si]
-            const transRate = m.stageTransitions[si]
-            const maxCount = m.atOrBeyond[0] || 1
-            const barHeight = Math.max(20, (count / maxCount) * 100)
-
-            return (
-              <div key={stage.key} className="flex items-center flex-1">
-                <div className="flex-1 flex flex-col items-center">
-                  {/* 転換率（最上部） */}
-                  <div className="text-center mb-2">
-                    <p className="text-[18px] font-bold tabular-nums" style={{ color: stage.color }}>{count}</p>
-                    <p className="text-[9px] text-[#99AACC]">社</p>
-                  </div>
-
-                  {/* バー */}
-                  <motion.div
-                    initial={{ height: 0 }}
-                    animate={{ height: `${barHeight}px` }}
-                    transition={{ duration: 0.5, delay: 0.2 + si * 0.06 }}
-                    className="w-full max-w-[60px] rounded-[4px]"
-                    style={{ background: `${stage.color}30`, border: `1px solid ${stage.color}40`, boxShadow: `0 0 8px ${stage.color}15` }}
-                  />
-
-                  {/* ステージ名 */}
-                  <p className="text-[10px] font-semibold mt-2 text-center" style={{ color: stage.color }}>{stage.label}</p>
-
-                  {/* 全体転換率 */}
-                  <p className="text-[9px] tabular-nums mt-0.5" style={{ color: '#99AACC' }}>
-                    {convRate}%
-                  </p>
-                </div>
-
-                {/* 矢印 + 移行率 */}
-                {si < STAGES.length - 1 && (
-                  <div className="flex flex-col items-center mx-1 shrink-0">
-                    <span className="text-[10px] font-bold tabular-nums mb-1" style={{ color: m.stageTransitions[si + 1] >= 50 ? '#44FF88' : '#FF8888' }}>
-                      {m.stageTransitions[si + 1]}%
-                    </span>
-                    <ArrowRight size={12} style={{ color: '#2244AA' }} />
-                  </div>
-                )}
+    <ObsPageShell>
+      <div style={{ backgroundColor: PAGE_BG }} className="min-h-screen">
+        <div className="w-full max-w-[1240px] mx-auto px-8 xl:px-12 pb-16">
+          {/* ═══════════════════════════ Header ═══════════════════════════ */}
+          <div className="pt-14 pb-10">
+            <div className="flex items-center gap-4">
+              <div
+                className="w-12 h-12 flex items-center justify-center font-[family-name:var(--font-display)] text-2xl font-bold"
+                style={{
+                  backgroundColor: CARD_BG,
+                  color: '#e3c06b',
+                  borderRadius: '6px',
+                  boxShadow: 'inset 0 0 0 1px rgba(227, 192, 107, 0.3)',
+                }}
+              >
+                Z
               </div>
-            )
-          })}
-        </div>
-      </motion.div>
+              <div className="flex flex-col">
+                <h1
+                  className="font-[family-name:var(--font-display)] text-[28px] font-semibold tracking-[-0.02em]"
+                  style={{ color: '#e4e2e4' }}
+                >
+                  商談パイプラインレポート
+                </h1>
+                <span
+                  className="text-[11px] font-medium tracking-[0.2em] mt-0.5"
+                  style={{ color: '#8f8c90' }}
+                >
+                  EXECUTIVE SUMMARY
+                </span>
+              </div>
+            </div>
+            <div
+              className="mt-6 h-px w-full"
+              style={{ backgroundColor: 'rgba(227, 192, 107, 0.25)' }}
+            />
+          </div>
 
-      {/* ── 案件一覧テーブル ── */}
-      <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }}
-        className="rounded-[8px] overflow-hidden" style={{ background: FF.card, border: FF.border, boxShadow: FF.shadow }}>
-        <div className="px-5 py-3 flex items-center justify-between" style={{ borderBottom: '1px solid #2244AA' }}>
-          <h3 className="text-[13px] font-bold text-[#EEEEFF] tracking-[0.02em]">案件一覧</h3>
-          <span className="text-[11px] text-[#99AACC]">{filtered.length} 件</span>
-        </div>
+          {/* ═══════════════════════════ Period Tabs ═══════════════════════════ */}
+          <div className="flex gap-8 mb-6">
+            {PERIODS.map(p => {
+              const active = period === p.key
+              return (
+                <button
+                  key={p.key}
+                  onClick={() => setPeriod(p.key)}
+                  className="text-[13px] font-medium pb-2 transition-colors duration-150"
+                  style={{
+                    color: active ? '#e4e2e4' : '#5d6478',
+                    borderBottom: active ? '1.5px solid #e3c06b' : '1.5px solid transparent',
+                  }}
+                >
+                  {p.label}
+                </button>
+              )
+            })}
+          </div>
 
-        {/* Header */}
-        <div className="grid items-center px-5 py-2" style={{ gridTemplateColumns: '28px 1.2fr 0.8fr 90px 80px 1fr', borderBottom: '1px solid rgba(34,68,170,0.3)', background: 'rgba(16,24,56,0.4)' }}>
-          <span className="text-[10px] text-[#99AACC] font-bold">#</span>
-          <span className="text-[10px] text-[#99AACC] font-bold uppercase tracking-[0.06em]">企業 / 担当</span>
-          <span className="text-[10px] text-[#99AACC] font-bold uppercase tracking-[0.06em]">ステータス</span>
-          <span className="text-[10px] text-[#99AACC] font-bold uppercase tracking-[0.06em]">金額</span>
-          <span className="text-[10px] text-[#99AACC] font-bold uppercase tracking-[0.06em]">担当</span>
-          <span className="text-[10px] text-[#99AACC] font-bold uppercase tracking-[0.06em]">進捗・備考</span>
-        </div>
+          {/* ═══════════════════════════ Executive Summary Card ═══════════════════════════ */}
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.4 }}
+            className="relative rounded-[12px] p-8 mb-14"
+            style={{
+              backgroundColor: CARD_BG,
+              boxShadow: 'inset 0 0 0 1px rgba(120, 140, 200, 0.08)',
+            }}
+          >
+            {/* 左側の金色アクセントライン */}
+            <div
+              className="absolute left-0 top-6 bottom-6 w-[3px] rounded-r"
+              style={{ backgroundColor: '#e3c06b' }}
+            />
 
-        {/* Rows */}
-        {filtered.map((deal, i) => {
-          const stageCfg = STAGES.find(s => s.key === deal.stage)
-          const color = stageCfg?.color || '#7788AA'
-          return (
-            <motion.div key={deal.id} initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.3 + i * 0.03 }}
-              className="grid items-center px-5 py-3 hover:bg-[rgba(136,187,255,0.03)] transition-colors"
-              style={{ gridTemplateColumns: '28px 1.2fr 0.8fr 90px 80px 1fr', borderBottom: '1px solid rgba(34,68,170,0.15)' }}>
-              <span className="text-[11px] text-[#99AACC] tabular-nums">{String(i + 1).padStart(2, '0')}</span>
+            <SectionLabel>エグゼクティブサマリー</SectionLabel>
+
+            <div className="grid grid-cols-[200px_1fr_1fr] gap-10 mt-5">
+              {/* 結論 */}
               <div>
-                <p className="text-[13px] font-semibold text-[#EEEEFF] truncate">{deal.company}</p>
-                <p className="text-[10px] text-[#AABBDD]">{deal.contact}</p>
+                <FieldLabel>結論</FieldLabel>
+                <div className="relative mt-2">
+                  <button
+                    onClick={() => setConclusionOpen(v => !v)}
+                    className="w-full flex items-center justify-between rounded-[6px] px-3 h-10 text-[14px] font-medium transition-colors"
+                    style={{
+                      backgroundColor: CARD_BG_DEEP,
+                      color: '#e3c06b',
+                      boxShadow: 'inset 0 0 0 1px rgba(227, 192, 107, 0.25)',
+                    }}
+                  >
+                    <span>{conclusion}</span>
+                    <ChevronDown size={14} style={{ color: '#8f8c90' }} />
+                  </button>
+                  {conclusionOpen && (
+                    <div
+                      className="absolute z-10 mt-1 w-full rounded-[6px] overflow-hidden"
+                      style={{ backgroundColor: CARD_BG_DEEP, boxShadow: 'inset 0 0 0 1px rgba(120, 140, 200, 0.12)' }}
+                    >
+                      {['順調', '要注意', '危険'].map(opt => (
+                        <button
+                          key={opt}
+                          onClick={() => { setConclusion(opt); setConclusionOpen(false) }}
+                          className="w-full text-left px-3 h-9 text-[13px] transition-colors"
+                          style={{ color: '#e4e2e4' }}
+                          onMouseOver={e => (e.currentTarget.style.backgroundColor = 'rgba(227, 192, 107, 0.08)')}
+                          onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                        >
+                          {opt}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                </div>
               </div>
-              <span className="inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold w-fit"
-                style={{ background: `${color}18`, color, border: `1px solid ${color}30` }}>
-                <span className="w-[5px] h-[5px] rounded-full" style={{ background: color }} />
-                {deal.stage}
-              </span>
-              <span className="text-[12px] font-semibold text-[#EEEEFF] tabular-nums">{formatAmount(deal.amount)}</span>
-              <span className="text-[11px] text-[#CCDDF0]">{deal.owner}</span>
-              <div className="flex items-start gap-1.5 min-w-0">
-                {deal.note.includes('⚠') && <AlertTriangle size={11} className="text-[#FF8888] shrink-0 mt-0.5" />}
-                <p className="text-[11px] text-[#CCDDF0] truncate">{deal.note}</p>
-              </div>
-            </motion.div>
-          )
-        })}
-      </motion.div>
 
-      {/* ── インサイト ── */}
-      <div className="grid grid-cols-3 gap-3">
-        {[
-          { title: '案件化率', value: `${m.conversionRates[2]}%`, desc: 'IS → PJ化予定 への転換率', color: '#AA88FF' },
-          { title: 'POC移行率', value: `${m.conversionRates[3]}%`, desc: 'PJ化予定 → POC実施中 への移行率', color: '#FFDD44' },
-          { title: '最終クローズ率', value: `${m.closeRate}%`, desc: '全案件のうち受注に至った割合', color: '#44FF88' },
-        ].map((insight, i) => (
-          <motion.div key={insight.title} initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.35 + i * 0.05 }}
-            className="rounded-[8px] p-4" style={{ background: FF.card, border: FF.border, boxShadow: FF.shadow }}>
-            <p className="text-[10px] font-bold text-[#99AACC] uppercase tracking-[0.08em] mb-1">{insight.title}</p>
-            <p className="text-[24px] font-bold tabular-nums" style={{ color: insight.color }}>{insight.value}</p>
-            <p className="text-[10px] text-[#AABBDD] mt-1">{insight.desc}</p>
+              {/* NEXT */}
+              <div>
+                <FieldLabel>NEXT</FieldLabel>
+                <div
+                  className="mt-2 rounded-[6px] p-4 text-[12.5px] leading-[1.9]"
+                  style={{ backgroundColor: CARD_BG_DEEP, color: '#c2c0c6' }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <DocIcon />
+                    <span className="font-medium" style={{ color: '#e4e2e4' }}>トライアル期間の週次MTG</span>
+                  </div>
+                  <div>1週目：動作確認</div>
+                  <div>2週目：運用確認</div>
+                  <div>3週目：最終調整</div>
+                  <div>4週目：意向確認</div>
+                </div>
+              </div>
+
+              {/* 助けが必要な1点 */}
+              <div>
+                <FieldLabel>助けが必要な1点</FieldLabel>
+                <div
+                  className="mt-2 rounded-[6px] p-4 text-[12.5px] leading-[1.9]"
+                  style={{ backgroundColor: CARD_BG_DEEP, color: '#c2c0c6' }}
+                >
+                  <div className="flex items-center gap-1.5 mb-1">
+                    <DocIcon />
+                    <span className="font-medium" style={{ color: '#e4e2e4' }}>機能アップデート</span>
+                  </div>
+                  <div className="mt-1">4月：担当者の割り当て通知</div>
+                  <div>5月：チケットからのFAQ自動作成（Gドライブ・シェアポイント）</div>
+                  <div className="mt-2" style={{ color: '#e3c06b' }}>※Must Have</div>
+                </div>
+              </div>
+            </div>
           </motion.div>
-        ))}
+
+          {/* ═══════════════════════════ Pipeline Funnel ═══════════════════════════ */}
+          <div className="flex items-center gap-3 mb-5">
+            <SectionLabel>商談パイプライン</SectionLabel>
+            <span className="text-[11px]" style={{ color: '#8f8c90' }}>— {period === 'all' ? '全期間合算' : period === '2026-03' ? '2026年3月' : '2026年4月'}</span>
+            <button
+              className="ml-1 text-[10.5px] px-2 py-1 rounded-[4px] transition-colors"
+              style={{
+                backgroundColor: CARD_BG,
+                color: '#e3c06b',
+                boxShadow: 'inset 0 0 0 1px rgba(227, 192, 107, 0.25)',
+              }}
+            >
+              認定条件とは？
+            </button>
+          </div>
+
+          <div className="grid grid-cols-[1fr_36px_1fr_36px_1fr_36px_1fr] gap-0 items-stretch mb-4">
+            <StageCard
+              label="有効商談数"
+              value={counts.valid}
+              color="#e3c06b"
+              condition="担当部門 / 導入検討中 / 時期感あり"
+              rateLabel="最終転換率"
+              rate={counts.finalRate}
+              rateColor="#e3c06b"
+            />
+            <Arrow label="昇格" />
+            <StageCard
+              label="PJ化予定あり"
+              value={counts.pjPlanned}
+              color="#7ec6ff"
+              condition="2回目の商談意向 / トライアル意向"
+              rateLabel="移行率"
+              rate={counts.plannedRate}
+              rateColor="#6bd6a2"
+            />
+            <Arrow label="PJ化" />
+            <StageCard
+              label="PJ可能案件"
+              value={counts.pjPossible}
+              color="#7ec6ff"
+              condition="推進可能"
+              rateLabel="移行率"
+              rate={counts.possibleRate}
+              rateColor="#6bd6a2"
+            />
+            <Arrow label="POC" />
+            <StageCard
+              label="PJ進行"
+              value={counts.pjRunning}
+              color="#6bd6a2"
+              condition="POC実施確定 / 2回目商談以降に移行"
+              rateLabel="移行率"
+              rate={counts.runningRate}
+              rateColor="#6bd6a2"
+              accentBorder
+            />
+          </div>
+
+          {/* 失注 / 契約 */}
+          <div className="grid grid-cols-2 gap-4 mb-14">
+            <OutcomeCard
+              icon={<X size={14} style={{ color: '#ff6b6b' }} strokeWidth={2.5} />}
+              iconBg="rgba(255, 107, 107, 0.12)"
+              label="失注"
+              value={counts.lost}
+              rateLabel="PJ進行比"
+              rate={counts.lostRate}
+              accent="#ff6b6b"
+            />
+            <OutcomeCard
+              icon={<Check size={14} style={{ color: '#6bd6a2' }} strokeWidth={2.5} />}
+              iconBg="rgba(107, 214, 162, 0.12)"
+              label="契約"
+              value={counts.contracted}
+              rateLabel="PJ進行比"
+              rate={counts.contractRate}
+              accent="#6bd6a2"
+            />
+          </div>
+
+          {/* ═══════════════════════════ Deals List ═══════════════════════════ */}
+          <div className="flex items-center gap-3 mb-4">
+            <SectionLabel>有効商談一覧</SectionLabel>
+            <span className="text-[11px]" style={{ color: '#8f8c90' }}>— {filteredDeals.length}件</span>
+          </div>
+
+          <div
+            className="rounded-[10px] overflow-hidden"
+            style={{ backgroundColor: CARD_BG }}
+          >
+            {/* Header */}
+            <div
+              className="grid items-center px-6 py-3 text-[11px] font-medium tracking-[0.12em] uppercase"
+              style={{
+                gridTemplateColumns: '44px 1.3fr 0.7fr 1.4fr',
+                color: '#8f8c90',
+              }}
+            >
+              <span>#</span>
+              <span>企業名 / 担当</span>
+              <span>ステータス</span>
+              <span>進捗・備考</span>
+            </div>
+
+            {/* Rows */}
+            {filteredDeals.map((d, i) => {
+              const s = STATUS_STYLES[d.status]
+              return (
+                <motion.div
+                  key={d.id}
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  transition={{ delay: 0.02 * i }}
+                  className="grid items-center px-6 py-4 transition-colors duration-150"
+                  style={{
+                    gridTemplateColumns: '44px 1.3fr 0.7fr 1.4fr',
+                    borderTop: i === 0 ? 'none' : '1px solid rgba(120, 140, 200, 0.06)',
+                  }}
+                  onMouseOver={e => (e.currentTarget.style.backgroundColor = 'rgba(120, 140, 200, 0.03)')}
+                  onMouseOut={e => (e.currentTarget.style.backgroundColor = 'transparent')}
+                >
+                  <span className="text-[12px] tabular-nums" style={{ color: '#5d6478' }}>
+                    {d.id}
+                  </span>
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-[13.5px] font-semibold" style={{ color: '#e4e2e4' }}>
+                        {d.company}
+                      </span>
+                      {d.partner && (
+                        <span
+                          className="text-[10px] px-1.5 py-0.5 rounded-[3px]"
+                          style={{
+                            backgroundColor: 'rgba(120, 140, 200, 0.08)',
+                            color: '#8f8c90',
+                          }}
+                        >
+                          パートナー
+                        </span>
+                      )}
+                    </div>
+                    <div className="text-[11.5px] mt-0.5" style={{ color: '#8f8c90' }}>
+                      {d.owners.join(' / ')}
+                    </div>
+                  </div>
+                  <div>
+                    <span
+                      className="inline-flex items-center gap-1.5 px-2.5 h-6 rounded-full text-[11px] font-medium"
+                      style={{ backgroundColor: s.bg, color: s.color }}
+                    >
+                      <span
+                        className="w-1.5 h-1.5 rounded-full"
+                        style={{ backgroundColor: s.color }}
+                      />
+                      {s.label}
+                    </span>
+                  </div>
+                  <div className="text-[12px] leading-[1.7]" style={{ color: '#c2c0c6' }}>
+                    {d.note}
+                  </div>
+                </motion.div>
+              )
+            })}
+          </div>
+
+          {/* ═══════════════════════════ Footer ═══════════════════════════ */}
+          <div className="mt-14 pt-6 flex items-center justify-between text-[11px]"
+            style={{
+              color: '#5d6478',
+              borderTop: '1px solid rgba(120, 140, 200, 0.08)',
+            }}
+          >
+            <div>
+              <span className="font-[family-name:var(--font-display)] font-semibold" style={{ color: '#e3c06b' }}>zooba</span>
+              <span className="mx-3" style={{ color: '#3d4458' }}>|</span>
+              <span>商談パイプラインレポート</span>
+            </div>
+            <div>Confidential · CEO Executive Summary · 2026.03.30</div>
+          </div>
+        </div>
+      </div>
+    </ObsPageShell>
+  )
+}
+
+// ═══════════════════════════════════════════════════════════════════════════════
+// SUB-COMPONENTS
+// ═══════════════════════════════════════════════════════════════════════════════
+
+function SectionLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="flex items-center gap-2">
+      <span className="w-6 h-px" style={{ backgroundColor: '#e3c06b' }} />
+      <span className="text-[11px] font-medium tracking-[0.12em]" style={{ color: '#e3c06b' }}>
+        {children}
+      </span>
+    </div>
+  )
+}
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <span className="text-[11px] font-medium tracking-[0.18em] uppercase" style={{ color: '#8f8c90' }}>
+      {children}
+    </span>
+  )
+}
+
+function DocIcon() {
+  return (
+    <svg width="12" height="12" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <rect x="3" y="2" width="10" height="12" rx="1.5" fill="#e3c06b" opacity="0.25" />
+      <rect x="3" y="2" width="10" height="12" rx="1.5" stroke="#e3c06b" strokeWidth="1" opacity="0.6" />
+      <line x1="5.5" y1="6" x2="10.5" y2="6" stroke="#e3c06b" strokeWidth="1" opacity="0.6" />
+      <line x1="5.5" y1="8.5" x2="10.5" y2="8.5" stroke="#e3c06b" strokeWidth="1" opacity="0.6" />
+      <line x1="5.5" y1="11" x2="8.5" y2="11" stroke="#e3c06b" strokeWidth="1" opacity="0.6" />
+    </svg>
+  )
+}
+
+function StageCard({
+  label, value, color, condition, rateLabel, rate, rateColor, accentBorder,
+}: {
+  label: string
+  value: number
+  color: string
+  condition: string
+  rateLabel: string
+  rate: number
+  rateColor: string
+  accentBorder?: boolean
+}) {
+  return (
+    <div
+      className="relative rounded-[10px] p-5 flex flex-col"
+      style={{
+        backgroundColor: CARD_BG,
+        boxShadow: accentBorder
+          ? `inset 0 0 0 1px ${color}50`
+          : 'inset 0 0 0 1px rgba(120, 140, 200, 0.06)',
+        minHeight: 200,
+      }}
+    >
+      <div className="text-[12px] font-medium mb-3" style={{ color }}>{label}</div>
+      <div className="flex items-baseline gap-1">
+        <span
+          className="font-[family-name:var(--font-display)] tabular-nums tracking-[-0.04em]"
+          style={{ color, fontSize: '56px', fontWeight: 300, lineHeight: 1 }}
+        >
+          {value}
+        </span>
+        <span className="text-[14px] font-medium" style={{ color: '#8f8c90' }}>社</span>
+      </div>
+      <div className="h-px my-4" style={{ backgroundColor: 'rgba(120, 140, 200, 0.08)' }} />
+      <div className="text-[10px] tracking-[0.1em] mb-1" style={{ color: '#5d6478' }}>認定条件</div>
+      <div className="text-[11.5px] leading-[1.6] flex-1" style={{ color: '#c2c0c6' }}>
+        {condition}
+      </div>
+      <div className="h-px my-3" style={{ backgroundColor: 'rgba(120, 140, 200, 0.08)' }} />
+      <div className="flex items-baseline justify-between">
+        <span className="text-[10.5px]" style={{ color: '#8f8c90' }}>{rateLabel}</span>
+        <span
+          className="font-[family-name:var(--font-display)] font-semibold tabular-nums text-[18px]"
+          style={{ color: rateColor }}
+        >
+          {rate}%
+        </span>
+      </div>
+    </div>
+  )
+}
+
+function Arrow({ label }: { label: string }) {
+  return (
+    <div className="flex flex-col items-center justify-center">
+      <svg width="20" height="12" viewBox="0 0 20 12" fill="none">
+        <path d="M0 6 L16 6 M12 2 L18 6 L12 10" stroke="#5d6478" strokeWidth="1.2" fill="none" />
+      </svg>
+      <span className="text-[9.5px] mt-1" style={{ color: '#5d6478' }}>{label}</span>
+    </div>
+  )
+}
+
+function OutcomeCard({
+  icon, iconBg, label, value, rateLabel, rate, accent,
+}: {
+  icon: React.ReactNode
+  iconBg: string
+  label: string
+  value: number
+  rateLabel: string
+  rate: number
+  accent: string
+}) {
+  return (
+    <div
+      className="rounded-[10px] p-5 flex items-center gap-5"
+      style={{
+        backgroundColor: CARD_BG,
+        boxShadow: `inset 0 0 0 1px ${accent}20`,
+      }}
+    >
+      <div
+        className="w-10 h-10 rounded-full flex items-center justify-center shrink-0"
+        style={{ backgroundColor: iconBg }}
+      >
+        {icon}
+      </div>
+      <div className="flex-1">
+        <div className="text-[11.5px] mb-1" style={{ color: '#8f8c90' }}>{label}</div>
+        <div className="flex items-baseline gap-1">
+          <span
+            className="font-[family-name:var(--font-display)] tabular-nums tracking-[-0.04em]"
+            style={{ color: '#e4e2e4', fontSize: '32px', fontWeight: 300, lineHeight: 1 }}
+          >
+            {value}
+          </span>
+          <span className="text-[13px]" style={{ color: '#8f8c90' }}>社</span>
+        </div>
+      </div>
+      <div className="flex items-baseline gap-2">
+        <span className="text-[10.5px]" style={{ color: '#8f8c90' }}>{rateLabel}</span>
+        <span className="font-[family-name:var(--font-display)] font-semibold text-[16px] tabular-nums" style={{ color: accent }}>
+          {rate}%
+        </span>
       </div>
     </div>
   )

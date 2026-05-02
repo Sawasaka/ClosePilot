@@ -130,7 +130,7 @@ export const contactsRouter = router({
   startCall: protectedProcedure
     .input(z.object({ id: z.string() }))
     .mutation(async ({ ctx, input }) => {
-      const { generateBrowserToken } = await import('@closepilot/integrations-twilio')
+      const { generateBrowserToken } = await import('@bgm/integrations-twilio')
       const token = await generateBrowserToken(`user-${ctx.userId}`)
 
       // コール試行回数を自動インクリメント
