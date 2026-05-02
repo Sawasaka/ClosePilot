@@ -1,364 +1,695 @@
 'use client'
 
-import { useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
-import { usePathname } from 'next/navigation'
-import { motion, AnimatePresence } from 'framer-motion'
+import { useRouter, usePathname } from 'next/navigation'
 import {
-  Home, Columns3, Building2, Users, Briefcase,
-  List, CheckSquare, BookOpen, BarChart2, LayoutDashboard,
-  Workflow, FileStack, AlertCircle, Settings, Zap, ChevronRight,
-  Trophy, Rocket, Bot, Mail, Send, FileText, Target, GitBranch, Gift,
-  Medal, Map, GraduationCap, Award, Swords,
-  Globe, Vote, Settings2, History, Tv,
-  ScrollText, Palette, CreditCard,
+  PenSquare,
+  Search,
+  CreditCard,
+  Plug,
+  ChevronUp,
+  Building2,
+  Columns3,
+  Users,
+  Briefcase,
+  List,
+  CheckSquare,
+  LayoutDashboard,
+  Send,
+  Target,
+  BookOpen,
+  MoreHorizontal,
+  Pin,
+  Pencil,
+  Trash2,
+  PanelLeft,
 } from 'lucide-react'
+import { MOCK_CHAT_HISTORY } from '@/lib/chat-history/mock-data'
 
-// ── Navigation structure ──────────────────────────────────────────────────────
-const NAV_GROUPS = [
-  // ── ホーム ──
-  {
-    label: null,
-    items: [
-      { href: '/',          label: 'ホーム',           icon: Bot },
-    ],
-  },
-  // ── ToDo ──
-  {
-    label: 'ToDo',
-    items: [
-      { href: '/today',     label: '今日のタスク一覧',  icon: Home, badge: 8 },
-      { href: '/overdue',   label: '期限超過タスク一覧', icon: AlertCircle, badge: 4 },
-      { href: '/tasks',     label: 'タスク一覧',        icon: CheckSquare },
-    ],
-  },
-  // ── CRM ──
-  {
-    label: 'CRM',
-    items: [
-      { href: '/pipeline',  label: 'パイプライン',     icon: Columns3 },
-      { href: '/lists',     label: 'ISリスト',         icon: List },
-      { href: '/companies', label: '企業',             icon: Building2 },
-      { href: '/contacts',  label: 'コンタクト',       icon: Users },
-      { href: '/deals',     label: '取引',             icon: Briefcase },
-    ],
-  },
-  // ── マーケティング ──
-  {
-    label: 'マーケティング',
-    items: [
-      { href: '/nurturing',  label: 'ナーチャリング',   icon: Mail },
-      { href: '/campaigns',  label: '配信管理',         icon: Send },
-      { href: '/leads',      label: 'リード分析',       icon: Target },
-      { href: '/automation', label: 'オートメーション', icon: Workflow },
-      { href: '/documents', label: 'リンク資料',       icon: FileStack, roadmap: 'v2', tooltip: '顧客の閲覧状況・滞在時間を自動トラッキング' },
-      { href: '/content-studio', label: '資料作成',      icon: Palette },
-    ],
-  },
-  // ── PDM ──
-  {
-    label: 'PDM',
-    items: [
-      { href: '/meetings',  label: '議事録',           icon: FileText },
-      { href: '/issues',    label: '課題ボード',       icon: GitBranch },
-      { href: '/priority',  label: '開発優先度',       icon: BarChart2 },
-      { href: '/talent/roadmap',      label: '開発ロードマップ', icon: Map },
-    ],
-  },
-  // ── 人事 ──
-  {
-    label: '人事',
-    items: [
-      { href: '/talent/level',        label: 'マイレベル',       icon: Medal },
-      { href: '/talent/training',     label: '研修プログレス',   icon: GraduationCap },
-      { href: '/talent/achievements', label: '達成・バッジ',     icon: Award },
-      { href: '/talent/quests',       label: 'クエスト',         icon: Swords },
-      { href: '/talent/goals',        label: '目標設定',         icon: Target },
-      { href: '/onboarding',          label: 'オンボーディング', icon: Rocket },
-    ],
-  },
-  // ── データサイエンス ──
-  {
-    label: 'データサイエンス',
-    items: [
-      { href: '/dashboard', label: '成績',            icon: LayoutDashboard },
-      { href: '/analytics', label: 'アクション数',    icon: BarChart2 },
-      { href: '/pipeline-report', label: 'パイプラインレポート', icon: BarChart2 },
-      { href: '/knowledge', label: 'ナレッジ',         icon: BookOpen },
-    ],
-  },
-  // ── 経営者 ──
-  {
-    label: '経営者',
-    items: [
-      { href: '/rulebook',                   label: 'ルールブック',     icon: ScrollText },
-      { href: '/gamification',              label: 'ストーリー',       icon: BookOpen },
-      { href: '/gamification/tutorial',     label: 'チュートリアル',   icon: Target },
-      { href: '/gamification/economy',      label: '仮想経済',         icon: Gift },
-      { href: '/gamification/team',         label: 'チームプレイ',     icon: Users },
-      { href: '/gamification/leaderboard',  label: 'リーダーボード',   icon: Trophy },
-    ],
-  },
-  // ── メタバース ──
-  {
-    label: 'メタバース',
-    items: [
-      { href: '/metaverse/rooms',   label: '研修ルーム一覧', icon: Tv },
-      { href: '/metaverse/history', label: '研修履歴',       icon: History },
-    ],
-  },
-  // ── Web3 ──
-  {
-    label: 'Web3',
-    items: [
-      { href: '/web3/proposals', label: '提案一覧',           icon: Vote },
-      { href: '/web3/influence', label: '影響度ダッシュボード', icon: Globe },
-      { href: '/web3/settings',  label: 'スコア設定',         icon: Settings2 },
-    ],
-  },
+// ─── ワークスペースナビ項目 ─────────────────────────────────────────────────
+type NavItemDef = { href: string; label: string; icon: React.ElementType }
+const NAV_ITEMS: NavItemDef[] = [
+  { href: '/companies', label: '企業',           icon: Building2 },
+  { href: '/pipeline',  label: 'パイプライン',   icon: Columns3 },
+  { href: '/contacts',  label: 'コンタクト',     icon: Users },
+  { href: '/deals',     label: '取引',           icon: Briefcase },
+  { href: '/lists',     label: 'ISリスト',       icon: List },
+  { href: '/tasks',     label: 'タスク一覧',     icon: CheckSquare },
+  { href: '/dashboard', label: 'アクションボード', icon: LayoutDashboard },
+  { href: '/mail',      label: 'メール配信',     icon: Send },
+  { href: '/priority',  label: '開発優先度',     icon: Target },
+  { href: '/knowledge', label: 'ナレッジ',       icon: BookOpen },
 ]
 
-// ── NavItem — Nintendo button style ──────────────────────────────────────────
-function NavItem({
-  href, label, icon: Icon, active, badge, roadmap, note, tooltip, devOrder,
+// ─── Top nav button (新しいチャット / 検索 / ナビ項目) ──────────────────────
+function TopNavItem({
+  icon: Icon,
+  label,
+  onClick,
+  active,
 }: {
-  href: string; label: string; icon: React.ElementType; active: boolean; badge?: number; roadmap?: string; note?: string; tooltip?: string; devOrder?: number
+  icon: React.ElementType
+  label: string
+  onClick: () => void
+  active?: boolean
 }) {
-  const [showTooltip, setShowTooltip] = useState(false)
+  const [hover, setHover] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      className="w-full mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150 text-left"
+      style={{
+        width: 'calc(100% - 16px)',
+        backgroundColor: active
+          ? 'var(--color-obs-surface-high)'
+          : hover
+            ? 'var(--color-obs-surface-low)'
+            : 'transparent',
+        transitionTimingFunction: 'var(--ease-liquid)',
+      }}
+    >
+      <Icon
+        size={15}
+        strokeWidth={active ? 2.2 : 1.9}
+        style={{
+          color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+          flexShrink: 0,
+        }}
+      />
+      <span
+        className="text-[13.5px] tracking-[-0.01em] leading-none"
+        style={{
+          color: 'var(--color-obs-text)',
+          fontWeight: active ? 600 : 500,
+          opacity: active ? 1 : 0.92,
+        }}
+      >
+        {label}
+      </span>
+    </button>
+  )
+}
+
+// ─── ワークスペースナビ用 Link アイテム ─────────────────────────────────────
+function WorkspaceNavItem({
+  href,
+  icon: Icon,
+  label,
+  active,
+}: {
+  href: string
+  icon: React.ElementType
+  label: string
+  active: boolean
+}) {
+  const [hover, setHover] = useState(false)
+  return (
+    <Link href={href}>
+      <div
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        className="mx-2 flex items-center gap-2.5 px-3 py-[7px] rounded-[var(--radius-obs-md)] transition-colors duration-150"
+        style={{
+          backgroundColor: active
+            ? 'var(--color-obs-surface-high)'
+            : hover
+              ? 'var(--color-obs-surface-low)'
+              : 'transparent',
+          transitionTimingFunction: 'var(--ease-liquid)',
+        }}
+      >
+        <Icon
+          size={15}
+          strokeWidth={active ? 2.2 : 1.9}
+          style={{
+            color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+            flexShrink: 0,
+          }}
+        />
+        <span
+          className="text-[13px] tracking-[-0.01em] leading-none"
+          style={{
+            color: 'var(--color-obs-text)',
+            fontWeight: active ? 600 : 500,
+            opacity: active ? 1 : 0.88,
+          }}
+        >
+          {label}
+        </span>
+      </div>
+    </Link>
+  )
+}
+
+// ─── Chat history item ───────────────────────────────────────────────────────
+function ChatItemMenuRow({
+  icon: Icon,
+  label,
+  onClick,
+  danger,
+}: {
+  icon: React.ElementType
+  label: string
+  onClick: () => void
+  danger?: boolean
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      className="w-[calc(100%-8px)] mx-1 flex items-center gap-2.5 px-3 py-[7px] rounded-[6px] transition-colors duration-100"
+      style={{
+        color: danger ? '#ff6b6b' : 'var(--color-obs-text)',
+      }}
+      onMouseOver={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+          'var(--color-obs-surface-low)'
+      }}
+      onMouseOut={(e) => {
+        ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+      }}
+    >
+      <Icon size={14} strokeWidth={1.9} style={{ flexShrink: 0 }} />
+      <span className="text-[13px] tracking-[-0.01em]">{label}</span>
+    </button>
+  )
+}
+
+function ChatItem({
+  id,
+  title,
+  pinned,
+  editing,
+  menuOpen,
+  active,
+  onClick,
+  onMenuToggle,
+  onMenuClose,
+  onPinToggle,
+  onRenameStart,
+  onRenameCommit,
+  onDelete,
+}: {
+  id: string
+  title: string
+  pinned: boolean
+  editing: boolean
+  menuOpen: boolean
+  active: boolean
+  onClick: () => void
+  onMenuToggle: () => void
+  onMenuClose: () => void
+  onPinToggle: () => void
+  onRenameStart: () => void
+  onRenameCommit: (newTitle: string) => void
+  onDelete: () => void
+}) {
+  const [hover, setHover] = useState(false)
+  const [draft, setDraft] = useState(title)
+  const inputRef = useRef<HTMLInputElement | null>(null)
+
+  useEffect(() => {
+    if (!editing) return
+    setDraft(title)
+    const t = window.setTimeout(() => inputRef.current?.select(), 0)
+    return () => window.clearTimeout(t)
+  }, [editing, title])
+
+  const showMore = hover || menuOpen
 
   return (
-    <div className="relative mx-2">
-      <Link href={href} className="block">
-        <motion.div
-          className="relative flex flex-wrap items-center gap-2.5 px-3 py-[8px] rounded-[8px]"
-          style={active ? {
-            background: 'linear-gradient(180deg, #182058 0%, #101840 100%)',
-            boxShadow: '0 0 12px rgba(68,102,200,0.25), inset 0 1px 0 rgba(200,220,255,0.1)',
-            border: '1px solid #3355AA',
-          } : undefined}
-          whileHover={!active ? { background: 'rgba(136,187,255,0.05)' } : undefined}
-          whileTap={{ scale: 0.97 }}
-          transition={{ duration: 0.1 }}
-        >
-          <Icon
-            size={15}
-            strokeWidth={active ? 2.4 : 1.75}
-            style={{ color: active ? '#FFFFFF' : '#556688', flexShrink: 0 }}
-          />
-          <span
-            className="leading-none tracking-[-0.01em] text-[13px]"
+    <div
+      data-chat-id={id}
+      className="relative mx-2"
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+    >
+      <div
+        role={editing ? undefined : 'button'}
+        tabIndex={editing ? -1 : 0}
+        onClick={editing ? undefined : onClick}
+        onKeyDown={(e) => {
+          if (editing) return
+          if (e.key === 'Enter' || e.key === ' ') {
+            e.preventDefault()
+            onClick()
+          }
+        }}
+        className="flex items-center gap-2 px-3 py-[9px] rounded-[var(--radius-obs-md)] transition-colors duration-150 text-left cursor-pointer"
+        style={{
+          backgroundColor: active
+            ? 'var(--color-obs-surface-high)'
+            : hover || menuOpen
+              ? 'var(--color-obs-surface-low)'
+              : 'transparent',
+          transitionTimingFunction: 'var(--ease-liquid)',
+        }}
+      >
+        {pinned && (
+          <Pin
+            size={11}
+            strokeWidth={2}
             style={{
-              color: active ? '#FFFFFF' : '#7788AA',
-              fontWeight: active ? 600 : 400,
+              color: 'var(--color-obs-text-muted)',
+              flexShrink: 0,
+              transform: 'rotate(45deg)',
+            }}
+          />
+        )}
+
+        {editing ? (
+          <input
+            ref={inputRef}
+            value={draft}
+            onChange={(e) => setDraft(e.target.value)}
+            onClick={(e) => e.stopPropagation()}
+            onKeyDown={(e) => {
+              e.stopPropagation()
+              if (e.key === 'Enter') {
+                e.preventDefault()
+                onRenameCommit(draft.trim() || title)
+              } else if (e.key === 'Escape') {
+                e.preventDefault()
+                onRenameCommit(title)
+              }
+            }}
+            onBlur={() => onRenameCommit(draft.trim() || title)}
+            className="flex-1 bg-transparent outline-none text-[13px] leading-snug tracking-[-0.005em] min-w-0"
+            style={{
+              color: 'var(--color-obs-text)',
+              boxShadow: 'inset 0 0 0 1px var(--color-obs-surface-highest)',
+              borderRadius: '4px',
+              padding: '1px 4px',
+            }}
+          />
+        ) : (
+          <span
+            className="flex-1 text-[13px] leading-snug tracking-[-0.005em] truncate"
+            style={{
+              color: 'var(--color-obs-text)',
+              fontWeight: active ? 600 : 450,
+              opacity: active ? 1 : 0.88,
             }}
           >
-            {label}
+            {title}
           </span>
-
-          {badge != null && badge > 0 && (
-            <span
-              className="ml-1 min-w-[18px] h-[18px] px-1 flex items-center justify-center rounded-full text-[10px] font-bold leading-none shrink-0"
-              style={{
-                background: active ? 'rgba(255,255,255,0.2)' : href === '/overdue' ? '#FF4444' : '#3355CC',
-                color: '#FFFFFF',
-              }}
-            >
-              {badge}
-            </span>
-          )}
-
-          {roadmap && !active && (
-            <span
-              className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-[4px] shrink-0 uppercase tracking-[0.03em]"
-              style={{
-                background: roadmap === 'v2' ? 'rgba(96,165,250,0.12)' : 'rgba(139,92,246,0.12)',
-                color: roadmap === 'v2' ? '#60A5FA' : '#A78BFA',
-              }}
-            >
-              {roadmap === 'v2' ? 'Phase 2' : 'Phase 3'}
-            </span>
-          )}
-
-          {devOrder != null && !active && (
-            <span
-              className="ml-auto text-[9px] font-semibold px-1.5 py-0.5 rounded-[4px] shrink-0 tracking-[0.03em]"
-              style={{ background: 'rgba(255,255,255,0.05)', color: '#4A5568' }}
-            >
-              #{devOrder}
-            </span>
-          )}
-
-          {tooltip && !active && (
-            <button
-              onClick={e => { e.preventDefault(); e.stopPropagation(); setShowTooltip(v => !v) }}
-              className="ml-auto w-4 h-4 rounded-full flex items-center justify-center shrink-0 text-[9px] font-bold hover:bg-[rgba(255,255,255,0.08)] transition-colors"
-              style={{ color: '#4A5568' }}
-            >
-              ?
-            </button>
-          )}
-
-          {/* Active badge dot */}
-          <AnimatePresence>
-            {active && (
-              <motion.span
-                layoutId="sidebar-active-dot"
-                className="ml-auto w-[5px] h-[5px] rounded-full bg-white shrink-0"
-                style={{ opacity: 0.7 }}
-                initial={{ opacity: 0, scale: 0 }}
-                animate={{ opacity: 0.7, scale: 1 }}
-                exit={{ opacity: 0, scale: 0 }}
-                transition={{ duration: 0.18, ease: [0.16, 1, 0.3, 1] }}
-              />
-            )}
-          </AnimatePresence>
-          {note && !active && (
-            <span className="w-full pl-[27px] text-[9px] leading-tight -mt-1 mb-0.5" style={{ color: '#4A5568' }}>
-              {note}
-            </span>
-          )}
-        </motion.div>
-      </Link>
-      {/* Tooltip popover */}
-      <AnimatePresence>
-        {showTooltip && tooltip && (
-          <motion.div
-            initial={{ opacity: 0, y: -4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.15 }}
-            className="absolute left-3 right-3 mt-1 px-3 py-2 rounded-[8px] z-40"
-            style={{ background: '#1D1D1F', boxShadow: '0 4px 16px rgba(0,0,0,0.2)' }}
-          >
-            <p className="text-[10px] text-white leading-relaxed">{tooltip}</p>
-            <button
-              onClick={() => setShowTooltip(false)}
-              className="absolute top-1 right-1.5 text-white/40 hover:text-white/80 transition-colors"
-            >
-              <X size={10} />
-            </button>
-          </motion.div>
         )}
-      </AnimatePresence>
+
+        {showMore && !editing && (
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              onMenuToggle()
+            }}
+            className="shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors duration-100"
+            style={{
+              color: 'var(--color-obs-text-muted)',
+              backgroundColor: menuOpen ? 'var(--color-obs-surface-highest)' : 'transparent',
+            }}
+            onMouseOver={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                'var(--color-obs-surface-highest)'
+            }}
+            onMouseOut={(e) => {
+              if (!menuOpen) {
+                ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+              }
+            }}
+            title="メニュー"
+          >
+            <MoreHorizontal size={14} strokeWidth={2} />
+          </button>
+        )}
+      </div>
+
+      {menuOpen && (
+        <div
+          className="absolute right-2 top-full mt-1 rounded-[var(--radius-obs-md)] py-1 z-50 min-w-[160px]"
+          style={{
+            backgroundColor: 'var(--color-obs-surface-highest)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+        >
+          <ChatItemMenuRow
+            icon={Pin}
+            label={pinned ? 'ピン留めを外す' : 'ピン留めする'}
+            onClick={() => {
+              onPinToggle()
+              onMenuClose()
+            }}
+          />
+          <ChatItemMenuRow
+            icon={Pencil}
+            label="名前を変更"
+            onClick={() => {
+              onRenameStart()
+              onMenuClose()
+            }}
+          />
+          <ChatItemMenuRow
+            icon={Trash2}
+            label="削除"
+            danger
+            onClick={() => {
+              onDelete()
+              onMenuClose()
+            }}
+          />
+        </div>
+      )}
     </div>
   )
 }
 
-// ── Section label ─────────────────────────────────────────────────────────────
-function SectionLabel({ label }: { label: string }) {
+// ─── User menu (drop-up) ────────────────────────────────────────────────────
+type MenuItem = { href: string; icon: React.ElementType; label: string }
+const USER_MENU_ITEMS: MenuItem[] = [
+  { href: '/subscription',          icon: CreditCard, label: 'プラン・クレジット' },
+  { href: '/settings/integrations', icon: Plug,       label: '連携設定' },
+]
+
+function UserMenu({ userName, userInitial }: { userName: string; userInitial: string }) {
+  const [open, setOpen] = useState(false)
+  const [hover, setHover] = useState(false)
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+
+  // 外側クリックで閉じる
+  useEffect(() => {
+    if (!open) return
+    const onDocClick = (e: MouseEvent) => {
+      if (!wrapRef.current) return
+      if (!wrapRef.current.contains(e.target as Node)) setOpen(false)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [open])
+
   return (
-    <p
-      className="px-5 pt-4 pb-1.5 text-[10px] font-bold uppercase"
-      style={{ color: '#99AACC', letterSpacing: '0.12em' }}
-    >
-      {label}
-    </p>
+    <div ref={wrapRef} className="mx-2 mb-3 relative">
+      {/* Drop-up menu */}
+      {open && (
+        <div
+          className="absolute left-0 right-0 bottom-full mb-2 rounded-[var(--radius-obs-md)] py-1.5 z-50"
+          style={{
+            backgroundColor: 'var(--color-obs-surface-highest)',
+            boxShadow: '0 10px 30px rgba(0,0,0,0.45), inset 0 0 0 1px rgba(109,106,111,0.14)',
+          }}
+        >
+          {USER_MENU_ITEMS.map((m) => (
+            <Link
+              key={m.href}
+              href={m.href}
+              onClick={() => setOpen(false)}
+              className="flex items-center gap-2.5 px-3 py-[7px] mx-1 rounded-[6px] transition-colors duration-100"
+              style={{ color: 'var(--color-obs-text)' }}
+              onMouseOver={(e) => {
+                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor =
+                  'var(--color-obs-surface-low)'
+              }}
+              onMouseOut={(e) => {
+                ;(e.currentTarget as HTMLAnchorElement).style.backgroundColor = 'transparent'
+              }}
+            >
+              <m.icon
+                size={14}
+                strokeWidth={1.9}
+                style={{ color: 'var(--color-obs-text-muted)', flexShrink: 0 }}
+              />
+              <span className="text-[13px] tracking-[-0.01em]">{m.label}</span>
+            </Link>
+          ))}
+        </div>
+      )}
+
+      {/* User card button */}
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        onMouseEnter={() => setHover(true)}
+        onMouseLeave={() => setHover(false)}
+        className="w-full flex items-center gap-2.5 px-2.5 py-2 rounded-[var(--radius-obs-md)] cursor-pointer transition-colors duration-150"
+        style={{
+          backgroundColor: open || hover
+            ? 'var(--color-obs-surface-low)'
+            : 'var(--color-obs-surface)',
+          transitionTimingFunction: 'var(--ease-liquid)',
+        }}
+      >
+        {/* Avatar */}
+        <div
+          className="w-[28px] h-[28px] rounded-full flex items-center justify-center shrink-0"
+          style={{
+            background:
+              'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
+            boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.2)',
+          }}
+        >
+          <span
+            className="text-[11px] font-bold leading-none"
+            style={{ color: 'var(--color-obs-on-primary)' }}
+          >
+            {userInitial}
+          </span>
+        </div>
+
+        <span
+          className="flex-1 text-left text-[13px] font-medium truncate tracking-[-0.01em]"
+          style={{ color: 'var(--color-obs-text)' }}
+        >
+          {userName}
+        </span>
+
+        <ChevronUp
+          size={13}
+          strokeWidth={2}
+          style={{
+            color: 'var(--color-obs-text-muted)',
+            transform: open ? 'rotate(0deg)' : 'rotate(180deg)',
+            transition: 'transform 0.15s ease',
+          }}
+          className="shrink-0"
+        />
+      </button>
+    </div>
   )
 }
 
-// ── Sidebar ───────────────────────────────────────────────────────────────────
+// ─── Sidebar ─────────────────────────────────────────────────────────────────
 export function Sidebar() {
+  const router = useRouter()
   const pathname = usePathname()
+  const [activeChatId, setActiveChatId] = useState<string | null>(null)
+  const [pinnedIds, setPinnedIds] = useState<Set<string>>(new Set())
+  const [deletedIds, setDeletedIds] = useState<Set<string>>(new Set())
+  const [renamedTitles, setRenamedTitles] = useState<Record<string, string>>({})
+  const [editingId, setEditingId] = useState<string | null>(null)
+  const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+  const [collapsed, setCollapsed] = useState(false)
 
-  const isActive = (href: string) =>
+  // 折りたたみ状態を <html> の data 属性に反映 → ヘッダー/メイン領域のレイアウトが追随
+  useEffect(() => {
+    document.documentElement.dataset.sidebarCollapsed = collapsed ? 'true' : 'false'
+    return () => {
+      // unmount 時はリセット（折りたたみ前提のレイアウトが残らないように）
+      delete document.documentElement.dataset.sidebarCollapsed
+    }
+  }, [collapsed])
+
+  // メニューを外側クリックで閉じる
+  useEffect(() => {
+    if (!menuOpenId) return
+    const onDocClick = (e: MouseEvent) => {
+      const tgt = e.target as HTMLElement | null
+      if (!tgt) return setMenuOpenId(null)
+      const inItem = tgt.closest(`[data-chat-id="${menuOpenId}"]`)
+      if (!inItem) setMenuOpenId(null)
+    }
+    document.addEventListener('mousedown', onDocClick)
+    return () => document.removeEventListener('mousedown', onDocClick)
+  }, [menuOpenId])
+
+  const visibleChats = useMemo(() => {
+    return MOCK_CHAT_HISTORY
+      .filter((c) => !deletedIds.has(c.id))
+      .map((c) => ({ ...c, title: renamedTitles[c.id] ?? c.title }))
+      .sort((a, b) => {
+        const ap = pinnedIds.has(a.id) ? 1 : 0
+        const bp = pinnedIds.has(b.id) ? 1 : 0
+        if (ap !== bp) return bp - ap
+        return a.updatedAt < b.updatedAt ? 1 : -1
+      })
+  }, [deletedIds, renamedTitles, pinnedIds])
+
+  const isHomePathname = pathname === '/'
+  const isNavActive = (href: string) =>
     href === '/' ? pathname === '/' : pathname.startsWith(href)
 
+  const handleNewChat = () => {
+    setActiveChatId(null)
+    router.push('/')
+  }
+  const handleSearch = () => {
+    // Phase 1: 検索モーダル未実装。ホームのチャット入力にフォーカス。
+    router.push('/?focus=search')
+  }
+  const handleChatClick = (id: string) => {
+    setActiveChatId(id)
+    router.push(`/?chat=${id}`)
+  }
+  const togglePin = (id: string) => {
+    setPinnedIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+  }
+  const deleteChat = (id: string) => {
+    setDeletedIds((prev) => {
+      const next = new Set(prev)
+      next.add(id)
+      return next
+    })
+    if (activeChatId === id) setActiveChatId(null)
+  }
+  const commitRename = (id: string, newTitle: string) => {
+    setRenamedTitles((prev) => ({ ...prev, [id]: newTitle }))
+    setEditingId(null)
+  }
+
   return (
-    <aside
-      className="fixed left-0 top-0 bottom-0 w-[224px] flex flex-col z-30 select-none"
-      style={{
-        background: 'linear-gradient(180deg, #0c1030 0%, #060818 100%)',
-        borderRight: '2px solid #2244AA',
-        boxShadow: '4px 0 24px rgba(0,0,0,0.5), inset -1px 0 0 rgba(136,187,255,0.08)',
-      }}
-    >
-      {/* ── Logo ── */}
-      <div
-        className="h-[56px] flex items-center px-5 shrink-0"
-        style={{ borderBottom: '2px solid #2244AA' }}
+    <>
+      {/* ── 折りたたみ時の展開ボタン（左上の固定位置に出現） ── */}
+      {collapsed && (
+        <button
+          type="button"
+          onClick={() => setCollapsed(false)}
+          aria-label="サイドバーを開く"
+          className="fixed top-3 left-3 z-40 w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center transition-colors duration-150"
+          style={{
+            color: 'var(--color-obs-text-muted)',
+            backgroundColor: 'var(--color-obs-surface-high)',
+            transitionTimingFunction: 'var(--ease-liquid)',
+          }}
+          onMouseOver={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+          }}
+          onMouseOut={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+          }}
+        >
+          <PanelLeft size={16} strokeWidth={1.8} />
+        </button>
+      )}
+
+      <aside
+        className="fixed left-0 top-0 bottom-0 w-[244px] flex flex-col z-30 select-none transition-transform duration-200"
+        style={{
+          backgroundColor: 'var(--color-obs-surface-lowest)',
+          transform: collapsed ? 'translateX(-100%)' : 'translateX(0)',
+          transitionTimingFunction: 'var(--ease-liquid)',
+        }}
       >
-        <Link href="/" className="flex items-center gap-3">
-          <motion.div
-            className="w-[30px] h-[30px] rounded-[8px] flex items-center justify-center shrink-0"
-            style={{
-              background: 'linear-gradient(135deg, #5AC8FA 0%, #5577DD 35%, #2244AA 70%, #3355CC 100%)',
-              boxShadow: '0 0 16px rgba(85,119,221,0.85), 0 0 5px rgba(125,211,252,0.95), inset 0 1px 0 rgba(255,255,255,0.5)',
-              border: '1px solid rgba(255,255,255,0.4)',
-            }}
-            whileHover={{ scale: 1.08 }}
-            whileTap={{ scale: 0.95 }}
-            transition={{ duration: 0.15, ease: [0.16, 1, 0.3, 1] }}
+        {/* ── ロゴ + 折りたたみボタン ── */}
+        <div className="h-[56px] shrink-0 flex items-center justify-between pl-4 pr-2">
+          <Link
+            href="/dashboard"
+            className="transition-opacity duration-150 hover:opacity-80"
+            aria-label="Front Office ホーム"
           >
-            <Zap size={15} className="text-white" strokeWidth={2.5} style={{ filter: 'drop-shadow(0 1px 2px rgba(0,0,0,0.4))' }} />
-          </motion.div>
-          <div className="flex flex-col">
-            <span className="text-[15px] font-semibold text-[#FFFFFF] tracking-[-0.03em] leading-tight">
-              BGM
+            <span
+              className="font-[family-name:var(--font-display)] text-[16px] font-semibold tracking-[-0.015em]"
+              style={{ color: 'var(--color-obs-text)' }}
+            >
+              Front Office
             </span>
-            <span className="text-[9px] text-[#5577DD] tracking-[0.06em] leading-tight uppercase font-semibold">
-              Business Growth Management
-            </span>
-          </div>
-        </Link>
+          </Link>
+          <button
+            type="button"
+            onClick={() => setCollapsed(true)}
+            aria-label="サイドバーを折りたたむ"
+            className="w-8 h-8 rounded-[var(--radius-obs-md)] flex items-center justify-center transition-colors duration-150"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+            onMouseOver={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                'var(--color-obs-surface-high)'
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+            }}
+            onMouseOut={(e) => {
+              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+            }}
+          >
+            <PanelLeft size={15} strokeWidth={1.8} />
+          </button>
+        </div>
+
+      {/* ── Workspace nav ── */}
+      <div className="flex flex-col gap-[2px] pt-2 pb-2">
+        {NAV_ITEMS.map((it) => (
+          <WorkspaceNavItem
+            key={it.href}
+            href={it.href}
+            icon={it.icon}
+            label={it.label}
+            active={isNavActive(it.href)}
+          />
+        ))}
       </div>
 
-      {/* ── Navigation groups ── */}
-      <nav className="flex-1 overflow-y-auto overflow-x-hidden pt-2 pb-2">
-        {NAV_GROUPS.map((group, gi) => (
-          <div key={gi} className={gi > 0 ? 'mt-1' : ''}>
-            {group.label && <SectionLabel label={group.label} />}
-            {!group.label && gi === 0 && <div className="h-1" />}
-            <div className="flex flex-col gap-[2px]">
-              {group.items.map(item => (
-                <NavItem
-                  key={item.href}
-                  href={item.href}
-                  label={item.label}
-                  icon={item.icon}
-                  active={isActive(item.href)}
-                  badge={'badge' in item ? (item as { badge: number }).badge : undefined}
-                  roadmap={'roadmap' in item ? (item as { roadmap: string }).roadmap : undefined}
-                  note={'note' in item ? (item as { note: string }).note : undefined}
-                  tooltip={'tooltip' in item ? (item as { tooltip: string }).tooltip : undefined}
-                  devOrder={'devOrder' in item ? (item as { devOrder: number }).devOrder : undefined}
-                />
-              ))}
-            </div>
-          </div>
-        ))}
+      {/* ── Divider (workspace ↔ chat) ── */}
+      <div className="mx-4 my-1 h-px" style={{ backgroundColor: 'var(--color-obs-surface-low)' }} />
+
+      {/* ── Chat zone (新しいチャット / 検索 + 履歴) ── */}
+      <nav className="bgm-chat-scroll flex-1 overflow-y-auto overflow-x-hidden pt-3 pb-2">
+        {/* チャット用アクション */}
+        <div className="flex flex-col gap-[2px] mb-2">
+          <TopNavItem
+            icon={PenSquare}
+            label="新しいチャット"
+            onClick={handleNewChat}
+            active={isHomePathname && !activeChatId}
+          />
+          <TopNavItem
+            icon={Search}
+            label="検索"
+            onClick={handleSearch}
+            active={false}
+          />
+        </div>
+
+        {/* 履歴 */}
+        <div className="flex flex-col gap-[3px]">
+          {visibleChats.map((it) => (
+            <ChatItem
+              key={it.id}
+              id={it.id}
+              title={it.title}
+              pinned={pinnedIds.has(it.id)}
+              editing={editingId === it.id}
+              menuOpen={menuOpenId === it.id}
+              active={activeChatId === it.id}
+              onClick={() => handleChatClick(it.id)}
+              onMenuToggle={() => setMenuOpenId((prev) => (prev === it.id ? null : it.id))}
+              onMenuClose={() => setMenuOpenId(null)}
+              onPinToggle={() => togglePin(it.id)}
+              onRenameStart={() => setEditingId(it.id)}
+              onRenameCommit={(newTitle) => commitRename(it.id, newTitle)}
+              onDelete={() => deleteChat(it.id)}
+            />
+          ))}
+        </div>
       </nav>
 
-      {/* ── Divider ── */}
-      <div className="mx-4 h-px" style={{ background: '#2244AA' }} />
-
-      {/* ── Settings & Subscription ── */}
-      <div className="py-1.5">
-        <NavItem href="/subscription" label="プラン・クレジット" icon={CreditCard} active={isActive('/subscription')} />
-        <NavItem href="/settings" label="設定" icon={Settings} active={isActive('/settings')} />
-      </div>
-
-      {/* ── Workspace ── */}
-      <div className="mx-2 mb-3">
-        <motion.div
-          className="flex items-center gap-2.5 px-3 py-2.5 rounded-[8px] cursor-pointer"
-          style={{ background: 'rgba(255,255,255,0.03)' }}
-          whileHover={{ background: 'rgba(255,255,255,0.06)' }}
-          transition={{ duration: 0.12 }}
-        >
-          <div
-            className="w-[20px] h-[20px] rounded-[5px] flex items-center justify-center shrink-0"
-            style={{ background: 'linear-gradient(145deg, #0A84FF, #5E5CE6)' }}
-          >
-            <span className="text-[8px] font-bold text-white leading-none">CP</span>
-          </div>
-          <div className="flex-1 min-w-0">
-            <p className="text-[12.5px] font-medium text-[#8B95A5] truncate tracking-[-0.01em]">
-              ワークスペース
-            </p>
-          </div>
-          <ChevronRight size={12} style={{ color: '#3355AA' }} className="shrink-0" />
-        </motion.div>
-      </div>
-    </aside>
+        {/* ── User menu (drop-up: 設定 / 連携 / プラン) ── */}
+        <UserMenu userName="開発 太郎" userInitial="開" />
+      </aside>
+    </>
   )
 }
