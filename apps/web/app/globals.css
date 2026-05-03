@@ -369,14 +369,30 @@ textarea:focus-visible,
   }
 }
 
-/* サイドバーのチャット履歴用スクロールバー（細め・サブトル）*/
-.bgm-chat-scroll::-webkit-scrollbar { width: 6px; }
+/* サイドバーのチャット履歴用スクロールバー（常時可視・ドラッグしやすい幅）*/
+.bgm-chat-scroll {
+  /* スクロールバーぶんのスペースを常時確保（出現/消失でレイアウトがずれないように）*/
+  scrollbar-gutter: stable;
+  /* Firefox */
+  scrollbar-width: thin;
+  scrollbar-color: rgba(143, 140, 144, 0.42) transparent;
+}
+.bgm-chat-scroll::-webkit-scrollbar { width: 10px; }
 .bgm-chat-scroll::-webkit-scrollbar-track { background: transparent; }
 .bgm-chat-scroll::-webkit-scrollbar-thumb {
-  background: rgba(143, 140, 144, 0.18);
-  border-radius: 10px;
+  /* padding-box + 透明 border で track 中央に細いバーが浮かぶ macOS 風 */
+  background-color: rgba(143, 140, 144, 0.38);
+  border: 2px solid transparent;
+  background-clip: padding-box;
+  border-radius: 999px;
+  min-height: 32px;
 }
-.bgm-chat-scroll:hover::-webkit-scrollbar-thumb { background: rgba(143, 140, 144, 0.32); }
-.bgm-chat-scroll::-webkit-scrollbar-thumb:hover { background: rgba(171, 199, 255, 0.45); }
-/* Firefox */
-.bgm-chat-scroll { scrollbar-width: thin; scrollbar-color: rgba(143,140,144,0.22) transparent; }
+.bgm-chat-scroll:hover::-webkit-scrollbar-thumb {
+  background-color: rgba(171, 199, 255, 0.55);
+  background-clip: padding-box;
+}
+.bgm-chat-scroll::-webkit-scrollbar-thumb:hover,
+.bgm-chat-scroll::-webkit-scrollbar-thumb:active {
+  background-color: rgba(171, 199, 255, 0.75);
+  background-clip: padding-box;
+}

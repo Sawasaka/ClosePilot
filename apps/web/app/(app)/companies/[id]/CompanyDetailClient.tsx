@@ -92,6 +92,30 @@ function extractDomain(url: string | null | undefined): string {
   }
 }
 
+// クロール／エンリッチ過程で保存された "UNKNOWN_xxxx" や AI 由来のメタ説明文（"推定に基づく〜"等）は
+// 実体がない値なので画面では `—` に正規化する。
+function clean(value: string | null | undefined): string {
+  if (!value) return '—'
+  const v = value.trim()
+  if (!v) return '—'
+  if (/^UNKNOWN[_\-:]/i.test(v)) return '—'
+  if (v.startsWith('推定に基づく')) return '—'
+  if (v.includes('記載なし') && v.length > 20) return '—'
+  return v
+}
+
+// 住所は prefecture/city/address を結合するが、メタ文（推定に基づく〜・記載なしを含む長文）は除外
+function buildAddress(
+  prefecture: string | null | undefined,
+  city: string | null | undefined,
+  address: string | null | undefined,
+): string {
+  const prf = clean(prefecture)
+  const cty = clean(city)
+  const adr = clean(address)
+  return [prf, cty, adr].filter((s) => s !== '—').join('')
+}
+
 const INTENT_LABEL: Record<string, { tone: 'hot' | 'middle' | 'low' | 'neutral'; text: string }> = {
   HOT: { tone: 'hot', text: '● HOT' },
   MIDDLE: { tone: 'middle', text: '● MIDDLE' },
@@ -127,7 +151,7 @@ export default function CompanyDetailClient({
   }
 
   const topIntent = c.companyIntents?.[0]
-  const addrParts = [c.prefecture, c.city, c.address].filter(Boolean).join('')
+  const addrParts = buildAddress(c.prefecture, c.city, c.address)
   const domain = extractDomain(c.websiteUrl)
 
   return (
@@ -149,7 +173,9 @@ export default function CompanyDetailClient({
         <ObsHero
           eyebrow={c.industry?.name ?? 'Company Master'}
           title={c.name}
-          caption={[c.nameKana, addrParts].filter(Boolean).join(' · ')}
+          caption={[clean(c.nameKana), addrParts]
+            .filter((s) => s && s !== '—')
+            .join(' · ')}
           action={
             topIntent ? (
               <ObsChip tone={INTENT_LABEL[topIntent.intentLevel]?.tone ?? 'neutral'}>
@@ -195,10 +221,10 @@ export default function CompanyDetailClient({
               <ObsDefList
                 columns={2}
                 items={[
-                  { label: '正式名称', value: c.name },
-                  { label: 'カナ', value: c.nameKana ?? '—' },
-                  { label: '法人番号', value: c.corporateNumber ?? '—' },
-                  { label: '法人種別', value: c.corporateType ?? '—' },
+                  { label: '正式名称', value: clean(c.name) },
+                  { label: 'カナ', value: clean(c.nameKana) },
+                  { label: '法人番号', value: clean(c.corporateNumber) },
+                  { label: '法人種別', value: clean(c.corporateType) },
                   {
                     label: '公式サイト',
                     value: c.websiteUrl ? (
@@ -227,9 +253,9 @@ export default function CompanyDetailClient({
                       '—'
                     ),
                   },
-                  { label: '従業員数', value: c.employeeCount ?? '—' },
-                  { label: '売上', value: c.revenue ?? '—' },
-                  { label: '代表者', value: c.representative ?? '—' },
+                  { label: '従業員数', value: clean(c.employeeCount) },
+                  { label: '売上', value: clean(c.revenue) },
+                  { label: '代表者', value: clean(c.representative) },
                   {
                     label: '代表電話',
                     value: c.representativePhone ? (

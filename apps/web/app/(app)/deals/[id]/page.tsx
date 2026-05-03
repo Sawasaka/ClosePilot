@@ -29,13 +29,11 @@ import {
   Layers,
   Users,
   Flame,
-  ArrowRight,
   Activity,
   History,
   StickyNote,
   Cpu,
   Headphones,
-  ChevronDown,
 } from 'lucide-react'
 import { useCallStore } from '@/lib/stores/callStore'
 import { ObsPageShell } from '@/components/obsidian'
@@ -45,9 +43,11 @@ import { GoogleTimeline } from '@/components/google/google-timeline'
 // Types
 // ═══════════════════════════════════════════════════════════════════════════════
 
+// パイプライン側 (app/(app)/pipeline/page.tsx) の StageKey と一致させる
 type DealStage =
-  | 'NEW_LEAD' | 'QUALIFIED' | 'FIRST_MEETING' | 'SOLUTION_FIT'
-  | 'PROPOSAL' | 'NEGOTIATION' | 'VERBAL_COMMIT' | 'CLOSED_WON' | 'CLOSED_LOST'
+  | 'IS' | 'NURTURING' | 'MEETING_PLANNED' | 'MEETING_DONE'
+  | 'PROJECT_PLANNED' | 'MULTI_MEETING' | 'POC'
+  | 'CLOSED_WON' | 'LOST_DEAL' | 'CHURN' | 'LOST'
 
 type DealStatus = 'アクティブ' | '優先対応' | '保留'
 
@@ -228,7 +228,7 @@ const MOCK_DEALS: Record<string, DealDetail> = {
     id: 'd1', name: '株式会社テクノリード - 2026/01/15',
     company: '株式会社テクノリード', companyId: '1',
     contact: '田中 誠', contactId: '1', contactPhone: '090-1234-5678',
-    owner: '田中太郎', stage: 'NEGOTIATION', status: 'アクティブ',
+    owner: '田中太郎', stage: 'POC', status: 'アクティブ',
     amount: 4800000, probability: 80, expectedCloseAt: '2026-03-31', updatedAt: '2026-03-22',
     progressStatus: '提案フェーズ / 最終見積回答待ち',
     nextAction: '決裁者(CTO鈴木氏)同席の最終デモ',
@@ -239,7 +239,7 @@ const MOCK_DEALS: Record<string, DealDetail> = {
     id: 'd2', name: '株式会社イノベーション - 大型案件',
     company: '株式会社イノベーション', companyId: '3',
     contact: '佐々木 拓也', contactId: '3', contactPhone: '090-3456-7890',
-    owner: '田中太郎', stage: 'VERBAL_COMMIT', status: '優先対応',
+    owner: '田中太郎', stage: 'POC', status: '優先対応',
     amount: 6000000, probability: 90, expectedCloseAt: '2026-03-28', updatedAt: '2026-03-21',
     progressStatus: '口頭合意済 / 契約書ドラフト確認中',
     nextAction: '契約書の最終レビューと押印手配',
@@ -250,7 +250,7 @@ const MOCK_DEALS: Record<string, DealDetail> = {
     id: 'd3', name: '合同会社フューチャー - 2026/02/01',
     company: '合同会社フューチャー', companyId: '2',
     contact: '山本 佳子', contactId: '2', contactPhone: '090-2345-6789',
-    owner: '鈴木花子', stage: 'QUALIFIED', status: 'アクティブ',
+    owner: '鈴木花子', stage: 'MEETING_PLANNED', status: 'アクティブ',
     amount: 2400000, probability: 40, expectedCloseAt: '2026-04-15', updatedAt: '2026-03-19',
     progressStatus: 'ヒアリング継続 / 予算確認中',
     nextAction: '2回目商談で要件整理',
@@ -261,7 +261,7 @@ const MOCK_DEALS: Record<string, DealDetail> = {
     id: 'd4', name: '株式会社グロース - HR導入',
     company: '株式会社グロース', companyId: '4',
     contact: '中村 理恵', contactId: '4', contactPhone: '090-4567-8901',
-    owner: '佐藤次郎', stage: 'QUALIFIED', status: 'アクティブ',
+    owner: '佐藤次郎', stage: 'MEETING_PLANNED', status: 'アクティブ',
     amount: 900000, probability: 30, expectedCloseAt: '2026-04-30', updatedAt: '2026-03-10',
     progressStatus: '初期ヒアリング完了 / 費用感共有待ち',
     nextAction: '比較資料を送付後フォローコール',
@@ -663,12 +663,12 @@ const MOCK_AGGREGATIONS: Record<string, MeetingAggregation> = {
 }
 
 const MOCK_STAGE_HISTORY: StageHistoryItem[] = [
-  { stage: 'NEW_LEAD',      date: '2026-01-15', daysAgo: 67, isCurrent: false },
-  { stage: 'QUALIFIED',     date: '2026-01-22', daysAgo: 60, isCurrent: false },
-  { stage: 'FIRST_MEETING', date: '2026-02-03', daysAgo: 48, isCurrent: false },
-  { stage: 'SOLUTION_FIT',  date: '2026-02-20', daysAgo: 31, isCurrent: false },
-  { stage: 'PROPOSAL',      date: '2026-03-05', daysAgo: 18, isCurrent: false },
-  { stage: 'NEGOTIATION',   date: '2026-03-15', daysAgo:  8, isCurrent: true  },
+  { stage: 'IS',               date: '2026-01-15', daysAgo: 67, isCurrent: false },
+  { stage: 'NURTURING',        date: '2026-01-22', daysAgo: 60, isCurrent: false },
+  { stage: 'MEETING_PLANNED',  date: '2026-02-03', daysAgo: 48, isCurrent: false },
+  { stage: 'MEETING_DONE',     date: '2026-02-20', daysAgo: 31, isCurrent: false },
+  { stage: 'PROJECT_PLANNED',  date: '2026-03-05', daysAgo: 18, isCurrent: false },
+  { stage: 'POC',              date: '2026-03-15', daysAgo:  8, isCurrent: true  },
 ]
 
 // ─── タスク初期モックデータ ───────────────────────────────────────────────
@@ -702,7 +702,10 @@ const DEAL_TASK_TYPE_STYLES: Record<DealTaskType, DealTaskTypeStyle> = {
   other:    { Icon: CheckCircle2, label: 'その他',   bg: 'rgba(143,140,144,0.14)', iconColor: 'var(--color-obs-text-muted)' },
 }
 
-const ALL_DEAL_TASK_TYPES: DealTaskType[] = ['call', 'email', 'meeting', 'proposal', 'followup', 'other']
+// タスク作成フォームで選択できる種別
+// (既存データに meeting/proposal/followup が含まれている場合は表示時は STYLES から引いて表示するが、
+//  新規作成時は「コール / メール / その他」の3つに集約する)
+const ALL_DEAL_TASK_TYPES: DealTaskType[] = ['call', 'email', 'other']
 
 const MOCK_ACTIVITIES: ActivityItem[] = [
   { id: '1', type: 'call',  timestamp: '2026-03-20T14:32', title: 'コール — アポ獲得', result: 'アポ獲得', durationSec: 154, description: '3/28 14:00 デモ商談を設定' },
@@ -753,21 +756,24 @@ const CHIP_TONE_STYLE: Record<ChipTone, React.CSSProperties> = {
 
 // ステージごとの chip（Obsidian 準拠）— 色は tone で吸収
 const STAGE_CONFIG: Record<DealStage, { label: string; tone: 'primary' | 'hot' | 'middle' | 'low' | 'neutral' }> = {
-  NEW_LEAD:      { label: '新規リード', tone: 'neutral' },
-  QUALIFIED:     { label: '有資格',     tone: 'low'     },
-  FIRST_MEETING: { label: '初回商談',   tone: 'primary' },
-  SOLUTION_FIT:  { label: '課題適合',   tone: 'primary' },
-  PROPOSAL:      { label: '提案',       tone: 'middle'  },
-  NEGOTIATION:   { label: '交渉',       tone: 'hot'     },
-  VERBAL_COMMIT: { label: '口頭合意',   tone: 'primary' },
-  CLOSED_WON:    { label: '受注',       tone: 'primary' },
-  CLOSED_LOST:   { label: '失注',       tone: 'neutral' },
+  IS:              { label: 'IS',             tone: 'low'     },
+  NURTURING:       { label: 'ナーチャリング', tone: 'primary' },
+  MEETING_PLANNED: { label: '商談予定',       tone: 'low'     },
+  MEETING_DONE:    { label: '商談済み',       tone: 'primary' },
+  PROJECT_PLANNED: { label: 'PJ化予定あり',   tone: 'primary' },
+  MULTI_MEETING:   { label: '複数商談済み',   tone: 'primary' },
+  POC:             { label: 'POC',            tone: 'middle'  },
+  CLOSED_WON:      { label: '受注',           tone: 'primary' },
+  LOST_DEAL:       { label: '失注',           tone: 'hot'     },
+  CHURN:           { label: 'チャーン',       tone: 'hot'     },
+  LOST:            { label: 'ロスト',         tone: 'neutral' },
 }
 
-// 取引パイプラインの全ステージ順序（前進/後退の判定にも使用）
+// 取引パイプラインの全ステージ順序（前進/後退の判定にも使用）— pipeline と同じ並び
 const ALL_STAGES: DealStage[] = [
-  'NEW_LEAD', 'QUALIFIED', 'FIRST_MEETING', 'SOLUTION_FIT',
-  'PROPOSAL', 'NEGOTIATION', 'VERBAL_COMMIT', 'CLOSED_WON', 'CLOSED_LOST',
+  'IS', 'NURTURING', 'MEETING_PLANNED', 'MEETING_DONE',
+  'PROJECT_PLANNED', 'MULTI_MEETING', 'POC',
+  'CLOSED_WON', 'LOST_DEAL', 'CHURN', 'LOST',
 ]
 
 function todayISO(): string {
@@ -1171,14 +1177,10 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
   // ステージ履歴の state（編集可能）
   const [stageHistory, setStageHistory] = useState<StageHistoryItem[]>(MOCK_STAGE_HISTORY)
-  const [isStagePickerOpen, setIsStagePickerOpen] = useState(false)
   const currentStage: DealStage = stageHistory.find(h => h.isCurrent)?.stage ?? rawDeal.stage
 
   function handleChangeStage(next: DealStage) {
-    if (next === currentStage) {
-      setIsStagePickerOpen(false)
-      return
-    }
+    if (next === currentStage) return
     setStageHistory(prev => {
       const cleared = prev.map(h => ({ ...h, isCurrent: false }))
       return [
@@ -1186,7 +1188,6 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
         { stage: next, date: todayISO(), daysAgo: 0, isCurrent: true },
       ]
     })
-    setIsStagePickerOpen(false)
   }
 
   function handleTaskSave(t: DealTask) {
@@ -1404,7 +1405,7 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
 
               {/* 初回商談までの IS 活動 の境界線（カレンダー連携で取得） */}
               {(() => {
-                const firstMeeting = stageHistory.find(h => h.stage === 'FIRST_MEETING')
+                const firstMeeting = stageHistory.find(h => h.stage === 'MEETING_DONE')
                 if (!firstMeeting) {
                   return (
                     <div
@@ -2324,149 +2325,76 @@ export default function DealDetailPage({ params }: { params: Promise<{ id: strin
                 icon={Target}
                 title="ステージ履歴"
                 iconTint="primary"
-                right={
-                  <button
-                    type="button"
-                    onClick={() => setIsStagePickerOpen(v => !v)}
-                    className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-semibold transition-colors"
-                    style={{
-                      background: isStagePickerOpen
-                        ? 'rgba(171,199,255,0.18)'
-                        : 'rgba(171,199,255,0.10)',
-                      color: 'var(--color-obs-primary)',
-                    }}
-                  >
-                    {isStagePickerOpen ? (
-                      <>
-                        <X size={10} />
-                        閉じる
-                      </>
-                    ) : (
-                      <>
-                        <Pencil size={10} />
-                        編集
-                      </>
-                    )}
-                  </button>
-                }
               />
 
               <motion.div
                 className="p-3 space-y-0.5"
                 initial="hidden"
                 animate="visible"
-                variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
+                variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
               >
-                {stageHistory.map((item, i) => {
-                  const cfg = STAGE_CONFIG[item.stage]
-                  // 直近の同ステージは「最新」のみ表示濃く、それ以前は控えめに
+                {ALL_STAGES.map((stage) => {
+                  const cfg = STAGE_CONFIG[stage]
+                  const item = stageHistory.find((h) => h.stage === stage)
+                  const isCurrent = stage === currentStage
+                  const isPassed = !!item && !item.isCurrent
                   return (
-                    <motion.div
-                      key={`${item.stage}-${item.date}-${i}`}
+                    <motion.button
+                      key={stage}
+                      type="button"
+                      onClick={() => { if (!isCurrent) handleChangeStage(stage) }}
                       variants={{
                         hidden: { opacity: 0, x: -8 },
                         visible: { opacity: 1, x: 0, transition: { duration: 0.2, ease: [0.16, 1, 0.3, 1] } },
                       }}
-                      className="flex items-center gap-2.5 px-2 py-2 rounded-[7px]"
-                      style={item.isCurrent ? {
-                        background: 'rgba(171,199,255,0.06)',
-                        boxShadow: 'inset 2px 0 0 var(--color-obs-primary)',
-                      } : {}}
+                      className="w-full flex items-center gap-2.5 px-2 py-2 rounded-[7px] text-left transition-colors"
+                      style={{
+                        background: isCurrent ? 'rgba(171,199,255,0.06)' : 'transparent',
+                        boxShadow: isCurrent ? 'inset 2px 0 0 var(--color-obs-primary)' : undefined,
+                        cursor: isCurrent ? 'default' : 'pointer',
+                      }}
+                      onMouseEnter={(e) => {
+                        if (!isCurrent) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(171,199,255,0.04)'
+                      }}
+                      onMouseLeave={(e) => {
+                        if (!isCurrent) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
+                      }}
+                      title={isCurrent ? '現在のステージ' : `${cfg.label} に変更`}
                     >
-                      {item.isCurrent
-                        ? <CheckCircle2 size={13} style={{ color: 'var(--color-obs-primary)' }} className="shrink-0" />
-                        : <div className="w-[13px] h-[13px] rounded-full shrink-0" style={{ boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.20)' }} />
-                      }
-                      <span className="text-[12px] flex-1" style={{
-                        fontWeight: item.isCurrent ? 600 : 400,
-                        color: item.isCurrent ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
-                      }}>
+                      {isCurrent ? (
+                        <CheckCircle2 size={13} style={{ color: 'var(--color-obs-primary)' }} className="shrink-0" />
+                      ) : isPassed ? (
+                        <CheckCircle2 size={13} style={{ color: 'var(--color-obs-text-muted)' }} className="shrink-0" />
+                      ) : (
+                        <div className="w-[13px] h-[13px] rounded-full shrink-0" style={{ boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.20)' }} />
+                      )}
+                      <span
+                        className="text-[12px] flex-1"
+                        style={{
+                          fontWeight: isCurrent ? 600 : isPassed ? 500 : 400,
+                          color: isCurrent
+                            ? 'var(--color-obs-primary)'
+                            : isPassed
+                              ? 'var(--color-obs-text)'
+                              : 'var(--color-obs-text-subtle)',
+                        }}
+                      >
                         {cfg.label}
                       </span>
-                      <div className="text-right">
-                        <p className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                          {item.daysAgo === 0 ? '今日' : `${item.daysAgo}日前`}
-                        </p>
-                      </div>
-                    </motion.div>
+                      <span
+                        className="text-[11px]"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        {isCurrent
+                          ? '現在'
+                          : isPassed
+                            ? item.daysAgo === 0 ? '今日' : `${item.daysAgo}日前`
+                            : '未到達'}
+                      </span>
+                    </motion.button>
                   )
                 })}
               </motion.div>
-
-              {/* Stage Picker（編集モード時のみ表示） */}
-              <AnimatePresence>
-                {isStagePickerOpen && (
-                  <motion.div
-                    key="stage-picker"
-                    initial={{ height: 0, opacity: 0 }}
-                    animate={{ height: 'auto', opacity: 1 }}
-                    exit={{ height: 0, opacity: 0 }}
-                    transition={{ duration: 0.2, ease: [0.16, 1, 0.3, 1] }}
-                    className="overflow-hidden"
-                    style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.12)' }}
-                  >
-                    <div className="px-3 py-3 flex flex-col gap-2">
-                      <div className="flex items-center justify-between gap-2 px-1">
-                        <span className="text-[10.5px] font-medium tracking-[0.06em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                          ステージを変更
-                        </span>
-                        <span className="text-[10px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                          全 {ALL_STAGES.length} 段階
-                        </span>
-                      </div>
-                      <div className="grid grid-cols-1 gap-1">
-                        {ALL_STAGES.map((s) => {
-                          const cfg = STAGE_CONFIG[s]
-                          const active = s === currentStage
-                          const tone = CHIP_TONE_STYLE[cfg.tone]
-                          return (
-                            <button
-                              key={s}
-                              type="button"
-                              disabled={active}
-                              onClick={() => handleChangeStage(s)}
-                              className="flex items-center gap-2 px-2.5 py-2 rounded-[7px] transition-colors text-left"
-                              style={{
-                                background: active ? 'rgba(171,199,255,0.06)' : 'transparent',
-                                boxShadow: active ? 'inset 2px 0 0 var(--color-obs-primary)' : undefined,
-                                cursor: active ? 'default' : 'pointer',
-                                opacity: active ? 0.85 : 1,
-                              }}
-                              onMouseEnter={(e) => {
-                                if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'rgba(171,199,255,0.04)'
-                              }}
-                              onMouseLeave={(e) => {
-                                if (!active) (e.currentTarget as HTMLButtonElement).style.background = 'transparent'
-                              }}
-                            >
-                              <span
-                                className="inline-flex items-center px-2 py-0.5 rounded-full text-[11px] font-semibold shrink-0"
-                                style={tone}
-                              >
-                                {cfg.label}
-                              </span>
-                              <span
-                                className="text-[11px] flex-1"
-                                style={{ color: active ? 'var(--color-obs-primary)' : 'var(--color-obs-text-subtle)' }}
-                              >
-                                {active ? '現在のステージ' : `${cfg.label} に変更`}
-                              </span>
-                              {active ? (
-                                <CheckCircle2 size={12} style={{ color: 'var(--color-obs-primary)' }} />
-                              ) : (
-                                <ChevronDown size={11} style={{ color: 'var(--color-obs-text-subtle)', transform: 'rotate(-90deg)' }} />
-                              )}
-                            </button>
-                          )
-                        })}
-                      </div>
-                      <p className="text-[10px] px-1 mt-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
-                        変更すると履歴に新しいエントリが追加されます。
-                      </p>
-                    </div>
-                  </motion.div>
-                )}
-              </AnimatePresence>
             </motion.div>
           </aside>
         </div>

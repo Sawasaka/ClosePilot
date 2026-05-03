@@ -1,52 +1,26 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import {
   ArrowUp,
   Paperclip,
   Mic,
-  Hourglass,
-  Check,
-  ChevronDown,
 } from 'lucide-react'
 import { ObsPageShell } from '@/components/obsidian'
 import { AssigneeFilter } from '@/components/ai/AssigneeFilter'
-
-type ThinkingDepth = 'standard' | 'extended'
-
-const THINKING_DEPTH_OPTIONS: { value: ThinkingDepth; label: string; description: string }[] = [
-  { value: 'standard', label: '標準', description: '素早い回答' },
-  { value: 'extended', label: '拡張', description: 'より深く考える' },
-]
+import { ModelSelector } from '@/components/ai/ModelSelector'
+import {
+  useFileAttachments,
+  HiddenFileInput,
+  AttachmentChip,
+} from '@/components/ai/file-attach'
 
 export default function HomePage() {
   const router = useRouter()
   const [prompt, setPrompt] = useState('')
-  const [thinkingDepth, setThinkingDepth] = useState<ThinkingDepth>('extended')
-  const [isDepthOpen, setIsDepthOpen] = useState(false)
   const taRef = useRef<HTMLTextAreaElement | null>(null)
-  const depthRef = useRef<HTMLDivElement | null>(null)
-
-  useEffect(() => {
-    if (!isDepthOpen) return
-    const onClickOutside = (e: MouseEvent) => {
-      if (depthRef.current && !depthRef.current.contains(e.target as Node)) {
-        setIsDepthOpen(false)
-      }
-    }
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setIsDepthOpen(false)
-    }
-    document.addEventListener('mousedown', onClickOutside)
-    document.addEventListener('keydown', onKeyDown)
-    return () => {
-      document.removeEventListener('mousedown', onClickOutside)
-      document.removeEventListener('keydown', onKeyDown)
-    }
-  }, [isDepthOpen])
-
-  const currentDepth = THINKING_DEPTH_OPTIONS.find((o) => o.value === thinkingDepth)!
+  const attach = useFileAttachments()
 
   const handleSubmit = () => {
     const q = prompt.trim()
@@ -109,10 +83,26 @@ export default function HomePage() {
               }}
             />
 
+            <HiddenFileInput inputRef={attach.inputRef} onChange={attach.handleChange} />
+
+            {/* 添付ファイルプレビュー (1個以上ある時のみ表示) */}
+            {attach.files.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 px-3 pb-1">
+                {attach.files.map((f, i) => (
+                  <AttachmentChip
+                    key={`${f.name}-${i}`}
+                    file={f}
+                    onRemove={() => attach.remove(i)}
+                  />
+                ))}
+              </div>
+            )}
+
             <div className="flex items-center justify-between px-3 pb-2 pt-1">
               <div className="flex items-center gap-1">
                 <button
                   type="button"
+                  onClick={attach.openPicker}
                   className="w-9 h-9 rounded-full flex items-center justify-center transition-colors duration-150"
                   style={{ color: 'var(--color-obs-text-muted)' }}
                   onMouseOver={(e) => {
@@ -123,107 +113,13 @@ export default function HomePage() {
                     (e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
                     ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
                   }}
-                  title="添付"
+                  title="ファイルを添付"
+                  aria-label="ファイルを添付"
                 >
                   <Paperclip size={16} />
                 </button>
-                {/* ── 思考の深さ Dropdown ── */}
-                <div ref={depthRef} className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsDepthOpen((v) => !v)}
-                    aria-haspopup="listbox"
-                    aria-expanded={isDepthOpen}
-                    className="inline-flex items-center gap-1.5 h-8 pl-3 pr-2 rounded-full text-[12px] font-medium transition-colors duration-150"
-                    style={{
-                      backgroundColor: 'var(--color-obs-surface-highest)',
-                      color: 'var(--color-obs-text)',
-                    }}
-                    title="思考の深さ"
-                  >
-                    <Hourglass size={12} style={{ color: 'var(--color-obs-primary)' }} />
-                    {currentDepth.label}
-                    <ChevronDown
-                      size={12}
-                      style={{
-                        color: 'var(--color-obs-text-muted)',
-                        transform: isDepthOpen ? 'rotate(180deg)' : 'rotate(0deg)',
-                        transition: 'transform 150ms var(--ease-liquid)',
-                      }}
-                    />
-                  </button>
-
-                  {isDepthOpen && (
-                    <div
-                      role="listbox"
-                      aria-label="思考の深さ"
-                      className="absolute bottom-full left-0 mb-2 min-w-[200px] py-2 rounded-[var(--radius-obs-lg)] z-50"
-                      style={{
-                        backgroundColor: 'var(--color-obs-surface-high)',
-                        border: '1px solid var(--color-obs-border)',
-                        boxShadow: '0 10px 30px rgba(0,0,0,0.4)',
-                      }}
-                    >
-                      <div
-                        className="px-3 pb-1.5 text-[10px] font-medium tracking-[0.1em] uppercase"
-                        style={{ color: 'var(--color-obs-text-muted)' }}
-                      >
-                        思考の深さ
-                      </div>
-                      {THINKING_DEPTH_OPTIONS.map((opt) => {
-                        const selected = opt.value === thinkingDepth
-                        return (
-                          <button
-                            key={opt.value}
-                            type="button"
-                            role="option"
-                            aria-selected={selected}
-                            onClick={() => {
-                              setThinkingDepth(opt.value)
-                              setIsDepthOpen(false)
-                            }}
-                            className="w-full flex items-center gap-2 px-3 py-2 text-left transition-colors duration-150"
-                            style={{ color: 'var(--color-obs-text)' }}
-                            onMouseOver={(e) => {
-                              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                                'var(--color-obs-surface-highest)'
-                            }}
-                            onMouseOut={(e) => {
-                              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                                'transparent'
-                            }}
-                          >
-                            <Hourglass
-                              size={13}
-                              style={{
-                                color: selected
-                                  ? 'var(--color-obs-primary)'
-                                  : 'var(--color-obs-text-muted)',
-                              }}
-                            />
-                            <div className="flex-1 min-w-0">
-                              <div className="text-[13px] font-medium leading-tight">
-                                {opt.label}
-                              </div>
-                              <div
-                                className="text-[11.5px] leading-tight mt-0.5"
-                                style={{ color: 'var(--color-obs-text-muted)' }}
-                              >
-                                {opt.description}
-                              </div>
-                            </div>
-                            {selected && (
-                              <Check
-                                size={14}
-                                style={{ color: 'var(--color-obs-primary)' }}
-                              />
-                            )}
-                          </button>
-                        )
-                      })}
-                    </div>
-                  )}
-                </div>
+                {/* ── モデル + 思考の深さ ── */}
+                <ModelSelector />
 
                 {/* ── 担当者で絞り込む ── */}
                 <AssigneeFilter />

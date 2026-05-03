@@ -7,11 +7,12 @@ import {
   CheckCircle2,
   UserRound,
   Loader2,
-  MessageSquarePlus,
+  PenSquare,
   MoreHorizontal,
   Pin,
   Pencil,
   Trash2,
+  Search,
 } from 'lucide-react'
 import { answerForQuestion, type KnowledgeAnswer } from '@/lib/support/mock-knowledge'
 
@@ -42,16 +43,16 @@ const MOCK_HISTORY: Conversation[] = [
   { id: 'sc6', title: 'タスクの一括移動',          status: 'resolved' },
 ]
 
+// チャットステータス表記 (open=未対応 / in_progress=連絡待ち / resolved=解決済み)
 const STATUS_LABEL: Record<Status, string> = {
   open: '未対応',
-  in_progress: '相談中',
+  in_progress: '連絡待ち',
   resolved: '解決済み',
 }
-
-const STATUS_COLOR: Record<Status, { bg: string; fg: string }> = {
-  open:        { bg: 'rgba(143,140,144,0.18)', fg: 'var(--color-obs-text-muted)' },
-  in_progress: { bg: 'rgba(255,184,107,0.16)', fg: 'var(--color-obs-middle)' },
-  resolved:    { bg: 'rgba(126,198,255,0.16)', fg: 'var(--color-obs-low)' },
+const STATUS_DOT: Record<Status, string> = {
+  open: 'var(--color-obs-text-subtle)',
+  in_progress: 'var(--color-obs-middle)',
+  resolved: 'var(--color-obs-low)',
 }
 
 export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -67,21 +68,30 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
   const [renamedTitles, setRenamedTitles] = useState<Record<string, string>>({})
   const [editingId, setEditingId] = useState<string | null>(null)
   const [menuOpenId, setMenuOpenId] = useState<string | null>(null)
+  const [historyQuery, setHistoryQuery] = useState('')
+  // チャットごとのステータス上書き(初期値は MOCK_HISTORY、解決/エスカレーション操作で更新)
+  const [chatStatuses, setChatStatuses] = useState<Record<string, Status>>({})
 
   const scrollRef = useRef<HTMLDivElement | null>(null)
   const inputRef = useRef<HTMLTextAreaElement | null>(null)
 
-  // 表示用に整形した履歴
+  // 表示用に整形した履歴(検索クエリでフィルタ + ステータスoverride反映)
   const visibleConversations = useMemo(() => {
+    const q = historyQuery.trim().toLowerCase()
     return MOCK_HISTORY
       .filter((c) => !deletedIds.has(c.id))
-      .map((c) => ({ ...c, title: renamedTitles[c.id] ?? c.title }))
+      .map((c) => ({
+        ...c,
+        title: renamedTitles[c.id] ?? c.title,
+        status: chatStatuses[c.id] ?? c.status,
+      }))
+      .filter((c) => (q ? c.title.toLowerCase().includes(q) : true))
       .sort((a, b) => {
         const ap = pinnedIds.has(a.id) ? 1 : 0
         const bp = pinnedIds.has(b.id) ? 1 : 0
         return bp - ap
       })
-  }, [pinnedIds, deletedIds, renamedTitles])
+  }, [pinnedIds, deletedIds, renamedTitles, historyQuery, chatStatuses])
 
   // 履歴メニューを外側クリックで閉じる
   useEffect(() => {
@@ -158,6 +168,9 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
       },
     ])
     setStatus('resolved')
+    if (activeConvId) {
+      setChatStatuses((prev) => ({ ...prev, [activeConvId]: 'resolved' }))
+    }
   }
 
   const handleEscalate = () => {
@@ -171,6 +184,9 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
       },
     ])
     setStatus('in_progress')
+    if (activeConvId) {
+      setChatStatuses((prev) => ({ ...prev, [activeConvId]: 'in_progress' }))
+    }
   }
 
   const handleNewConversation = () => {
@@ -225,7 +241,7 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
             send(draft)
           }
         }}
-        placeholder="メッセージを入力"
+        placeholder="Front Office のサービスについて相談する"
         rows={1}
         className="w-full bg-transparent resize-none outline-none focus:outline-none focus-visible:outline-none text-[14px] leading-relaxed max-h-[160px]"
         style={{ color: 'var(--color-obs-text)' }}
@@ -299,41 +315,106 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
                 ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
               }}
             >
-              <MessageSquarePlus
+              <PenSquare
                 size={14}
                 strokeWidth={1.9}
                 style={{ color: 'var(--color-obs-text-muted)' }}
               />
-              新しい問い合わせ
+              新しいチャット
             </button>
+          </div>
+
+          {/* 履歴検索 */}
+          <div className="px-3 pb-2 shrink-0">
+            <div
+              className="flex items-center gap-2 h-9 px-3 rounded-[var(--radius-obs-md)] transition-colors duration-150"
+              style={{
+                backgroundColor: 'var(--color-obs-surface-low)',
+                border: '1px solid transparent',
+              }}
+              onMouseOver={(e) => {
+                ;(e.currentTarget as HTMLDivElement).style.borderColor =
+                  'var(--color-obs-border)'
+              }}
+              onMouseOut={(e) => {
+                ;(e.currentTarget as HTMLDivElement).style.borderColor = 'transparent'
+              }}
+            >
+              <Search
+                size={13}
+                strokeWidth={1.9}
+                style={{ color: 'var(--color-obs-text-muted)' }}
+              />
+              <input
+                type="text"
+                value={historyQuery}
+                onChange={(e) => setHistoryQuery(e.target.value)}
+                placeholder="チャットを検索"
+                className="flex-1 bg-transparent outline-none text-[12.5px] leading-none"
+                style={{ color: 'var(--color-obs-text)' }}
+              />
+              {historyQuery && (
+                <button
+                  type="button"
+                  onClick={() => setHistoryQuery('')}
+                  aria-label="検索をクリア"
+                  className="w-5 h-5 rounded-full flex items-center justify-center transition-colors duration-100"
+                  style={{ color: 'var(--color-obs-text-muted)' }}
+                  onMouseOver={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      'var(--color-obs-surface-highest)'
+                    ;(e.currentTarget as HTMLButtonElement).style.color =
+                      'var(--color-obs-text)'
+                  }}
+                  onMouseOut={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                    ;(e.currentTarget as HTMLButtonElement).style.color =
+                      'var(--color-obs-text-muted)'
+                  }}
+                >
+                  <X size={11} />
+                </button>
+              )}
+            </div>
           </div>
 
           {/* 履歴リスト */}
           <div className="flex-1 overflow-y-auto px-2 pb-3">
             <div
-              className="px-3 pt-3 pb-1.5 text-[10.5px] font-medium tracking-[0.08em]"
+              className="px-3 pt-2 pb-1.5 text-[10.5px] font-medium tracking-[0.08em]"
               style={{ color: 'var(--color-obs-text-subtle)' }}
             >
-              履歴
+              最近
             </div>
             <div className="flex flex-col gap-[1px]">
-              {visibleConversations.map((c) => (
-                <ConversationItem
-                  key={c.id}
-                  conv={c}
-                  pinned={pinnedIds.has(c.id)}
-                  editing={editingId === c.id}
-                  menuOpen={menuOpenId === c.id}
-                  active={activeConvId === c.id}
-                  onClick={() => setActiveConvId(c.id)}
-                  onMenuToggle={() => setMenuOpenId((prev) => (prev === c.id ? null : c.id))}
-                  onMenuClose={() => setMenuOpenId(null)}
-                  onPinToggle={() => togglePin(c.id)}
-                  onRenameStart={() => setEditingId(c.id)}
-                  onRenameCommit={(newTitle) => commitRename(c.id, newTitle)}
-                  onDelete={() => deleteConv(c.id)}
-                />
-              ))}
+              {visibleConversations.length === 0 ? (
+                <div
+                  className="px-3 py-6 text-center text-[11.5px]"
+                  style={{ color: 'var(--color-obs-text-subtle)' }}
+                >
+                  {historyQuery
+                    ? `「${historyQuery}」に一致するチャットがありません`
+                    : 'まだチャットがありません'}
+                </div>
+              ) : (
+                visibleConversations.map((c) => (
+                  <ConversationItem
+                    key={c.id}
+                    conv={c}
+                    pinned={pinnedIds.has(c.id)}
+                    editing={editingId === c.id}
+                    menuOpen={menuOpenId === c.id}
+                    active={activeConvId === c.id}
+                    onClick={() => setActiveConvId(c.id)}
+                    onMenuToggle={() => setMenuOpenId((prev) => (prev === c.id ? null : c.id))}
+                    onMenuClose={() => setMenuOpenId(null)}
+                    onPinToggle={() => togglePin(c.id)}
+                    onRenameStart={() => setEditingId(c.id)}
+                    onRenameCommit={(newTitle) => commitRename(c.id, newTitle)}
+                    onDelete={() => deleteConv(c.id)}
+                  />
+                ))
+              )}
             </div>
           </div>
         </aside>
@@ -392,24 +473,24 @@ export function SupportPanel({ open, onClose }: { open: boolean; onClose: () => 
                 className="ml-auto text-[11.5px] underline-offset-2 hover:underline"
                 style={{ color: 'inherit' }}
               >
-                新しく問い合わせる
+                新しいチャットを始める
               </button>
             </div>
           )}
 
           {isEmpty ? (
-            // ── 空状態: 見出し + composer を縦中央配置 ──
+            // ── 空状態: 見出し + composer を縦中央配置（幅は会話表示エリアと同じ720pxで統一） ──
             <div className="flex-1 flex flex-col items-center justify-center px-6 gap-7">
               <h2
-                className="font-[family-name:var(--font-display)] text-center font-semibold tracking-[-0.02em]"
+                className="font-[family-name:var(--font-display)] text-center font-semibold tracking-[-0.02em] max-w-[720px]"
                 style={{
                   fontSize: 'clamp(22px, 2.3vw, 28px)',
                   color: 'var(--color-obs-text)',
                 }}
               >
-                何についてお困りですか？
+                Front Office に相談する
               </h2>
-              <div className="w-full max-w-[640px]">{Composer}</div>
+              <div className="w-full max-w-[720px] mx-auto">{Composer}</div>
             </div>
           ) : (
             <>
@@ -544,7 +625,6 @@ function ConversationItem({
   }, [editing, conv.title])
 
   const showMore = hover || menuOpen
-  const statusStyle = STATUS_COLOR[conv.status]
 
   return (
     <div
@@ -564,7 +644,7 @@ function ConversationItem({
             onClick()
           }
         }}
-        className="flex items-center gap-2 px-3 py-2 rounded-[var(--radius-obs-md)] cursor-pointer transition-colors duration-150"
+        className="flex items-center gap-2 px-3 py-[7px] rounded-[var(--radius-obs-md)] cursor-pointer transition-colors duration-150"
         style={{
           backgroundColor: active
             ? 'var(--color-obs-surface-low)'
@@ -614,7 +694,7 @@ function ConversationItem({
                 />
               )}
               <span
-                className="text-[12.5px] truncate"
+                className="text-[12.5px] truncate flex-1 min-w-0"
                 style={{
                   color: 'var(--color-obs-text)',
                   fontWeight: active ? 600 : 450,
@@ -625,32 +705,35 @@ function ConversationItem({
             </div>
           )}
 
-          {/* ステータスバッジ */}
-          <div className="mt-1">
-            <span
-              className="inline-flex items-center h-[15px] px-1.5 rounded-full text-[9.5px] font-medium tracking-[0.02em]"
-              style={{
-                backgroundColor: statusStyle.bg,
-                color: statusStyle.fg,
-              }}
-            >
-              {STATUS_LABEL[conv.status]}
-            </span>
-          </div>
+          {/* タイトルの下にステータスラベル */}
+          {!editing && (
+            <div className="mt-0.5 pl-[1px]">
+              <span
+                className="text-[10px] tracking-[0.02em]"
+                style={{ color: STATUS_DOT[conv.status] }}
+              >
+                {STATUS_LABEL[conv.status]}
+              </span>
+            </div>
+          )}
         </div>
 
-        {/* 三点メニュートリガー */}
-        {showMore && !editing && (
+        {/* 三点メニュートリガー(ホバー時にフェードイン) */}
+        {!editing && (
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation()
               onMenuToggle()
             }}
-            className="shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors duration-100"
+            tabIndex={showMore ? 0 : -1}
+            className="shrink-0 w-6 h-6 rounded flex items-center justify-center transition-[opacity,background-color] duration-150"
             style={{
-              color: 'var(--color-obs-text-muted)',
+              color: 'var(--color-obs-text)',
               backgroundColor: menuOpen ? 'var(--color-obs-surface-high)' : 'transparent',
+              opacity: showMore ? 1 : 0,
+              pointerEvents: showMore ? 'auto' : 'none',
+              transitionTimingFunction: 'var(--ease-liquid)',
             }}
             onMouseOver={(e) => {
               ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
@@ -663,7 +746,7 @@ function ConversationItem({
             }}
             aria-label="メニュー"
           >
-            <MoreHorizontal size={13} strokeWidth={2} />
+            <MoreHorizontal size={14} strokeWidth={2.2} />
           </button>
         )}
       </div>

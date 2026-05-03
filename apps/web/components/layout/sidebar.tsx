@@ -239,7 +239,7 @@ function ChatItem({
             onClick()
           }
         }}
-        className="flex items-center gap-2 px-3 py-[9px] rounded-[var(--radius-obs-md)] transition-colors duration-150 text-left cursor-pointer"
+        className="flex items-center gap-2 px-3 py-[5px] rounded-[var(--radius-obs-md)] transition-colors duration-150 text-left cursor-pointer"
         style={{
           backgroundColor: active
             ? 'var(--color-obs-surface-high)'
@@ -299,17 +299,22 @@ function ChatItem({
           </span>
         )}
 
-        {showMore && !editing && (
+        {!editing && (
           <button
             type="button"
             onClick={(e) => {
               e.stopPropagation()
               onMenuToggle()
             }}
-            className="shrink-0 w-5 h-5 rounded flex items-center justify-center transition-colors duration-100"
+            aria-label="メニュー"
+            tabIndex={showMore ? 0 : -1}
+            className="shrink-0 w-6 h-6 rounded flex items-center justify-center transition-[opacity,background-color] duration-150"
             style={{
-              color: 'var(--color-obs-text-muted)',
+              color: 'var(--color-obs-text)',
               backgroundColor: menuOpen ? 'var(--color-obs-surface-highest)' : 'transparent',
+              opacity: showMore ? 1 : 0,
+              pointerEvents: showMore ? 'auto' : 'none',
+              transitionTimingFunction: 'var(--ease-liquid)',
             }}
             onMouseOver={(e) => {
               ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
@@ -322,7 +327,7 @@ function ChatItem({
             }}
             title="メニュー"
           >
-            <MoreHorizontal size={14} strokeWidth={2} />
+            <MoreHorizontal size={15} strokeWidth={2.2} />
           </button>
         )}
       </div>
@@ -565,28 +570,32 @@ export function Sidebar() {
 
   return (
     <>
-      {/* ── 折りたたみ時の展開ボタン（左上の固定位置に出現） ── */}
-      {collapsed && (
-        <button
-          type="button"
-          onClick={() => setCollapsed(false)}
-          aria-label="サイドバーを開く"
-          className="fixed top-3 left-3 z-40 w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center transition-colors duration-150"
-          style={{
-            color: 'var(--color-obs-text-muted)',
-            backgroundColor: 'var(--color-obs-surface-high)',
-            transitionTimingFunction: 'var(--ease-liquid)',
-          }}
-          onMouseOver={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
-          }}
-          onMouseOut={(e) => {
-            ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
-          }}
-        >
-          <PanelLeft size={16} strokeWidth={1.8} />
-        </button>
-      )}
+      {/* ── サイドバー折りたたみ／展開トグル（画面左上に常時固定。z-50 でサイドバー(z-30)より手前に置き、
+            折りたたみアニメーション時にロゴがこのボタンの背面を通り抜ける形にする） ── */}
+      <button
+        type="button"
+        onClick={() => setCollapsed((v) => !v)}
+        aria-label={collapsed ? 'サイドバーを開く' : 'サイドバーを折りたたむ'}
+        className="fixed top-3 left-3 z-50 w-9 h-9 rounded-[var(--radius-obs-md)] flex items-center justify-center transition-colors duration-150"
+        style={{
+          color: 'var(--color-obs-text-muted)',
+          backgroundColor: collapsed ? 'var(--color-obs-surface-high)' : 'transparent',
+          transitionTimingFunction: 'var(--ease-liquid)',
+        }}
+        onMouseOver={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+            'var(--color-obs-surface-high)'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
+        }}
+        onMouseOut={(e) => {
+          ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = collapsed
+            ? 'var(--color-obs-surface-high)'
+            : 'transparent'
+          ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
+        }}
+      >
+        <PanelLeft size={16} strokeWidth={1.8} />
+      </button>
 
       <aside
         className="fixed left-0 top-0 bottom-0 w-[244px] flex flex-col z-30 select-none transition-transform duration-200"
@@ -596,8 +605,8 @@ export function Sidebar() {
           transitionTimingFunction: 'var(--ease-liquid)',
         }}
       >
-        {/* ── ロゴ + 折りたたみボタン ── */}
-        <div className="h-[56px] shrink-0 flex items-center justify-between pl-4 pr-2">
+        {/* ── ロゴ ── (折りたたみ時はトグルボタンの背面を通り抜けて画面外へ消える) */}
+        <div className="h-[56px] shrink-0 flex items-center pl-14 pr-3">
           <Link
             href="/dashboard"
             className="transition-opacity duration-150 hover:opacity-80"
@@ -610,24 +619,6 @@ export function Sidebar() {
               Front Office
             </span>
           </Link>
-          <button
-            type="button"
-            onClick={() => setCollapsed(true)}
-            aria-label="サイドバーを折りたたむ"
-            className="w-8 h-8 rounded-[var(--radius-obs-md)] flex items-center justify-center transition-colors duration-150"
-            style={{ color: 'var(--color-obs-text-muted)' }}
-            onMouseOver={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
-                'var(--color-obs-surface-high)'
-              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text)'
-            }}
-            onMouseOut={(e) => {
-              ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
-              ;(e.currentTarget as HTMLButtonElement).style.color = 'var(--color-obs-text-muted)'
-            }}
-          >
-            <PanelLeft size={15} strokeWidth={1.8} />
-          </button>
         </div>
 
       {/* ── Workspace nav ── */}
@@ -665,7 +656,7 @@ export function Sidebar() {
         </div>
 
         {/* 履歴 */}
-        <div className="flex flex-col gap-[3px]">
+        <div className="flex flex-col gap-[1px]">
           {visibleChats.map((it) => (
             <ChatItem
               key={it.id}

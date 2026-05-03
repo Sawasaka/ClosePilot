@@ -179,26 +179,18 @@ function LeadSourceCell({ source }: { source: LeadSource }) {
   const s = LEAD_SOURCE_STYLES[source.type]
   const Icon = s.Icon
   return (
-    <div className="min-w-0 flex flex-col gap-0.5">
+    <div className="min-w-0 flex items-center">
       <span
         className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap w-fit"
         style={{
           backgroundColor: 'rgba(143,140,144,0.10)',
           color: 'var(--color-obs-text-muted)',
         }}
+        title={source.detail}
       >
         <Icon size={11} strokeWidth={2.2} style={{ color: s.iconFg }} />
         {s.label}
       </span>
-      {source.detail && (
-        <span
-          className="text-[10.5px] leading-tight truncate"
-          style={{ color: 'var(--color-obs-text-subtle)' }}
-          title={source.detail}
-        >
-          {source.detail}
-        </span>
-      )}
     </div>
   )
 }
@@ -331,6 +323,9 @@ export default function ContactsPage() {
   const [filterRanks, setFilterRanks]     = useState<Rank[]>([])
   const [filterDepartment, setFilterDepartment] = useState('')
   const [filterPersonRole, setFilterPersonRole] = useState<PersonRole | ''>('')
+  // コール/メールの活動量フィルタ。'' = 全件、'0' = 0件のみ、それ以外は「N件以上」
+  const [filterCallRange, setFilterCallRange] = useState<'' | '0' | '1' | '3' | '5'>('')
+  const [filterEmailRange, setFilterEmailRange] = useState<'' | '0' | '1' | '3' | '5'>('')
   const [sortKey, setSortKey]             = useState<SortKey>('status')
   const [sortDir, setSortDir]             = useState<SortDir>('asc')
   const [filterContactStatuses, setFilterContactStatuses] = useState<ContactStatus[]>([])
@@ -376,6 +371,10 @@ export default function ContactsPage() {
     if (filterRanks.length > 0)    list = list.filter(c => filterRanks.includes(c.rank))
     if (filterDepartment)          list = list.filter(c => c.department === filterDepartment)
     if (filterPersonRole)          list = list.filter(c => c.personRole === filterPersonRole)
+    if (filterCallRange === '0')   list = list.filter(c => c.callAttempts === 0)
+    else if (filterCallRange)      list = list.filter(c => c.callAttempts >= Number(filterCallRange))
+    if (filterEmailRange === '0')  list = list.filter(c => c.emailsSent === 0)
+    else if (filterEmailRange)     list = list.filter(c => c.emailsSent >= Number(filterEmailRange))
 
     const STATUS_ORDER: Record<ApproachStatus, number> = {
       'アポ獲得': 0, 'Next Action': 1, '接続済み': 2,
@@ -395,7 +394,7 @@ export default function ContactsPage() {
     })
 
     return list
-  }, [contacts, search, filterStatuses, filterContactStatuses, filterRanks, filterDepartment, filterPersonRole, sortKey, sortDir])
+  }, [contacts, search, filterStatuses, filterContactStatuses, filterRanks, filterDepartment, filterPersonRole, filterCallRange, filterEmailRange, sortKey, sortDir])
 
   function toggleSort(key: SortKey) {
     if (sortKey === key) setSortDir(d => d === 'asc' ? 'desc' : 'asc')
@@ -412,7 +411,7 @@ export default function ContactsPage() {
     setFilterContactStatuses(prev => prev.includes(s) ? prev.filter(x => x !== s) : [...prev, s])
   }
 
-  const hasFilters = filterStatuses.length > 0 || filterRanks.length > 0 || filterContactStatuses.length > 0 || !!filterDepartment || !!filterPersonRole
+  const hasFilters = filterStatuses.length > 0 || filterRanks.length > 0 || filterContactStatuses.length > 0 || !!filterDepartment || !!filterPersonRole || !!filterCallRange || !!filterEmailRange
 
   return (
     <ObsPageShell>
@@ -637,7 +636,7 @@ export default function ContactsPage() {
             {ALL_DEPARTMENTS.map(d => <option key={d} value={d}>{d}</option>)}
           </select>
 
-          {/* 職位フィルター */}
+          {/* 役職フィルター */}
           <select
             value={filterPersonRole}
             onChange={e => setFilterPersonRole(e.target.value as PersonRole | '')}
@@ -648,8 +647,44 @@ export default function ContactsPage() {
               color: filterPersonRole ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
             }}
           >
-            <option value="">職位</option>
+            <option value="">役職</option>
             {ALL_PERSON_ROLES.map(r => <option key={r} value={r}>{r}</option>)}
+          </select>
+
+          {/* コール数フィルター */}
+          <select
+            value={filterCallRange}
+            onChange={e => setFilterCallRange(e.target.value as '' | '0' | '1' | '3' | '5')}
+            onClick={e => e.stopPropagation()}
+            className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            style={{
+              backgroundColor: filterCallRange ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+              color: filterCallRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            <option value="">コール数</option>
+            <option value="0">0件のみ</option>
+            <option value="1">1件以上</option>
+            <option value="3">3件以上</option>
+            <option value="5">5件以上</option>
+          </select>
+
+          {/* メール数フィルター */}
+          <select
+            value={filterEmailRange}
+            onChange={e => setFilterEmailRange(e.target.value as '' | '0' | '1' | '3' | '5')}
+            onClick={e => e.stopPropagation()}
+            className="h-8 px-3 text-xs font-medium rounded-[var(--radius-obs-md)] appearance-none cursor-pointer transition-colors outline-none"
+            style={{
+              backgroundColor: filterEmailRange ? 'var(--color-obs-primary-container)' : 'var(--color-obs-surface-high)',
+              color: filterEmailRange ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+            }}
+          >
+            <option value="">メール数</option>
+            <option value="0">0件のみ</option>
+            <option value="1">1件以上</option>
+            <option value="3">3件以上</option>
+            <option value="5">5件以上</option>
           </select>
 
           {/* Clear filters */}
@@ -660,7 +695,7 @@ export default function ContactsPage() {
                 animate={{ opacity: 1, width: 'auto' }}
                 exit={{ opacity: 0, width: 0 }}
                 transition={{ duration: 0.15 }}
-                onClick={() => { setFilterStatuses([]); setFilterContactStatuses([]); setFilterRanks([]); setFilterDepartment(''); setFilterPersonRole('') }}
+                onClick={() => { setFilterStatuses([]); setFilterContactStatuses([]); setFilterRanks([]); setFilterDepartment(''); setFilterPersonRole(''); setFilterCallRange(''); setFilterEmailRange('') }}
                 className="inline-flex items-center gap-1 h-8 px-3 rounded-[var(--radius-obs-md)] text-xs font-medium transition-colors whitespace-nowrap overflow-hidden"
                 style={{ color: 'var(--color-obs-text-muted)' }}
                 onMouseOver={(e) => {
@@ -698,7 +733,7 @@ export default function ContactsPage() {
               { label: '氏名',          key: 'name' as SortKey,         sortable: true },
               { label: 'リード経由',     key: null,                       sortable: false },
               { label: '部門',          key: null,                       sortable: false },
-              { label: '職位',          key: null,                       sortable: false },
+              { label: '役職',          key: null,                       sortable: false },
               { label: 'ステータス',     key: 'status' as SortKey,       sortable: true },
               { label: 'Next Action',  key: null,                       sortable: false },
               { label: 'コール',        key: 'callAttempts' as SortKey, sortable: true },
@@ -794,7 +829,7 @@ export default function ContactsPage() {
                       {contact.department || '—'}
                     </span>
 
-                    {/* 職位 */}
+                    {/* 役職 */}
                     <div>
                       <ObsChip tone={personRoleToTone(contact.personRole)}>
                         {contact.personRole}

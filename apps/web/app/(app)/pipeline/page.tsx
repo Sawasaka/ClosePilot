@@ -1,19 +1,20 @@
 'use client'
 
 import { useMemo, useState, useRef, useEffect, DragEvent } from 'react'
+import Link from 'next/link'
 import {
   Plus,
   Calendar,
-  Star,
-  FlaskConical,
   X,
   Check,
   HelpCircle,
   ArrowRight,
+  ArrowLeft,
   ChevronDown,
-  Pencil,
+  Clock,
 } from 'lucide-react'
 import { ObsPageShell } from '@/components/obsidian'
+import { SignalBadge } from '@/components/crm/SignalBadge'
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,23 +53,29 @@ interface Deal {
   nextAction?: string       // Next Step: 次の一手（取引先マスタでフリーテキスト入力）
   nextActionDate?: string   // Next Step 実施予定日
   status?: string           // Status: 現在の進行状態（取引先マスタでフリーテキスト入力）
+  // 経由元（POC移行率テーブルへの自動集計に使用）
+  sourceCategory?: SourceCategory
+  source?: string           // 個別の経由元名 (例: HP, IT・情シス DXPO 等)
 }
+
+// 経由元カテゴリ：POC移行率テーブルの行と一致
+type SourceCategory = 'web' | 'referral' | 'partner' | 'event' | 'media'
 
 // ─── Mock Data ────────────────────────────────────────────────────────────────
 
 const INITIAL_DEALS: Deal[] = [
-  { id: 'd1',  code: 'BGM-0842', name: 'グローバルERP統合計画',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 12_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'IS',              order: 0, probability: 35, dueDate: '14 Oct', createdAt: '2026-04-02', emailCount: 2,  meetingCount: 0, status: 'アポ獲得待ち', nextAction: '初回コール', nextActionDate: '4/22' },
-  { id: 'd2',  code: 'BGM-1209', name: 'マーケティングHub連携',       company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 2_100_000,  intent: 'Low',    owner: '佐藤次郎', stage: 'IS',              order: 1, probability: 15, dueDate: '21 Oct', createdAt: '2026-04-08', emailCount: 1,  meetingCount: 0, status: '期日超過(2日)', nextAction: '資料送付', nextActionDate: '4/20' },
-  { id: 'd3',  code: 'BGM-0992', name: '次世代CRM導入検討',           company: '合同会社フューチャー',    contact: '山本 佳子',  amount: 8_900_000,  intent: 'Hot',    owner: '鈴木花子', stage: 'NURTURING',       order: 0, probability: 48, lastContact: '2h ago', createdAt: '2026-03-14', emailCount: 6,  meetingCount: 1, status: 'PoC検討中 / 次回商談設定', nextAction: '再アプローチ', nextActionDate: '4/24' },
-  { id: 'd4',  code: 'BGM-1104', name: 'SFA刷新案件 - A社',          company: '有限会社サクセス',        contact: '小林 健太',  amount: 5_200_000,  intent: 'Middle', owner: '鈴木花子', stage: 'MEETING_PLANNED', order: 0, probability: 52, dueDate: '28 Oct', createdAt: '2026-03-22', emailCount: 4,  meetingCount: 0, status: '初回商談前', nextAction: '商談実施', nextActionDate: '4/28' },
-  { id: 'd5',  code: 'BGM-1066', name: '物流最適化システム提案',      company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3_600_000,  intent: 'Middle', owner: '田中太郎', stage: 'MEETING_DONE',    order: 0, probability: 60, createdAt: '2026-03-10', emailCount: 8,  meetingCount: 1, status: '提案書レビュー待ち(先方CTO)', nextAction: '提案書レビュー', nextActionDate: '4/23' },
-  { id: 'd6',  code: 'BGM-1122', name: '基幹システムクラウド移行',    company: '株式会社グロース',        contact: '中村 理恵',  amount: 18_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'PROJECT_PLANNED', order: 0, probability: 92, priorityPhase: 'PRIORITY Q4', createdAt: '2026-02-18', emailCount: 22, meetingCount: 3, status: '決裁者MTG調整中', nextAction: '決裁者MTG', nextActionDate: '4/25' },
-  { id: 'd7',  code: 'BGM-0901', name: 'AI解析エンジン検証',          company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 6_800_000,  intent: 'Hot',    owner: '田中太郎', stage: 'POC',             order: 0, probability: 70, priorityPhase: 'Phase: Model Validation', createdAt: '2026-02-01', emailCount: 35, meetingCount: 5, status: 'PoC進行中 (週次定例)', nextAction: 'POC中間報告', nextActionDate: '4/26' },
-  { id: 'd8',  code: 'BGM-0718', name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 48_000_000, intent: 'Hot',    owner: '田中太郎', stage: 'CLOSED_WON',      order: 0, probability: 100, createdAt: '2025-12-12', emailCount: 58, meetingCount: 12, status: '契約完了 / オンボ開始', nextAction: 'オンボーディング', nextActionDate: '5/1' },
-  { id: 'd9',  code: 'BGM-1301', name: 'スタータープラン再提案',     company: '株式会社スタート',        contact: '吉田 千春',  amount: 600_000,    intent: 'Low',    owner: '佐藤次郎', stage: 'NURTURING',       order: 1, probability: 10, lastContact: '5d ago', createdAt: '2026-03-28', emailCount: 3,  meetingCount: 0, status: '長期ナーチャ(月次配信)', nextAction: 'ナーチャリングメール', nextActionDate: '5/3' },
-  { id: 'd10', code: 'BGM-0821', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1_500_000,  intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',       order: 0, createdAt: '2026-01-20', emailCount: 11, meetingCount: 2 },
-  { id: 'd11', code: 'BGM-0633', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960_000,    intent: 'Middle', owner: '田中太郎', stage: 'CHURN',           order: 0, createdAt: '2025-10-05', emailCount: 40, meetingCount: 4 },
-  { id: 'd12', code: 'BGM-0299', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2_100_000,  intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',            order: 0, createdAt: '2026-01-08', emailCount: 14, meetingCount: 2 },
+  { id: 'd1',  code: 'BGM-0842', name: 'グローバルERP統合計画',       company: '株式会社テクノリード',    contact: '田中 誠',    amount: 12_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'IS',              order: 0, probability: 35, dueDate: '14 Oct', createdAt: '2026-04-02', emailCount: 2,  meetingCount: 0, status: 'アポ獲得待ち', nextAction: '初回コール', nextActionDate: '4/22', sourceCategory: 'web', source: 'HP' },
+  { id: 'd2',  code: 'BGM-1209', name: 'マーケティングHub連携',       company: '合同会社ビジョン',        contact: '加藤 雄介',  amount: 2_100_000,  intent: 'Low',    owner: '佐藤次郎', stage: 'IS',              order: 1, probability: 15, dueDate: '21 Oct', createdAt: '2026-04-08', emailCount: 1,  meetingCount: 0, status: '期日超過(2日)', nextAction: '資料送付', nextActionDate: '4/20', sourceCategory: 'web', source: 'HP' },
+  { id: 'd3',  code: 'BGM-0992', name: '次世代CRM導入検討',           company: '合同会社フューチャー',    contact: '山本 佳子',  amount: 8_900_000,  intent: 'Hot',    owner: '鈴木花子', stage: 'NURTURING',       order: 0, probability: 48, lastContact: '2h ago', createdAt: '2026-03-14', emailCount: 6,  meetingCount: 1, status: 'PoC検討中 / 次回商談設定', nextAction: '再アプローチ', nextActionDate: '4/24', sourceCategory: 'web', source: '無料トライアルフォーム' },
+  { id: 'd4',  code: 'BGM-1104', name: 'SFA刷新案件 - A社',          company: '有限会社サクセス',        contact: '小林 健太',  amount: 5_200_000,  intent: 'Middle', owner: '鈴木花子', stage: 'MEETING_PLANNED', order: 0, probability: 52, dueDate: '28 Oct', createdAt: '2026-03-22', emailCount: 4,  meetingCount: 0, status: '初回商談前', nextAction: '商談実施', nextActionDate: '4/28', sourceCategory: 'referral', source: '名和さん紹介' },
+  { id: 'd5',  code: 'BGM-1066', name: '物流最適化システム提案',      company: '株式会社イノベーション',  contact: '佐々木 拓也', amount: 3_600_000,  intent: 'Middle', owner: '田中太郎', stage: 'MEETING_DONE',    order: 0, probability: 60, createdAt: '2026-03-10', emailCount: 8,  meetingCount: 1, status: '提案書レビュー待ち(先方CTO)', nextAction: '提案書レビュー', nextActionDate: '4/23', sourceCategory: 'event', source: 'IT・情シス DXPO' },
+  { id: 'd6',  code: 'BGM-1122', name: '基幹システムクラウド移行',    company: '株式会社グロース',        contact: '中村 理恵',  amount: 18_500_000, intent: 'Hot',    owner: '田中太郎', stage: 'PROJECT_PLANNED', order: 0, probability: 92, priorityPhase: 'PRIORITY Q4', createdAt: '2026-02-18', emailCount: 22, meetingCount: 3, status: '決裁者MTG調整中', nextAction: '決裁者MTG', nextActionDate: '4/25', sourceCategory: 'partner', source: '株式会社アシスト' },
+  { id: 'd7',  code: 'BGM-0901', name: 'AI解析エンジン検証',          company: '株式会社ネクスト',        contact: '鈴木 美香',  amount: 6_800_000,  intent: 'Hot',    owner: '田中太郎', stage: 'POC',             order: 0, probability: 70, priorityPhase: 'Phase: Model Validation', createdAt: '2026-02-01', emailCount: 35, meetingCount: 5, status: 'PoC進行中 (週次定例)', nextAction: 'POC中間報告', nextActionDate: '4/26', sourceCategory: 'web', source: 'HP' },
+  { id: 'd8',  code: 'BGM-0718', name: 'エンタープライズ契約（2期）', company: '株式会社テクノリード',    contact: '田中 誠',    amount: 48_000_000, intent: 'Hot',    owner: '田中太郎', stage: 'CLOSED_WON',      order: 0, probability: 100, createdAt: '2025-12-12', emailCount: 58, meetingCount: 12, status: '契約完了 / オンボ開始', nextAction: 'オンボーディング', nextActionDate: '5/1', sourceCategory: 'event', source: 'Startup JAPAN EXPO' },
+  { id: 'd9',  code: 'BGM-1301', name: 'スタータープラン再提案',     company: '株式会社スタート',        contact: '吉田 千春',  amount: 600_000,    intent: 'Low',    owner: '佐藤次郎', stage: 'NURTURING',       order: 1, probability: 10, lastContact: '5d ago', createdAt: '2026-03-28', emailCount: 3,  meetingCount: 0, status: '長期ナーチャ(月次配信)', nextAction: 'ナーチャリングメール', nextActionDate: '5/3', sourceCategory: 'media', source: 'BOXIL' },
+  { id: 'd10', code: 'BGM-0821', name: 'データ分析基盤構築',         company: '株式会社アルファ',        contact: '渡辺 健二',  amount: 1_500_000,  intent: 'Middle', owner: '鈴木花子', stage: 'LOST_DEAL',       order: 0, createdAt: '2026-01-20', emailCount: 11, meetingCount: 2, sourceCategory: 'media', source: 'アイスマイリー' },
+  { id: 'd11', code: 'BGM-0633', name: 'カスタマーサクセス契約',     company: '合同会社ベータ',          contact: '佐藤 良子',  amount: 960_000,    intent: 'Middle', owner: '田中太郎', stage: 'CHURN',           order: 0, createdAt: '2025-10-05', emailCount: 40, meetingCount: 4, sourceCategory: 'partner', source: '後藤さん紹介' },
+  { id: 'd12', code: 'BGM-0299', name: 'AI活用コンサルティング',     company: '株式会社デルタ',          contact: '木村 隆',    amount: 2_100_000,  intent: 'Hot',    owner: '佐藤次郎', stage: 'LOST',            order: 0, createdAt: '2026-01-08', emailCount: 14, meetingCount: 2, sourceCategory: 'event', source: 'デジタル化・DX推進展' },
 ]
 
 // ─── Stages ────────────────────────────────────────────────────────────────────
@@ -105,7 +112,7 @@ const STAGES: { key: StageKey; label: string; desc: string; color: StageColor }[
   { key: 'CLOSED_WON',       label: '受注',           desc: '契約締結が完了した案件',
     color: { accent: '#ffb347', bg: 'rgba(255,179,71,0.16)',  glow: 'rgba(255,179,71,0.75)',  text: '#ffd37a' } },
   // 失注・チャーン系（赤） — ネガティブは別階層
-  { key: 'LOST_DEAL',        label: '失注',           desc: '商談後に受注に至らなかった案件',
+  { key: 'LOST_DEAL',        label: '失注',           desc: 'POC後に受注に至らなかった案件',
     color: { accent: '#ff6b6b', bg: 'rgba(255,107,107,0.12)', glow: 'rgba(255,107,107,0.4)',  text: '#ff8a8a' } },
   { key: 'CHURN',            label: 'チャーン',       desc: '契約後に解約となった案件',
     color: { accent: '#ff4e6a', bg: 'rgba(255,78,106,0.12)',  glow: 'rgba(255,78,106,0.4)',   text: '#ff8a8a' } },
@@ -115,11 +122,6 @@ const STAGES: { key: StageKey; label: string; desc: string; color: StageColor }[
 
 const OWNERS = ['全員', '田中太郎', '鈴木花子', '佐藤次郎']
 
-const INTENT_STYLE: Record<IntentSignal, { label: string; cls: string }> = {
-  Hot:    { label: '高 (High)',   cls: 'bg-[rgba(255,107,107,0.12)] text-[#ff6b6b]' },
-  Middle: { label: '中 (Middle)', cls: 'bg-[rgba(255,184,107,0.12)] text-[#ffb86b]' },
-  Low:    { label: '低 (Low)',    cls: 'bg-[rgba(171,199,255,0.12)] text-[#abc7ff]' },
-}
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
@@ -200,12 +202,6 @@ export default function PipelinePage() {
             >
               パイプライン
             </h1>
-            <p
-              className="max-w-2xl text-sm leading-relaxed"
-              style={{ color: 'var(--color-obs-text-muted)' }}
-            >
-              進行中 {deals.length} 件の商談をステージ別に一望。ドラッグで段階を移動できます。
-            </p>
           </div>
 
           {/* ── View Tabs（Segmented Control） ── */}
@@ -449,25 +445,41 @@ const CONCLUSION_STYLE: Record<Conclusion, { color: string; bg: string; ring: st
 }
 
 // stage → レポート上の分類（ファネル＆バッジ共通）
-type ReportBucket = 'PJ進行' | 'PJ可能' | 'PJ化予定' | '有効商談' | '失注' | '契約' | 'その他'
+type ReportBucket = 'PJ進行' | 'PJ可能' | '有効商談' | '検証' | '失注' | '契約' | 'ロスト' | 'その他'
 
 function bucketOf(stage: StageKey): ReportBucket {
   if (stage === 'CLOSED_WON') return '契約'
-  if (stage === 'LOST_DEAL' || stage === 'LOST' || stage === 'CHURN') return '失注'
-  if (stage === 'POC') return 'PJ進行'
-  if (stage === 'PROJECT_PLANNED' || stage === 'MULTI_MEETING') return 'PJ可能'
-  if (stage === 'MEETING_DONE') return 'PJ化予定'
-  if (stage === 'IS' || stage === 'NURTURING' || stage === 'MEETING_PLANNED') return '有効商談'
+  if (stage === 'LOST_DEAL') return '失注'
+  if (stage === 'LOST' || stage === 'CHURN') return 'ロスト'
+  if (stage === 'POC') return '検証'
+  if (stage === 'MULTI_MEETING') return 'PJ進行'
+  if (stage === 'PROJECT_PLANNED') return 'PJ可能'
+  if (
+    stage === 'IS' ||
+    stage === 'NURTURING' ||
+    stage === 'MEETING_PLANNED' ||
+    stage === 'MEETING_DONE'
+  ) {
+    return '有効商談'
+  }
   return 'その他'
 }
 
+// テーブル行のステータスバッジ — ファネル3カード + 結果4カードと連動
+//   有効商談 → 商談済み (青)
+//   PJ可能   → プロジェクト化予定あり (シアン)
+//   PJ進行   → プロジェクト進行中 (グリーン)
+//   検証     → 検証中 (アンバー)
+//   契約     → 契約済み (グリーン)
+//   失注/ロスト → 失注（ロスト） (赤系 / グレー系で残しつつラベルは統合)
 const BADGE_STYLE: Record<ReportBucket, { label: string; color: string; bg: string } | null> = {
-  '有効商談': { label: '有効商談',    color: 'var(--color-obs-primary)',        bg: 'rgba(171,199,255,0.12)' },
-  'PJ化予定': { label: 'PJ化予定あり', color: '#c9a94b',                         bg: 'rgba(201,169,75,0.14)' },
-  'PJ可能':   { label: 'PJ可能案件',   color: 'var(--color-obs-low)',             bg: 'rgba(126,198,255,0.14)' },
-  'PJ進行':   { label: 'PJ進行',       color: '#6ee7a1',                         bg: 'rgba(110,231,161,0.14)' },
-  '失注':     { label: '失注',         color: 'var(--color-obs-hot)',            bg: 'rgba(255,107,107,0.14)' },
-  '契約':     { label: '契約',         color: '#6ee7a1',                         bg: 'rgba(110,231,161,0.14)' },
+  '有効商談': { label: '商談済み',              color: 'var(--color-obs-primary)',   bg: 'rgba(171,199,255,0.12)' },
+  'PJ可能':   { label: 'プロジェクト化予定あり', color: 'var(--color-obs-low)',       bg: 'rgba(126,198,255,0.14)' },
+  'PJ進行':   { label: 'プロジェクト進行中',     color: '#6ee7a1',                    bg: 'rgba(110,231,161,0.14)' },
+  '検証':     { label: '検証中',                color: '#c9a94b',                    bg: 'rgba(201,169,75,0.14)' },
+  '失注':     { label: '失注（ロスト）',         color: 'var(--color-obs-hot)',       bg: 'rgba(255,107,107,0.14)' },
+  '契約':     { label: '契約済み',              color: '#6ee7a1',                    bg: 'rgba(110,231,161,0.14)' },
+  'ロスト':   { label: '失注（ロスト）',         color: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.16)' },
   'その他':   null,
 }
 
@@ -475,10 +487,8 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
   const [period, setPeriod] = useState<ReportPeriod>('all')
   const [owner, setOwner] = useState<string>('全員')
 
-  // Executive Summary（localStorage 永続化）
+  // Executive Summary（localStorage に自動保存。編集モード/閲覧モードの分離は廃止）
   const [summary, setSummary] = useState<SummaryState>(DEFAULT_SUMMARY)
-  const [summaryOpen, setSummaryOpen] = useState(false)
-  const [draft, setDraft] = useState<SummaryState>(DEFAULT_SUMMARY)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -487,22 +497,17 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
       if (raw) {
         const parsed = JSON.parse(raw) as SummaryState
         setSummary(parsed)
-        setDraft(parsed)
       }
     } catch { /* ignore */ }
   }, [])
 
-  function openEditor() {
-    setDraft(summary)
-    setSummaryOpen(true)
-  }
-  function saveEditor() {
-    setSummary(draft)
-    try { localStorage.setItem(SUMMARY_KEY, JSON.stringify(draft)) } catch { /* ignore */ }
-    setSummaryOpen(false)
-  }
-  function resetEditor() {
-    setDraft(DEFAULT_SUMMARY)
+  // 任意フィールドを更新 → 即座に localStorage へ書き込み
+  const updateSummary = (patch: Partial<SummaryState>) => {
+    setSummary((prev) => {
+      const next = { ...prev, ...patch }
+      try { localStorage.setItem(SUMMARY_KEY, JSON.stringify(next)) } catch { /* ignore */ }
+      return next
+    })
   }
 
   // 担当者一覧は deals から動的生成
@@ -522,78 +527,71 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
 
   // ファネル集計
   // - カード数値：現在その段階で進行中の案件数（現在値）
-  // - 移行率 %：累計ベースで計算（失注・契約は過去実績として各段階の累計に加算）
-  // - 移行率ホバー：累計の内訳（現在 / 失注 / 契約）＋過去案件（失注・契約）リスト
+  // - 移行率 %：累計ベース（検証/契約/失注/ロストを過去実績として加算）
   const { counts, stageGroups } = useMemo(() => {
     const activeValid    = scoped.filter((d) => {
       const b = bucketOf(d.stage)
-      return b === '有効商談' || b === 'PJ化予定' || b === 'PJ可能' || b === 'PJ進行'
-    })
-    const activePlanned  = scoped.filter((d) => {
-      const b = bucketOf(d.stage)
-      return b === 'PJ化予定' || b === 'PJ可能' || b === 'PJ進行'
+      return b === '有効商談' || b === 'PJ可能' || b === 'PJ進行'
     })
     const activePossible = scoped.filter((d) => {
       const b = bucketOf(d.stage)
       return b === 'PJ可能' || b === 'PJ進行'
     })
     const activeRunning  = scoped.filter((d) => bucketOf(d.stage) === 'PJ進行')
-    const lostDeals      = scoped.filter((d) => bucketOf(d.stage) === '失注')
+    const verifyDeals    = scoped.filter((d) => bucketOf(d.stage) === '検証')
     const contractDeals  = scoped.filter((d) => bucketOf(d.stage) === '契約')
+    const lostDeals      = scoped.filter((d) => bucketOf(d.stage) === '失注')
+    const churnedDeals   = scoped.filter((d) => bucketOf(d.stage) === 'ロスト')
 
-    // 累計（過去にその段階を通過した実績。失注・契約を加算）
-    const totalValid      = activeValid.length    + lostDeals.length + contractDeals.length
-    const totalPlanned    = activePlanned.length  + lostDeals.length + contractDeals.length
-    const totalPossible   = activePossible.length + lostDeals.length + contractDeals.length
-    const totalRunning    = activeRunning.length  + lostDeals.length + contractDeals.length
+    // 過去案件 = ファネルから抜けた状態（検証/契約/失注/ロスト）
+    const past = [...verifyDeals, ...contractDeals, ...lostDeals, ...churnedDeals]
+
+    // 累計（現在進行中 + 過去）
+    const totalValid     = activeValid.length    + past.length
+    const totalPossible  = activePossible.length + past.length
+    const totalRunning   = activeRunning.length  + past.length
 
     return {
       counts: {
         // カード表示値 = 現在進行中のみ
         valid:      activeValid.length,
-        pjPlanned:  activePlanned.length,
         pjPossible: activePossible.length,
         pjRunning:  activeRunning.length,
-        lost:       lostDeals.length,
+        verify:     verifyDeals.length,
         contracted: contractDeals.length,
+        lost:       lostDeals.length,
+        churned:    churnedDeals.length,
         // 累計件数（ホバーで表示）
-        totalValid, totalPlanned, totalPossible, totalRunning,
+        totalValid, totalPossible, totalRunning,
         // 移行率は累計ベース
         finalRate:    totalValid > 0 ? Math.round((totalRunning / totalValid) * 100) : 0,
-        plannedRate:  totalValid > 0 ? Math.round((totalPlanned / totalValid) * 100) : 0,
-        possibleRate: totalPlanned > 0 ? Math.round((totalPossible / totalPlanned) * 100) : 0,
+        possibleRate: totalValid > 0 ? Math.round((totalPossible / totalValid) * 100) : 0,
         runningRate:  totalPossible > 0 ? Math.round((totalRunning / totalPossible) * 100) : 0,
-        // 失注/契約の PJ進行中比も累計ベース
-        lostRate:     totalRunning > 0 ? Math.round((lostDeals.length / totalRunning) * 100) : 0,
-        contractRate: totalRunning > 0 ? Math.round((contractDeals.length / totalRunning) * 100) : 0,
       },
       stageGroups: {
         // 現在進行中の案件（カード全体ホバー用）
         valid:      activeValid,
-        pjPlanned:  activePlanned,
         pjPossible: activePossible,
         pjRunning:  activeRunning,
-        lost:       lostDeals,
+        verify:     verifyDeals,
         contracted: contractDeals,
-        // 過去案件 = 失注 + 契約（移行率ホバー用。全段階で共通の「過去に通過した案件」）
-        past: [...lostDeals, ...contractDeals],
+        lost:       lostDeals,
+        churned:    churnedDeals,
+        // 過去案件 = 検証 + 契約 + 失注 + ロスト
+        past,
       },
     }
   }, [scoped])
 
-  // テーブル：有効商談だけを並べる（受注・失注を除く）
+  // テーブル：商談一覧 — ファネル3カード + 結果4カードに対応する6種すべてを表示
+  // (商談済み / プロジェクト化予定あり / プロジェクト進行中 / 検証中 / 契約済み / 失注（ロスト）)
   const activeDeals = useMemo(
-    () => scoped.filter((d) => {
-      const b = bucketOf(d.stage)
-      return b === '有効商談' || b === 'PJ化予定' || b === 'PJ可能' || b === 'PJ進行'
-    }),
+    () => scoped.filter((d) => bucketOf(d.stage) !== 'その他'),
     [scoped],
   )
 
   const periodLabel = period === 'all' ? '全期間合算' : period === '2026-03' ? '3月分' : '4月分'
   const ownerLabel = owner === '全員' ? '全体' : owner
-
-  const conc = CONCLUSION_STYLE[summary.conclusion]
 
   return (
     <div className="mt-4 space-y-8 pb-10">
@@ -655,120 +653,65 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
           })}
         </div>
 
-        <span className="ml-auto text-[11px] tracking-[0.08em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
-          {scoped.length} deals ・ {ownerLabel} / {periodLabel}
-        </span>
       </div>
 
-      {/* ─── エグゼクティブサマリー（編集可能） ─── */}
+      {/* ─── エグゼクティブサマリー（常時編集可能・自動保存） ─── */}
       <div
         className="stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-6 relative"
       >
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-3">
-            <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
-            <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
-              エグゼクティブサマリー
-            </span>
-          </div>
-          {!summaryOpen && (
-            <button
-              onClick={openEditor}
-              className="inline-flex items-center gap-1.5 h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
-              style={{
-                backgroundColor: 'rgba(0,113,227,0.12)',
-                color: 'var(--color-obs-primary)',
-                boxShadow: 'inset 0 0 0 1px rgba(171,199,255,0.22)',
-              }}
-            >
-              <Pencil size={11} />
-              編集
-            </button>
-          )}
-          {summaryOpen && (
-            <div className="flex items-center gap-2">
-              <button
-                onClick={resetEditor}
-                className="h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
-                style={{ backgroundColor: 'transparent', color: 'var(--color-obs-text-muted)' }}
-              >
-                デフォルトに戻す
-              </button>
-              <button
-                onClick={() => setSummaryOpen(false)}
-                className="h-7 px-3 rounded-full text-[11px] font-medium transition-colors"
-                style={{ backgroundColor: 'rgba(65,71,83,0.2)', color: 'var(--color-obs-text-muted)' }}
-              >
-                キャンセル
-              </button>
-              <button
-                onClick={saveEditor}
-                className="h-7 px-4 rounded-full text-[11px] font-semibold transition-colors"
-                style={{
-                  background: 'linear-gradient(140deg, var(--color-obs-primary) 0%, var(--color-obs-primary-container) 100%)',
-                  color: 'var(--color-obs-on-primary)',
-                  boxShadow: '0 4px 12px rgba(0,113,227,0.25)',
-                }}
-              >
-                保存
-              </button>
-            </div>
-          )}
+        <div className="flex items-center gap-3 mb-5">
+          <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
+          <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
+            エグゼクティブサマリー
+          </span>
+          <span className="text-[10px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            自動保存
+          </span>
         </div>
 
-        {!summaryOpen ? (
-          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-8">
-            <div>
-              <FieldLabel>結論</FieldLabel>
-              <div
-                className="mt-2 inline-flex items-center gap-2 h-10 px-4 rounded-[var(--radius-obs-md)] text-[14px] font-semibold"
-                style={{ backgroundColor: conc.bg, color: conc.color, boxShadow: `inset 0 0 0 1px ${conc.ring}` }}
-              >
-                <span className="w-2 h-2 rounded-full" style={{ backgroundColor: conc.color }} />
-                {summary.conclusion}
-              </div>
-            </div>
-            <SummaryView title="NEXT" body={summary.next} />
-            <SummaryView title="助けが必要な1点" body={summary.help} />
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-8">
-            <div>
-              <FieldLabel>結論</FieldLabel>
-              <ConclusionSelect value={draft.conclusion} onChange={(v) => setDraft({ ...draft, conclusion: v })} />
-            </div>
-            <div>
-              <FieldLabel>NEXT</FieldLabel>
-              <textarea
-                value={draft.next}
-                onChange={(e) => setDraft({ ...draft, next: e.target.value })}
-                rows={6}
-                className="mt-2 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
-                style={{
-                  backgroundColor: 'var(--color-obs-surface-low)',
-                  color: 'var(--color-obs-text)',
-                  boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
-                  minHeight: 150,
-                }}
-              />
-            </div>
-            <div>
-              <FieldLabel>助けが必要な1点</FieldLabel>
-              <textarea
-                value={draft.help}
-                onChange={(e) => setDraft({ ...draft, help: e.target.value })}
-                rows={6}
-                className="mt-2 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
-                style={{
-                  backgroundColor: 'var(--color-obs-surface-low)',
-                  color: 'var(--color-obs-text)',
-                  boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
-                  minHeight: 150,
-                }}
+        <div className="grid grid-cols-1 md:grid-cols-[220px_1fr_1fr] gap-8">
+          <div>
+            <FieldLabel>結論</FieldLabel>
+            <div className="mt-3">
+              <ConclusionSelect
+                value={summary.conclusion}
+                onChange={(v) => updateSummary({ conclusion: v })}
               />
             </div>
           </div>
-        )}
+          <div>
+            <FieldLabel>NEXT</FieldLabel>
+            <textarea
+              value={summary.next}
+              onChange={(e) => updateSummary({ next: e.target.value })}
+              rows={6}
+              placeholder="（未入力）"
+              className="mt-3 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
+              style={{
+                backgroundColor: 'var(--color-obs-surface-low)',
+                color: 'var(--color-obs-text)',
+                boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+                minHeight: 150,
+              }}
+            />
+          </div>
+          <div>
+            <FieldLabel>助けが必要な1点</FieldLabel>
+            <textarea
+              value={summary.help}
+              onChange={(e) => updateSummary({ help: e.target.value })}
+              rows={6}
+              placeholder="（未入力）"
+              className="mt-3 w-full rounded-[var(--radius-obs-md)] p-3 text-[12.5px] leading-[1.8] resize-y font-[family-name:var(--font-body)]"
+              style={{
+                backgroundColor: 'var(--color-obs-surface-low)',
+                color: 'var(--color-obs-text)',
+                boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+                minHeight: 150,
+              }}
+            />
+          </div>
+        </div>
       </div>
 
       {/* ─── セクションラベル ─── */}
@@ -789,64 +732,44 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
         </button>
       </div>
 
-      {/* ─── ファネル 4ステージ ─── */}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_auto_1fr_auto_1fr] gap-4 items-stretch">
+      {/* ─── ファネル 3ステージ ─── */}
+      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto_1fr_auto_1fr] gap-4 items-stretch">
         <FunnelCard
-          label="有効商談数"
+          label="商談数"
           value={counts.valid}
           color="var(--color-obs-primary)"
-          condition={'担当部門 / 導入検討中\n時期感あり'}
-          rateLabel="最終転換率"
-          rate={counts.finalRate}
-          rateColor="var(--color-obs-primary)"
+          condition={'商談済み'}
           activeDeals={stageGroups.valid}
           activeLabel="現在進行中の案件"
           rateTotal={counts.totalValid}
-          rateTotalLabel="有効商談累計"
+          rateTotalLabel="商談累計"
           rateNumerator={counts.totalRunning}
           rateNumeratorLabel="PJ進行まで到達"
           pastDeals={stageGroups.past}
         />
-        <ArrowStep label="昇格" />
-        <FunnelCard
-          label="PJ化予定あり"
-          value={counts.pjPlanned}
-          color="#c9a94b"
-          condition={'2回目の商談意向\nor トライアル意向'}
-          rateLabel="移行率"
-          rate={counts.plannedRate}
-          rateColor="#6ee7a1"
-          activeDeals={stageGroups.pjPlanned}
-          activeLabel="現在進行中の案件"
-          rateTotal={counts.totalValid}
-          rateTotalLabel="有効商談累計"
-          rateNumerator={counts.totalPlanned}
-          rateNumeratorLabel="PJ化予定まで到達"
-          pastDeals={stageGroups.past}
-        />
         <ArrowStep label="PJ化" />
         <FunnelCard
-          label="PJ可能案件"
+          label="プロジェクト化予定あり"
           value={counts.pjPossible}
           color="var(--color-obs-low)"
-          condition={'上長の社内推進\n社内障壁のクリア'}
+          condition={'プロジェクト化予定あり'}
           rateLabel="移行率"
           rate={counts.possibleRate}
           rateColor="#6ee7a1"
           activeDeals={stageGroups.pjPossible}
           activeLabel="現在進行中の案件"
-          rateTotal={counts.totalPlanned}
-          rateTotalLabel="PJ化予定累計"
+          rateTotal={counts.totalValid}
+          rateTotalLabel="商談累計"
           rateNumerator={counts.totalPossible}
-          rateNumeratorLabel="PJ可能まで到達"
+          rateNumeratorLabel="PJ化予定まで到達"
           pastDeals={stageGroups.past}
         />
         <ArrowStep label="POC" />
         <FunnelCard
-          label="PJ進行"
+          label="プロジェクト進行"
           value={counts.pjRunning}
           color="#6ee7a1"
-          condition={'POC実施確定\n2回目商談以降に移行'}
+          condition={'複数商談済み・POC'}
           rateLabel="移行率"
           rate={counts.runningRate}
           rateColor="#6ee7a1"
@@ -854,17 +777,47 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
           activeDeals={stageGroups.pjRunning}
           activeLabel="現在進行中の案件"
           rateTotal={counts.totalPossible}
-          rateTotalLabel="PJ可能累計"
+          rateTotalLabel="PJ化予定累計"
           rateNumerator={counts.totalRunning}
           rateNumeratorLabel="PJ進行まで到達"
           pastDeals={stageGroups.past}
         />
       </div>
 
-      {/* ─── 失注 / 契約 ─── */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        <OutcomeCard icon={<X size={16} />}     label="失注" value={counts.lost}       rate={counts.lostRate}     tone="hot"     deals={stageGroups.lost} />
-        <OutcomeCard icon={<Check size={16} />} label="契約" value={counts.contracted} rate={counts.contractRate} tone="success" deals={stageGroups.contracted} />
+      {/* ─── 検証 / 契約 / 失注 / ロスト ─── (定義は STAGES.desc から自動引用) */}
+      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <OutcomeCard
+          icon={<Clock size={16} />}
+          label="検証"
+          value={counts.verify}
+          tone="warning"
+          deals={stageGroups.verify}
+          desc={STAGES.find((s) => s.key === 'POC')?.desc}
+        />
+        <OutcomeCard
+          icon={<Check size={16} />}
+          label="契約"
+          value={counts.contracted}
+          tone="success"
+          deals={stageGroups.contracted}
+          desc={STAGES.find((s) => s.key === 'CLOSED_WON')?.desc}
+        />
+        <OutcomeCard
+          icon={<X size={16} />}
+          label="失注"
+          value={counts.lost}
+          tone="hot"
+          deals={stageGroups.lost}
+          desc={STAGES.find((s) => s.key === 'LOST_DEAL')?.desc}
+        />
+        <OutcomeCard
+          icon={<ArrowLeft size={16} />}
+          label="ロスト"
+          value={counts.churned}
+          tone="muted"
+          deals={stageGroups.churned}
+          desc={STAGES.find((s) => s.key === 'LOST')?.desc}
+        />
       </div>
 
       {/* ─── 有効商談一覧 ─── */}
@@ -872,7 +825,7 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
         <div className="flex items-center gap-3 mb-4">
           <span className="w-6 h-px" style={{ backgroundColor: 'var(--color-obs-outline-variant)' }} />
           <span className="text-[11px] font-medium tracking-[0.1em] uppercase" style={{ color: 'var(--color-obs-text-muted)' }}>
-            有効商談一覧
+            商談一覧
           </span>
           <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>
             — {activeDeals.length}件
@@ -964,6 +917,9 @@ function FunnelReport({ deals }: { deals: Deal[] }) {
           })}
         </div>
       </div>
+
+      {/* ─── POC移行率 ─── (取引データから経由元別に自動集計) */}
+      <TrialConversionTable deals={scoped} />
     </div>
   )
 }
@@ -1023,19 +979,345 @@ function FieldLabel({ children }: { children: React.ReactNode }) {
   )
 }
 
-function SummaryView({ title, body }: { title: string; body: string }) {
+// ─── POC移行率 ───────────────────────────────────────────────────────────────
+// 経由元カテゴリ表示名 (Deal.sourceCategory のキーと対応)
+const SOURCE_CATEGORY_LABEL: Record<SourceCategory, string> = {
+  web:      'WEB流入',
+  referral: '紹介',
+  partner:  'パートナー経由',
+  event:    'イベント',
+  media:    '媒体掲載',
+}
+
+// テーブルでの並び順（左から順に表示）
+const SOURCE_CATEGORY_ORDER: SourceCategory[] = ['web', 'referral', 'partner', 'event', 'media']
+
+// POC到達と判定するステージ：POC・契約・失注
+// （要件：受注／POC／失注のステージにいるお客さんが移行率に反映される）
+const POC_REACHED_STAGES: StageKey[] = ['POC', 'CLOSED_WON', 'LOST_DEAL']
+
+type TrialChannel = {
+  id: SourceCategory
+  category: string
+  sources: string[]                                                  // ヘッダ下サブテキスト用
+  acquired: number                                                   // カテゴリ内の取得社数 (=取引数)
+  trials: number                                                     // POC到達した社数
+  details: { source: string; acquired: number; trials: number }[]    // 経由元別内訳
+}
+
+const RATE_COLOR_GREEN = '#6ee7a1'
+const RATE_COLOR_GOLD = '#c9a94b'
+const RATE_COLOR_DIM = 'var(--color-obs-text-subtle)'
+
+function rateColorFor(rate: number): string {
+  if (rate <= 0) return RATE_COLOR_DIM
+  return RATE_COLOR_GREEN
+}
+
+function TrialConversionTable({ deals }: { deals: Deal[] }) {
+  const [openIds, setOpenIds] = useState<Set<string>>(new Set())
+  const toggle = (id: string) =>
+    setOpenIds((prev) => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id)
+      else next.add(id)
+      return next
+    })
+
+  // ── 取引データから経由元カテゴリ別に自動集計 ──
+  // 取得社数 = カテゴリ内取引数
+  // POC = POC / 受注 / 失注 のいずれかにいる取引数
+  const channels: TrialChannel[] = useMemo(() => {
+    const dealsWithSource = deals.filter((d) => !!d.sourceCategory && !!d.source)
+    return SOURCE_CATEGORY_ORDER.map<TrialChannel>((cat) => {
+      const inCat = dealsWithSource.filter((d) => d.sourceCategory === cat)
+      // 経由元名でグルーピング
+      const bySource = new Map<string, { acquired: number; trials: number }>()
+      for (const d of inCat) {
+        const key = d.source ?? '（未指定）'
+        const cur = bySource.get(key) ?? { acquired: 0, trials: 0 }
+        cur.acquired += 1
+        if (POC_REACHED_STAGES.includes(d.stage)) cur.trials += 1
+        bySource.set(key, cur)
+      }
+      const details = Array.from(bySource.entries()).map(([source, v]) => ({
+        source,
+        acquired: v.acquired,
+        trials: v.trials,
+      }))
+      return {
+        id: cat,
+        category: SOURCE_CATEGORY_LABEL[cat],
+        sources: details.map((d) => d.source),
+        acquired: inCat.length,
+        trials: inCat.filter((d) => POC_REACHED_STAGES.includes(d.stage)).length,
+        details,
+      }
+    }).filter((c) => c.acquired > 0) // 取引が無いカテゴリは行を出さない
+  }, [deals])
+
+  const totals = channels.reduce(
+    (acc, c) => ({ acquired: acc.acquired + c.acquired, trials: acc.trials + c.trials }),
+    { acquired: 0, trials: 0 },
+  )
+  const totalRate = totals.acquired > 0 ? Math.round((totals.trials / totals.acquired) * 100) : 0
+
   return (
     <div>
-      <FieldLabel>{title}</FieldLabel>
+      {/* セクション見出し */}
+      <div className="flex items-center gap-3 mb-4 mt-2">
+        <span className="w-6 h-px" style={{ backgroundColor: RATE_COLOR_GOLD, opacity: 0.5 }} />
+        <span
+          className="text-[11px] font-medium tracking-[0.1em] uppercase"
+          style={{ color: RATE_COLOR_GOLD }}
+        >
+          POC移行率
+        </span>
+      </div>
+
+      {/* テーブル */}
       <div
-        className="mt-2 rounded-[var(--radius-obs-md)] p-3.5 text-[12.5px] leading-[1.9] whitespace-pre-wrap break-words"
+        className="rounded-[var(--radius-obs-xl)] overflow-hidden"
         style={{
-          backgroundColor: 'var(--color-obs-surface-low)',
-          color: 'var(--color-obs-text-muted)',
-          minHeight: 140,
+          backgroundColor: 'var(--color-obs-surface-high)',
+          boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.2)',
         }}
       >
-        {body || <span style={{ color: 'var(--color-obs-text-subtle)' }}>（未入力）</span>}
+        {/* ヘッダ */}
+        <div
+          className="grid items-center px-5 py-3 text-[10.5px] font-medium tracking-[0.12em] uppercase gap-4"
+          style={{
+            gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
+            color: 'var(--color-obs-text-subtle)',
+            backgroundColor: 'var(--color-obs-surface-low)',
+          }}
+        >
+          <span>経由元カテゴリ</span>
+          <span className="text-right">取得社数</span>
+          <span className="text-right">POC到達</span>
+          <span className="text-right">移行率</span>
+        </div>
+
+        {/* 行 (経由元情報のある取引が無い場合は空状態) */}
+        {channels.length === 0 && (
+          <div
+            className="px-5 py-10 text-center text-[12px]"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            該当期間に経由元情報のある取引がありません
+          </div>
+        )}
+        {channels.map((c, i) => {
+          const isOpen = openIds.has(c.id)
+          const rate = c.acquired > 0 ? Math.round((c.trials / c.acquired) * 100) : 0
+          const rColor = rateColorFor(rate)
+          return (
+            <div
+              key={c.id}
+              style={{
+                borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.12)',
+              }}
+            >
+              <button
+                type="button"
+                onClick={() => toggle(c.id)}
+                className="w-full grid items-center px-5 py-4 text-left transition-colors duration-150 gap-4"
+                style={{
+                  gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
+                  backgroundColor: 'transparent',
+                }}
+                onMouseOver={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                    'rgba(65,71,83,0.12)'
+                }}
+                onMouseOut={(e) => {
+                  ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                }}
+                aria-expanded={isOpen}
+              >
+                <div className="min-w-0">
+                  <div
+                    className="text-[13px] font-semibold leading-tight"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
+                    {c.category}
+                  </div>
+                  <div
+                    className="text-[11px] mt-1 leading-snug truncate"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                    title={c.sources.join(' / ')}
+                  >
+                    {c.sources.join(' / ')}
+                  </div>
+                  <ChevronDown
+                    size={13}
+                    strokeWidth={2}
+                    className="mt-1.5"
+                    style={{
+                      color: 'var(--color-obs-text-subtle)',
+                      transform: isOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                      transition: 'transform 150ms var(--ease-liquid)',
+                    }}
+                  />
+                </div>
+                <div className="text-right tabular-nums">
+                  <span
+                    className="text-[18px] font-[family-name:var(--font-display)] font-bold"
+                    style={{ color: 'var(--color-obs-text)' }}
+                  >
+                    {c.acquired}
+                  </span>
+                  <span
+                    className="ml-0.5 text-[11px]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    社
+                  </span>
+                </div>
+                <div className="text-right tabular-nums">
+                  <span
+                    className="text-[18px] font-[family-name:var(--font-display)] font-bold"
+                    style={{ color: c.trials > 0 ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)' }}
+                  >
+                    {c.trials}
+                  </span>
+                  <span
+                    className="ml-0.5 text-[11px]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    社
+                  </span>
+                </div>
+                <div className="text-right tabular-nums">
+                  <span
+                    className="text-[20px] font-[family-name:var(--font-display)] font-bold"
+                    style={{ color: rColor }}
+                  >
+                    {rate}%
+                  </span>
+                </div>
+              </button>
+
+              {/* 展開時の内訳 */}
+              {isOpen && c.details.length > 0 && (
+                <div
+                  className="px-5 pb-4 pt-1"
+                  style={{ backgroundColor: 'rgba(65,71,83,0.06)' }}
+                >
+                  <div
+                    className="grid items-center px-3 py-2 text-[10px] font-medium tracking-[0.1em] uppercase gap-4"
+                    style={{
+                      gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
+                      color: 'var(--color-obs-text-subtle)',
+                    }}
+                  >
+                    <span>経由元</span>
+                    <span className="text-right">取得</span>
+                    <span className="text-right">申し込み</span>
+                    <span className="text-right">移行率</span>
+                  </div>
+                  {c.details.map((d) => {
+                    const dRate = d.acquired > 0 ? Math.round((d.trials / d.acquired) * 100) : 0
+                    const dColor = rateColorFor(dRate)
+                    return (
+                      <div
+                        key={d.source}
+                        className="grid items-center px-3 py-2 gap-4"
+                        style={{
+                          gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
+                          borderTop: '1px solid rgba(65,71,83,0.1)',
+                        }}
+                      >
+                        <span
+                          className="text-[12px] truncate"
+                          style={{ color: 'var(--color-obs-text-muted)' }}
+                          title={d.source}
+                        >
+                          {d.source}
+                        </span>
+                        <span
+                          className="text-right text-[12px] tabular-nums"
+                          style={{ color: 'var(--color-obs-text)' }}
+                        >
+                          {d.acquired}社
+                        </span>
+                        <span
+                          className="text-right text-[12px] tabular-nums"
+                          style={{
+                            color: d.trials > 0
+                              ? 'var(--color-obs-text)'
+                              : 'var(--color-obs-text-subtle)',
+                          }}
+                        >
+                          {d.trials}社
+                        </span>
+                        <span
+                          className="text-right text-[13px] font-bold tabular-nums"
+                          style={{ color: dColor }}
+                        >
+                          {dRate}%
+                        </span>
+                      </div>
+                    )
+                  })}
+                </div>
+              )}
+            </div>
+          )
+        })}
+
+        {/* 合計 */}
+        <div
+          className="grid items-center px-5 py-4 gap-4"
+          style={{
+            gridTemplateColumns: '1.6fr 0.6fr 0.8fr 0.6fr',
+            backgroundColor: 'rgba(201,169,75,0.06)',
+            borderTop: '1px solid rgba(201,169,75,0.18)',
+          }}
+        >
+          <span
+            className="text-[13px] font-bold tracking-[0.04em]"
+            style={{ color: RATE_COLOR_GOLD }}
+          >
+            合計
+          </span>
+          <div className="text-right tabular-nums">
+            <span
+              className="text-[18px] font-[family-name:var(--font-display)] font-bold"
+              style={{ color: RATE_COLOR_GOLD }}
+            >
+              {totals.acquired}
+            </span>
+            <span
+              className="ml-0.5 text-[11px]"
+              style={{ color: RATE_COLOR_GOLD, opacity: 0.7 }}
+            >
+              社
+            </span>
+          </div>
+          <div className="text-right tabular-nums">
+            <span
+              className="text-[18px] font-[family-name:var(--font-display)] font-bold"
+              style={{ color: RATE_COLOR_GOLD }}
+            >
+              {totals.trials}
+            </span>
+            <span
+              className="ml-0.5 text-[11px]"
+              style={{ color: RATE_COLOR_GOLD, opacity: 0.7 }}
+            >
+              社
+            </span>
+          </div>
+          <div className="text-right tabular-nums">
+            <span
+              className="text-[20px] font-[family-name:var(--font-display)] font-bold"
+              style={{ color: RATE_COLOR_GOLD }}
+            >
+              {totalRate}%
+            </span>
+          </div>
+        </div>
       </div>
     </div>
   )
@@ -1051,9 +1333,10 @@ function FunnelCard({
   value: number
   color: string
   condition: string
-  rateLabel: string
-  rate: number
-  rateColor: string
+  // 移行率は省略可能（最終転換率を出さないカードがある）
+  rateLabel?: string
+  rate?: number
+  rateColor?: string
   accent?: boolean
   activeDeals: Deal[]
   activeLabel: string
@@ -1075,6 +1358,9 @@ function FunnelCard({
         transform: hover !== 'none' ? 'translateY(-2px)' : 'translateY(0)',
         transitionTimingFunction: 'var(--ease-liquid)',
         cursor: 'default',
+        // ホバー中はカード自体を最前面に持ち上げて、下段カード(検証/契約/失注/ロスト)に
+        // ポップアップが隠れないようにする
+        zIndex: hover !== 'none' ? 50 : 'auto',
       }}
       onMouseEnter={() => setHover('card')}
       onMouseLeave={() => setHover('none')}
@@ -1098,30 +1384,33 @@ function FunnelCard({
         {condition}
       </p>
 
-      {/* 移行率ボックス（ホバーで累計内訳＋過去案件ポップオーバー） */}
-      <div
-        className="relative flex items-center justify-between mt-4 pt-3 -mx-2 px-2 rounded-[var(--radius-obs-sm)] cursor-help transition-colors duration-150"
-        style={{
-          boxShadow: 'inset 0 1px 0 0 var(--color-obs-outline-variant)',
-          backgroundColor: hover === 'rate' ? 'rgba(0,113,227,0.06)' : 'transparent',
-        }}
-        onMouseEnter={() => setHover('rate')}
-        onMouseLeave={() => setHover('card')}
-      >
-        <span className="text-[10px] font-medium tracking-[0.05em] uppercase inline-flex items-center gap-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
-          {rateLabel}
-          <HelpCircle size={9} style={{ opacity: 0.6 }} />
-        </span>
-        <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color: rateColor }}>
-          {rate}%
-        </span>
-      </div>
+      {/* 移行率ボックス（ホバーで累計内訳＋過去案件ポップオーバー）
+          rateLabel/rate が指定された時のみ表示（商談数カードでは非表示） */}
+      {rateLabel !== undefined && rate !== undefined && (
+        <div
+          className="relative flex items-center justify-between mt-4 pt-3 -mx-2 px-2 rounded-[var(--radius-obs-sm)] cursor-help transition-colors duration-150"
+          style={{
+            boxShadow: 'inset 0 1px 0 0 var(--color-obs-outline-variant)',
+            backgroundColor: hover === 'rate' ? 'rgba(0,113,227,0.06)' : 'transparent',
+          }}
+          onMouseEnter={() => setHover('rate')}
+          onMouseLeave={() => setHover('card')}
+        >
+          <span className="text-[10px] font-medium tracking-[0.05em] uppercase inline-flex items-center gap-1" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            {rateLabel}
+            <HelpCircle size={9} style={{ opacity: 0.6 }} />
+          </span>
+          <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color: rateColor }}>
+            {rate}%
+          </span>
+        </div>
+      )}
 
       {/* カード全体ホバー：現在進行中の案件 */}
       {hover === 'card' && <DealHoverList deals={activeDeals} title={activeLabel} accent={color} />}
 
       {/* 移行率ホバー：累計内訳 + 過去案件 */}
-      {hover === 'rate' && (
+      {hover === 'rate' && rate !== undefined && rateColor !== undefined && (
         <RateHoverDetail
           rate={rate}
           rateColor={rateColor}
@@ -1253,20 +1542,26 @@ function ArrowStep({ label }: { label: string }) {
   )
 }
 
-// ─── Sub: 失注 / 契約 カード ───────────────────────────────────────────────────
+// ─── Sub: アウトカムカード（検証/契約/失注/ロスト） ─────────────────────────
 function OutcomeCard({
-  icon, label, value, rate, tone, deals,
+  icon, label, value, rate, tone, deals, desc,
 }: {
   icon: React.ReactNode
   label: string
   value: number
-  rate: number
-  tone: 'hot' | 'success'
+  rate?: number
+  tone: 'hot' | 'success' | 'warning' | 'muted'
   deals: Deal[]
+  desc?: string
 }) {
   const [hover, setHover] = useState(false)
-  const color = tone === 'hot' ? 'var(--color-obs-hot)' : '#6ee7a1'
-  const bg = tone === 'hot' ? 'rgba(255,107,107,0.14)' : 'rgba(110,231,161,0.14)'
+  const TONE_STYLE: Record<typeof tone, { color: string; bg: string }> = {
+    hot:     { color: 'var(--color-obs-hot)',         bg: 'rgba(255,107,107,0.14)' },
+    success: { color: '#6ee7a1',                      bg: 'rgba(110,231,161,0.14)' },
+    warning: { color: '#c9a94b',                      bg: 'rgba(201,169,75,0.16)' },
+    muted:   { color: 'var(--color-obs-text-muted)',  bg: 'rgba(143,140,144,0.16)' },
+  }
+  const { color, bg } = TONE_STYLE[tone]
   return (
     <div
       className="relative stitch-glass stitch-glow-border rounded-[var(--radius-obs-xl)] p-5 flex items-center gap-5 transition-all duration-200"
@@ -1284,7 +1579,7 @@ function OutcomeCard({
       >
         {icon}
       </div>
-      <div className="flex-1">
+      <div className="flex-1 min-w-0">
         <p className="text-[11px] font-bold tracking-[0.1em] uppercase mb-1" style={{ color }}>
           {label}
         </p>
@@ -1297,15 +1592,25 @@ function OutcomeCard({
           </span>
           <span className="text-[11px]" style={{ color: 'var(--color-obs-text-muted)' }}>社</span>
         </div>
+        {desc && (
+          <p
+            className="text-[10.5px] mt-1.5 leading-snug"
+            style={{ color: 'var(--color-obs-text-muted)' }}
+          >
+            {desc}
+          </p>
+        )}
       </div>
-      <div className="text-right">
-        <p className="text-[10px] font-medium tracking-[0.08em] uppercase mb-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
-          PJ進行中比
-        </p>
-        <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color }}>
-          {rate}%
-        </span>
-      </div>
+      {typeof rate === 'number' && (
+        <div className="text-right">
+          <p className="text-[10px] font-medium tracking-[0.08em] uppercase mb-0.5" style={{ color: 'var(--color-obs-text-subtle)' }}>
+            PJ進行中比
+          </p>
+          <span className="font-[family-name:var(--font-display)] text-[15px] font-bold tabular-nums" style={{ color }}>
+            {rate}%
+          </span>
+        </div>
+      )}
 
       {/* ホバー：該当案件ポップオーバー */}
       {hover && <DealHoverList deals={deals} title={`${label}した案件`} accent={color} />}
@@ -1317,10 +1622,13 @@ function OutcomeCard({
 function DealHoverList({ deals, title, accent }: { deals: Deal[]; title: string; accent: string }) {
   return (
     <div
-      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(320px,calc(100vw-48px))] z-30 rounded-[var(--radius-obs-lg)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
+      className="absolute left-1/2 -translate-x-1/2 top-full mt-2 w-[min(320px,calc(100vw-48px))] z-50 rounded-[var(--radius-obs-lg)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
       style={{
-        backgroundColor: 'var(--color-obs-surface-highest)',
-        boxShadow: '0 12px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.4)',
+        backgroundColor: 'rgba(20,20,26,0.98)',
+        backdropFilter: 'blur(12px) saturate(140%)',
+        WebkitBackdropFilter: 'blur(12px) saturate(140%)',
+        boxShadow:
+          '0 24px 64px rgba(0,0,0,0.7), 0 0 0 1px rgba(255,255,255,0.1), inset 0 0 0 1px rgba(255,255,255,0.04)',
       }}
       onClick={(e) => e.stopPropagation()}
     >
@@ -1328,11 +1636,11 @@ function DealHoverList({ deals, title, accent }: { deals: Deal[]; title: string;
       <span
         className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 rotate-45"
         style={{
-          backgroundColor: 'var(--color-obs-surface-highest)',
-          boxShadow: 'inset 0 0 0 1px rgba(65,71,83,0.4)',
+          backgroundColor: 'rgba(20,20,26,0.98)',
+          boxShadow: 'inset 0 0 0 1px rgba(255,255,255,0.1)',
         }}
       />
-      <div className="px-4 py-2.5 flex items-center justify-between" style={{ backgroundColor: 'var(--color-obs-surface-low)' }}>
+      <div className="px-4 py-2.5 flex items-center justify-between" style={{ backgroundColor: 'rgba(255,255,255,0.04)', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
         <span className="text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: accent }}>
           {title}
         </span>
@@ -1349,34 +1657,20 @@ function DealHoverList({ deals, title, accent }: { deals: Deal[]; title: string;
           {deals.map((d, i) => (
             <div
               key={d.id}
-              className="px-4 py-2.5 flex items-start gap-3"
-              style={{ borderTop: i === 0 ? 'none' : '1px solid rgba(65,71,83,0.15)' }}
+              className="px-4 py-2 flex items-center gap-3"
+              style={{ borderTop: i === 0 ? 'none' : '1px solid rgba(255,255,255,0.06)' }}
             >
               <span
-                className="text-[10.5px] tabular-nums mt-0.5 shrink-0"
+                className="text-[10.5px] tabular-nums shrink-0"
                 style={{ color: 'var(--color-obs-text-subtle)' }}
               >
                 {String(i + 1).padStart(2, '0')}
               </span>
-              <div className="min-w-0 flex-1">
-                <div className="text-[12px] font-semibold truncate" style={{ color: 'var(--color-obs-text)' }}>
-                  {d.company}
-                </div>
-                <div className="flex items-center gap-2 text-[10.5px] mt-0.5">
-                  <span style={{ color: 'var(--color-obs-text-muted)' }}>{d.owner}</span>
-                  <span style={{ color: 'var(--color-obs-text-subtle)' }}>·</span>
-                  <span style={{ color: 'var(--color-obs-text-muted)' }}>
-                    {STAGES.find((s) => s.key === d.stage)?.label ?? d.stage}
-                  </span>
-                </div>
-                {d.status && (
-                  <div
-                    className="text-[10.5px] mt-1 line-clamp-2"
-                    style={{ color: 'var(--color-obs-text-muted)' }}
-                  >
-                    {d.status}
-                  </div>
-                )}
+              <div
+                className="text-[12.5px] font-semibold truncate flex-1 min-w-0"
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                {d.company}
               </div>
             </div>
           ))}
@@ -1387,8 +1681,8 @@ function DealHoverList({ deals, title, accent }: { deals: Deal[]; title: string;
 }
 
 // ─── Activity Gauges ───────────────────────────────────────────────────────────
-// メール：5段階（3, 5, 10, 30, 50+）
-// 商談：5段階（1, 2, 3, 5, 10+）色変化あり
+// メール：5段階（3, 5, 7, 10, 12+）
+// 商談：5段階（1, 2, 3, 5, 7+）色変化あり
 
 type GaugeLevel = 0 | 1 | 2 | 3 | 4 | 5
 
@@ -1396,8 +1690,8 @@ function emailLevel(n: number): GaugeLevel {
   if (n <= 0) return 0
   if (n <= 3) return 1
   if (n <= 5) return 2
-  if (n <= 10) return 3
-  if (n <= 30) return 4
+  if (n <= 7) return 3
+  if (n <= 10) return 4
   return 5
 }
 function meetingLevel(n: number): GaugeLevel {
@@ -1542,8 +1836,8 @@ function formatJpy(amount: number): string {
 }
 
 // ゲージのレベル目安（表示用）
-const EMAIL_THRESHOLDS = ['3', '5', '10', '30', '50+'] as const
-const MEETING_THRESHOLDS = ['1', '2', '3', '5', '10+'] as const
+const EMAIL_THRESHOLDS = ['3', '5', '7', '10', '12+'] as const
+const MEETING_THRESHOLDS = ['1', '2', '3', '5', '7+'] as const
 
 // ─── DealCard ─────────────────────────────────────────────────────────────────
 
@@ -1556,7 +1850,6 @@ function DealCard({
   onDragStart: (e: DragEvent<HTMLDivElement>) => void
   onDragEnd: (e: DragEvent<HTMLDivElement>) => void
 }) {
-  const intent = INTENT_STYLE[deal.intent]
   const isPOC = deal.stage === 'POC'
   const isPriority = deal.stage === 'PROJECT_PLANNED'
   const eLv = emailLevel(deal.emailCount)
@@ -1584,11 +1877,9 @@ function DealCard({
         ;(e.currentTarget as HTMLDivElement).style.backgroundColor = 'rgba(53, 52, 55, 0.6)'
       }}
     >
-      {/* Header: intent + createdAt */}
+      {/* Header: 1stパーティ シグナル + createdAt */}
       <div className="flex justify-between items-start mb-2.5">
-        <span className={`px-2 py-0.5 rounded-sm text-[9px] font-bold uppercase ${intent.cls}`}>
-          {intent.label}
-        </span>
+        <SignalBadge signal={deal.intent} />
         <span
           className="inline-flex items-center gap-1 text-[9.5px] tabular-nums"
           style={{ color: 'rgba(143,140,144,0.65)' }}
@@ -1598,30 +1889,22 @@ function DealCard({
         </span>
       </div>
 
-      {/* Title */}
+      {/* Title (取引先名 = 企業名) — クリックで取引詳細へ。drag は親カードに任せる */}
       <h4
-        className="text-sm font-semibold mb-1 leading-snug tracking-[-0.01em] group-hover:text-[color:var(--color-obs-primary)] transition-colors duration-150"
+        className="text-sm font-semibold mb-1 leading-snug tracking-[-0.01em]"
         style={{ color: 'var(--color-obs-text)' }}
       >
-        {deal.name}
+        <Link
+          href={`/deals/${deal.id}`}
+          className="hover:underline group-hover:text-[color:var(--color-obs-primary)] transition-colors duration-150"
+          style={{ color: 'inherit' }}
+          onClick={(e) => e.stopPropagation()}
+          draggable={false}
+          onDragStart={(e) => e.preventDefault()}
+        >
+          {deal.company}
+        </Link>
       </h4>
-
-      {/* Priority / Phase pill for special stages */}
-      {deal.priorityPhase && (
-        <div className="flex items-center gap-1.5 mt-2">
-          {isPriority ? (
-            <Star size={12} style={{ color: 'var(--color-obs-primary)' }} />
-          ) : isPOC ? (
-            <FlaskConical size={12} style={{ color: 'var(--color-obs-primary)' }} />
-          ) : null}
-          <span
-            className="text-[9px] font-bold uppercase tracking-[0.1em]"
-            style={{ color: 'var(--color-obs-primary)' }}
-          >
-            {deal.priorityPhase}
-          </span>
-        </div>
-      )}
 
       {/* Activity Gauges — メール + 商談（RPGレアリティ風） */}
       <div className="mt-4 space-y-3">

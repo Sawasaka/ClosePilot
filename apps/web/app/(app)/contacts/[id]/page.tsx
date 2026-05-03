@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect, useRef } from 'react'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
@@ -10,29 +10,25 @@ import {
   Mail,
   Building2,
   PhoneCall,
-  MessageSquare,
-  TrendingUp,
   Star,
   CalendarClock,
   Pencil,
   X,
   CheckCircle2,
-  FileEdit,
   Search,
   Megaphone,
-  Share2,
   Calendar,
-  UserCheck,
-  PhoneOutgoing,
-  Send,
-  Handshake,
   Inbox,
-  HelpCircle,
-  PencilLine,
+  Globe,
+  Plus,
+  Trash2,
+  Tag,
+  Paperclip,
+  Video,
+  BookOpen,
+  FileText,
 } from 'lucide-react'
-import { useCallStore } from '@/lib/stores/callStore'
 import type { ApproachStatus } from '@/types/crm'
-import { GoogleTimeline } from '@/components/google/google-timeline'
 
 // ─── Liquid Obsidian Status Chip ───────────────────────────────────────────────
 // 全ステータスバッジは「薄い同色背景 + ●ドット + 同色文字」の統一フォーマット。
@@ -66,43 +62,14 @@ function StatusObsBadge({ status, size = 'md' }: { status: ApproachStatus; size?
   )
 }
 
-// ─── Local RANK_CONFIG (角度 - A/B/C/プラス/設定なし) ────────────────────────
-// Liquid Obsidian: グラデ・発光は廃止、フラットチップ(背景α=0.14 + 同色文字)
-// A → primary系 / B → low系 / C → muted neutral / プラス → middle系 / 設定なし → neutral
-
-interface RankStyle {
-  bg: string
-  fg: string
-}
-
-const RANK_CONFIG: Record<'A' | 'B' | 'C' | 'プラス' | '設定なし', RankStyle> = {
-  A:        { bg: 'rgba(171,199,255,0.14)', fg: 'var(--color-obs-primary)' },
-  B:        { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
-  C:        { bg: 'rgba(143,140,144,0.14)', fg: 'var(--color-obs-text-muted)' },
-  'プラス': { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
-  '設定なし': { bg: 'rgba(143,140,144,0.10)', fg: 'var(--color-obs-text-subtle)' },
-}
-
-const RANK_OPTIONS_FULL: ContactRank[] = ['A', 'B', 'C', 'プラス', null]
-function rankLabel(r: ContactRank): string {
-  return r === null ? '設定なし' : r
-}
-function rankConfigOf(r: ContactRank): RankStyle {
-  return r === null ? RANK_CONFIG['設定なし'] : RANK_CONFIG[r]
-}
-
 // ─── Types ─────────────────────────────────────────────────────────────────────
 
-type ActivityType = 'call' | 'email' | 'note' | 'deal_advance'
-
-interface ActivityItem {
+type SimpleTask = {
   id: string
-  type: ActivityType
-  timestamp: string
   title: string
-  result?: ApproachStatus
-  durationSec?: number
-  description?: string
+  done: boolean
+  dueAt: string | null
+  memo?: string
 }
 
 type NextActionValue = 'メール' | 'コール' | '連絡待ち' | 'ナーチャリング' | '除外' | 'その他' | null
@@ -111,24 +78,15 @@ type PersonRole = '決裁者' | '推進者' | '一般'
 // 角度 — A / B / C / プラス / 設定なし
 type ContactRank = 'A' | 'B' | 'C' | 'プラス' | null
 
-// リード経由元（チャネル種別）
-type LeadSourceType =
-  | 'manual'
-  | 'web_form'
-  | 'organic_search'
-  | 'paid_ads'
-  | 'sns'
-  | 'event'
-  | 'referral'
-  | 'cold_call'
-  | 'cold_mail'
-  | 'partner'
-  | 'inbound'
-  | 'other'
+// リード経由元: 大分類（category）＋ サブカテゴリ（sub）の2段構成
+// 大分類: 組み込み3種（ホームページ/イベント/広告）＋ ユーザーがカスタム追加可能
+// サブ: ホームページのみ既定2項目（資料請求/問い合わせ・編集削除不可）。
+//        他カテゴリはカスタム追加のみ。
+// カスタムは localStorage に永続化。
 
 interface LeadSource {
-  type: LeadSourceType
-  detail: string
+  category: string  // 組み込み id ('homepage' | 'event' | 'ad') または 'custom_xxx'
+  sub: string
 }
 
 interface ContactDetail {
@@ -146,6 +104,7 @@ interface ContactDetail {
   nextAction: NextActionValue
   nextActionMemo: string
   callAttempts: number
+  mailCount: number
   lastCallAt: string | null
   nextActionAt: string | null
   personRole: PersonRole
@@ -153,53 +112,57 @@ interface ContactDetail {
 }
 
 // ─── Lead Source Style ─────────────────────────────────────────────────────────
-// Liquid Obsidian: 全タイプ共通の薄い neutral surface 下地 + アイコンの色のみ意味で変化。
-// テキストは text-muted、ゴーストアウトラインなし。
-
-interface LeadSourceStyle {
-  Icon: React.ElementType
-  label: string
-  // チップ背景 (全タイプ共通: 薄い neutral)
-  chipBg: string
-  // アイコンの色 (種別判別)
-  iconFg: string
-  // テキスト色 (全タイプ共通: muted)
-  fg: string
-}
-
-// 全タイプ共通: surface-high 相当の薄い neutral 下地 + ラベルは muted 統一
+// 全タイプ共通: surface-high 相当の薄い neutral 下地 + アイコン色だけ大分類を表す
 const LEAD_SOURCE_CHIP_BG = 'rgba(143,140,144,0.10)'
 const LEAD_SOURCE_FG = 'var(--color-obs-text-muted)'
 
-const LEAD_SOURCE_STYLES: Record<LeadSourceType, LeadSourceStyle> = {
-  manual:         { Icon: PencilLine,    label: '手動作成',         chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-muted)',  fg: LEAD_SOURCE_FG },
-  web_form:       { Icon: FileEdit,      label: 'Webフォーム',      chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
-  organic_search: { Icon: Search,        label: '自然検索',         chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
-  paid_ads:       { Icon: Megaphone,     label: '広告経由',         chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-primary)',     fg: LEAD_SOURCE_FG },
-  sns:            { Icon: Share2,        label: 'SNS',              chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
-  event:          { Icon: Calendar,      label: '展示会・イベント', chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-middle)',      fg: LEAD_SOURCE_FG },
-  referral:       { Icon: UserCheck,     label: '紹介',             chipBg: LEAD_SOURCE_CHIP_BG, iconFg: '#4ad98a',                      fg: LEAD_SOURCE_FG },
-  cold_call:      { Icon: PhoneOutgoing, label: '新規コール',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
-  cold_mail:      { Icon: Send,          label: '新規メール',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
-  partner:        { Icon: Handshake,     label: 'パートナー',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
-  inbound:        { Icon: Inbox,         label: '問い合わせ',       chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-low)',         fg: LEAD_SOURCE_FG },
-  other:          { Icon: HelpCircle,    label: 'その他',           chipBg: LEAD_SOURCE_CHIP_BG, iconFg: 'var(--color-obs-text-subtle)', fg: LEAD_SOURCE_FG },
+// 組み込み大分類 — 削除不可
+const BUILTIN_CATEGORY_IDS = ['homepage', 'event', 'webinar', 'media', 'ad'] as const
+type BuiltinCategoryId = typeof BUILTIN_CATEGORY_IDS[number]
+
+const BUILTIN_CATEGORY_META: Record<BuiltinCategoryId, {
+  label: string
+  Icon: React.ElementType
+  iconFg: string
+  defaultSubs: readonly string[]
+}> = {
+  homepage: {
+    label: 'ホームページ', Icon: Globe, iconFg: 'var(--color-obs-primary)',
+    // 編集・削除不可のデフォルト
+    defaultSubs: ['資料請求', '問い合わせ'],
+  },
+  event: {
+    label: 'イベント・展示会', Icon: Calendar, iconFg: 'var(--color-obs-middle)',
+    defaultSubs: [],
+  },
+  webinar: {
+    label: 'ウェビナー・セミナー', Icon: Video, iconFg: 'var(--color-obs-low)',
+    defaultSubs: [],
+  },
+  media: {
+    label: '掲載媒体', Icon: BookOpen, iconFg: '#4ad98a',
+    defaultSubs: [],
+  },
+  ad: {
+    label: '広告', Icon: Megaphone, iconFg: 'var(--color-obs-primary-dim)',
+    defaultSubs: [],
+  },
 }
 
-const ALL_LEAD_SOURCE_TYPES: LeadSourceType[] = [
-  'manual',
-  'web_form',
-  'organic_search',
-  'paid_ads',
-  'sns',
-  'event',
-  'referral',
-  'cold_call',
-  'cold_mail',
-  'partner',
-  'inbound',
-  'other',
-]
+// カスタム大分類のメタ（label のみ。アイコンは共通の Tag で表示）
+interface CustomCategoryDef {
+  id: string
+  label: string
+}
+
+const CUSTOM_CATEGORIES_KEY = 'fo.contacts.lead_source_custom_categories.v1'
+const CUSTOM_SUBS_KEY      = 'fo.contacts.lead_source_custom_subs.v1'
+
+// モック表示で使う「展示会」「検索広告」をシードしてあげる（初回のみ）
+
+function isBuiltinCategory(id: string): id is BuiltinCategoryId {
+  return (BUILTIN_CATEGORY_IDS as readonly string[]).includes(id)
+}
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────────
 
@@ -210,9 +173,9 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     email: 'tanaka@techno-lead.co.jp', phone: '03-1234-5678',
     rank: 'A', status: 'アポ獲得', statusMemo: '3/28 14:00 商談設定済み。Google Meet URL送付済み。',
     nextAction: null, nextActionMemo: '',
-    callAttempts: 3, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28',
+    callAttempts: 3, mailCount: 12, lastCallAt: '2026-03-20', nextActionAt: '2026-03-28',
     personRole: '決裁者',
-    leadSource: { type: 'manual', detail: '' },
+    leadSource: { category: 'homepage', sub: 'Webフォーム' },
   },
   '2': {
     id: '2', name: '山本 佳子', title: 'マネージャー', department: '購買部',
@@ -220,9 +183,9 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     email: 'yamamoto@future-llc.jp', phone: '06-2345-6789',
     rank: 'A', status: '接続済み', statusMemo: '初回コンタクト完了。提案資料の希望あり。',
     nextAction: null, nextActionMemo: '',
-    callAttempts: 5, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22',
+    callAttempts: 5, mailCount: 8, lastCallAt: '2026-03-19', nextActionAt: '2026-03-22',
     personRole: '推進者',
-    leadSource: { type: 'event', detail: '2026年Q1 SaaSWORLD出展時に名刺交換' },
+    leadSource: { category: 'event', sub: '展示会' },
   },
   '3': {
     id: '3', name: '佐々木 拓也', title: '事業企画 部長', department: '経営企画部',
@@ -230,9 +193,9 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     email: 'sasaki@nova-solutions.jp', phone: '03-3456-7890',
     rank: 'B', status: '未着手', statusMemo: '紹介元(株式会社グロース)から「決裁ライン直結」と聞いている。',
     nextAction: 'コール', nextActionMemo: '',
-    callAttempts: 0, lastCallAt: null, nextActionAt: '2026-04-25',
+    callAttempts: 0, mailCount: 0, lastCallAt: null, nextActionAt: '2026-04-25',
     personRole: '決裁者',
-    leadSource: { type: 'referral', detail: '既存顧客（株式会社グロース）からの紹介' },
+    leadSource: { category: 'homepage', sub: '問い合わせ' },
   },
   '4': {
     id: '4', name: '中村 理恵', title: 'マーケティング マネージャー', department: 'マーケティング部',
@@ -240,10 +203,43 @@ const MOCK_CONTACTS: Record<string, ContactDetail> = {
     email: 'nakamura@brightworks.co.jp', phone: '03-4567-8901',
     rank: 'A', status: '接続済み', statusMemo: 'SFA切り替え検討中。現行はSalesforce、Q2中の比較検討と明言。',
     nextAction: 'メール', nextActionMemo: '比較資料(機能差分 + 料金)を送付予定',
-    callAttempts: 2, lastCallAt: '2026-04-18', nextActionAt: '2026-04-23',
+    callAttempts: 2, mailCount: 6, lastCallAt: '2026-04-18', nextActionAt: '2026-04-23',
     personRole: '推進者',
-    leadSource: { type: 'paid_ads', detail: 'Google広告 (キーワード: SFA 切替)' },
+    leadSource: { category: 'ad', sub: '検索広告' },
   },
+}
+
+// 紐付け候補となる企業リスト(Phase 1: モック / 実装時は企業マスタから取得)
+// domains はメールアドレスのドメインから推測する際のキー(複数許容)
+type CompanyOption = { id: string; name: string; domains: string[] }
+const COMPANY_OPTIONS: CompanyOption[] = [
+  { id: '1',  name: '株式会社テクノリード',           domains: ['techno-lead.co.jp', 'technolead.jp'] },
+  { id: '2',  name: '合同会社フューチャー',           domains: ['future-llc.jp', 'future-llc.co.jp'] },
+  { id: '3',  name: '株式会社ノヴァソリューションズ', domains: ['nova-solutions.jp', 'nova-sol.com'] },
+  { id: '4',  name: '株式会社ブライトワークス',       domains: ['brightworks.co.jp'] },
+  { id: '5',  name: '株式会社イノベーション',         domains: ['innovation.co.jp'] },
+  { id: '6',  name: '株式会社グロース',               domains: ['growth-inc.jp', 'growth.co.jp'] },
+  { id: '7',  name: '有限会社サクセス',               domains: ['success-ltd.jp'] },
+  { id: '8',  name: '株式会社ネクスト',               domains: ['next-co.jp'] },
+  { id: '9',  name: '合同会社ビジョン',               domains: ['vision-llc.jp'] },
+  { id: '10', name: '株式会社スタート',               domains: ['start-inc.jp'] },
+]
+
+// メールアドレスからドメインを抽出 (例: foo@bar.co.jp → 'bar.co.jp')
+function extractDomain(email: string): string | null {
+  const at = email.lastIndexOf('@')
+  if (at < 0) return null
+  const d = email.slice(at + 1).trim().toLowerCase()
+  return d.length > 0 ? d : null
+}
+
+// ドメイン一致による企業推測。完全一致を優先、無ければサブドメイン一致 (e.g. mail.bar.co.jp ⊃ bar.co.jp)
+function inferCompaniesFromEmail(email: string): CompanyOption[] {
+  const d = extractDomain(email)
+  if (!d) return []
+  const exact = COMPANY_OPTIONS.filter((c) => c.domains.includes(d))
+  if (exact.length > 0) return exact
+  return COMPANY_OPTIONS.filter((c) => c.domains.some((cd) => d.endsWith('.' + cd)))
 }
 
 // ─── Person Role Style (Liquid Obsidian flat chip) ────────────────────────────
@@ -269,31 +265,6 @@ const NEXT_ACTION_STYLES: Record<Exclude<NextActionValue, null>, ObsChipStyle> =
 
 const ALL_NEXT_ACTIONS: Exclude<NextActionValue, null>[] = ['メール', 'コール', '連絡待ち', 'ナーチャリング', '除外', 'その他']
 
-const MOCK_ACTIVITIES: ActivityItem[] = [
-  {
-    id: 'a1', type: 'call', timestamp: '2026-03-20T14:32',
-    title: 'コール', result: 'アポ獲得', durationSec: 154,
-    description: '3月28日 14:00 商談設定完了。Google Meet URLを送付済み',
-  },
-  {
-    id: 'a2', type: 'deal_advance', timestamp: '2026-03-20T14:33',
-    title: 'Deal が First Meeting ステージへ進行',
-  },
-  {
-    id: 'a3', type: 'call', timestamp: '2026-03-18T11:15',
-    title: 'コール', result: '不在', durationSec: 0,
-    description: '受付が応答。折返し連絡を依頼。',
-  },
-  {
-    id: 'a4', type: 'email', timestamp: '2026-03-17T09:00',
-    title: 'メール送信', description: '会社紹介資料を添付して送付',
-  },
-  {
-    id: 'a5', type: 'call', timestamp: '2026-03-15T10:00',
-    title: 'コール', result: '不通', durationSec: 0,
-  },
-]
-
 // ─── Style Constants (Liquid Obsidian) ─────────────────────────────────────────
 
 const CARD_STYLE: React.CSSProperties = {
@@ -303,69 +274,11 @@ const CARD_STYLE: React.CSSProperties = {
 
 // ─── Helpers ───────────────────────────────────────────────────────────────────
 
-function formatDateTime(ts: string): string {
-  const d = new Date(ts)
-  return `${d.getMonth() + 1}/${d.getDate()} ${d.getHours().toString().padStart(2, '0')}:${d.getMinutes().toString().padStart(2, '0')}`
-}
-
 function formatDuration(sec: number): string {
   if (sec === 0) return '—'
   const m = Math.floor(sec / 60)
   const s = sec % 60
   return m > 0 ? `${m}分${s}秒` : `${s}秒`
-}
-
-// ─── Activity Icon ─────────────────────────────────────────────────────────────
-// Liquid Obsidian: 単色フラット背景 + lucide アイコン1色。グラデ・発光・borderはなし。
-// 種別判別はアイコン形状とアイコン色 (意味色) の差で確保。
-
-interface ActivityIconStyle {
-  Icon: React.ElementType
-  bg: string
-  iconColor: string
-}
-
-function getActivityIconStyle(type: ActivityType): ActivityIconStyle {
-  if (type === 'call') {
-    return {
-      Icon: PhoneCall,
-      bg: 'rgba(126,198,255,0.14)',
-      iconColor: 'var(--color-obs-low)',
-    }
-  }
-  if (type === 'email') {
-    return {
-      Icon: Mail,
-      bg: 'rgba(171,199,255,0.14)',
-      iconColor: 'var(--color-obs-primary)',
-    }
-  }
-  if (type === 'note') {
-    return {
-      Icon: MessageSquare,
-      bg: 'rgba(143,140,144,0.14)',
-      iconColor: 'var(--color-obs-text-muted)',
-    }
-  }
-  // deal_advance などのシステムイベント
-  return {
-    Icon: TrendingUp,
-    bg: 'var(--color-obs-surface-high)',
-    iconColor: 'var(--color-obs-text-subtle)',
-  }
-}
-
-function ActivityIcon({ type }: { type: ActivityType }) {
-  const s = getActivityIconStyle(type)
-  const Icon = s.Icon
-  return (
-    <div
-      className="w-9 h-9 rounded-full flex items-center justify-center shrink-0"
-      style={{ backgroundColor: s.bg }}
-    >
-      <Icon size={15} style={{ color: s.iconColor }} strokeWidth={2} />
-    </div>
-  )
 }
 
 // ─── Inline Selectors (クリックでドロップダウン編集) ──────────────────────────
@@ -556,25 +469,1247 @@ function NextActionSelector({ value, onChange }: {
   )
 }
 
-// ─── LeadSourceSelector (リード経由元) ────────────────────────────────────────
-// チップ(タイプ) + フリーテキスト(detail) の 2 段構成。
-// チップをクリックすると種別ドロップダウン、テキストをクリックするとインライン編集。
+// ─── CompanyPicker (紐付け企業: ドメイン推測 + 検索) ──────────────────────────
+function CompanyPicker({
+  companyId,
+  companyName,
+  email,
+  onSelect,
+}: {
+  companyId: string
+  companyName: string
+  email: string
+  onSelect: (id: string, name: string) => void
+}) {
+  const [open, setOpen] = useState(false)
+  const [query, setQuery] = useState('')
+  const wrapRef = useRef<HTMLDivElement | null>(null)
+  const searchRef = useRef<HTMLInputElement | null>(null)
 
-function LeadSourceTypeChip({ type }: { type: LeadSourceType }) {
-  const s = LEAD_SOURCE_STYLES[type]
-  const Icon = s.Icon
+  // メールから推測した企業
+  const suggested = useMemo(() => inferCompaniesFromEmail(email), [email])
+  const suggestedIds = useMemo(() => new Set(suggested.map((s) => s.id)), [suggested])
+
+  // 検索結果(推測候補は除外して重複表示を避ける)
+  const searchResults = useMemo(() => {
+    const q = query.trim().toLowerCase()
+    return COMPANY_OPTIONS.filter((o) => !suggestedIds.has(o.id)).filter((o) =>
+      q ? o.name.toLowerCase().includes(q) || o.domains.some((d) => d.includes(q)) : true,
+    )
+  }, [query, suggestedIds])
+
+  // 外側クリック / Esc で閉じる
+  useEffect(() => {
+    if (!open) return
+    const onDoc = (e: MouseEvent) => {
+      if (wrapRef.current && !wrapRef.current.contains(e.target as Node)) {
+        setOpen(false)
+      }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    // 開いたら検索欄にフォーカス
+    const t = window.setTimeout(() => searchRef.current?.focus(), 30)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+      window.clearTimeout(t)
+    }
+  }, [open])
+
+  const handlePick = (o: CompanyOption) => {
+    onSelect(o.id, o.name)
+    setOpen(false)
+    setQuery('')
+  }
+
+  const inferredDomain = extractDomain(email)
+
+  return (
+    <div ref={wrapRef} className="relative">
+      <button
+        type="button"
+        onClick={() => setOpen((v) => !v)}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+        className="w-full h-[36px] px-3 pr-8 text-left text-[13px] rounded-[8px] outline-none transition-colors duration-150 inline-flex items-center gap-2"
+        style={{
+          background: 'var(--color-obs-surface-low)',
+          color: 'var(--color-obs-text)',
+          boxShadow: open
+            ? 'inset 0 0 0 1px rgba(171,199,255,0.4)'
+            : 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+        }}
+      >
+        <Building2 size={13} style={{ color: 'var(--color-obs-text-muted)', flexShrink: 0 }} />
+        <span className="truncate flex-1">
+          {companyName || '企業を選択…'}
+        </span>
+        <ChevronDown
+          size={13}
+          className="absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none transition-transform duration-150"
+          style={{
+            color: 'var(--color-obs-text-muted)',
+            transform: open ? 'translateY(-50%) rotate(180deg)' : 'translateY(-50%)',
+          }}
+        />
+      </button>
+
+      {open && (
+        <div
+          className="absolute z-50 left-0 right-0 mt-1.5 rounded-[10px] overflow-hidden"
+          style={{
+            background: 'var(--color-obs-surface-highest)',
+            boxShadow: '0 16px 40px rgba(0,0,0,0.55), inset 0 0 0 1px rgba(109,106,111,0.22)',
+          }}
+        >
+          {/* 検索ボックス */}
+          <div
+            className="flex items-center gap-2 px-3 h-9"
+            style={{ borderBottom: '1px solid rgba(109,106,111,0.16)' }}
+          >
+            <Search size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
+            <input
+              ref={searchRef}
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="企業名・ドメインで検索"
+              className="flex-1 bg-transparent outline-none text-[12.5px]"
+              style={{ color: 'var(--color-obs-text)' }}
+            />
+            {query && (
+              <button
+                type="button"
+                onClick={() => setQuery('')}
+                aria-label="クリア"
+                className="w-4 h-4 rounded-full flex items-center justify-center"
+                style={{ color: 'var(--color-obs-text-muted)' }}
+              >
+                <X size={10} />
+              </button>
+            )}
+          </div>
+
+          <div className="max-h-[260px] overflow-y-auto py-1">
+            {/* 推測候補(検索クエリが空のときのみ表示) */}
+            {!query && suggested.length > 0 && (
+              <>
+                <div
+                  className="px-3 pt-2 pb-1 flex items-center gap-1.5 text-[10px] font-semibold tracking-[0.08em] uppercase"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                >
+                  メールから推測
+                  {inferredDomain && (
+                    <span
+                      className="font-normal normal-case tracking-normal text-[10.5px]"
+                      style={{ color: 'var(--color-obs-text-subtle)' }}
+                    >
+                      @{inferredDomain}
+                    </span>
+                  )}
+                </div>
+                {suggested.map((o) => (
+                  <CompanyRow
+                    key={`s-${o.id}`}
+                    option={o}
+                    selected={o.id === companyId}
+                    suggested
+                    onPick={() => handlePick(o)}
+                  />
+                ))}
+                <div
+                  className="my-1 mx-3 h-px"
+                  style={{ backgroundColor: 'rgba(109,106,111,0.16)' }}
+                />
+              </>
+            )}
+
+            {/* 推測候補が空 + 検索クエリも空のとき、ヒントを出す */}
+            {!query && suggested.length === 0 && email && (
+              <div
+                className="px-3 py-2 text-[11px]"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                メール「{email}」から該当企業を推測できませんでした。下記から検索して選択してください。
+              </div>
+            )}
+
+            {/* 検索結果 / 全件 */}
+            {searchResults.length === 0 ? (
+              <div
+                className="px-3 py-3 text-[11.5px] text-center"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                該当する企業がありません
+              </div>
+            ) : (
+              <>
+                {!query && (
+                  <div
+                    className="px-3 pt-2 pb-1 text-[10px] font-semibold tracking-[0.08em] uppercase"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    すべての企業
+                  </div>
+                )}
+                {searchResults.map((o) => (
+                  <CompanyRow
+                    key={o.id}
+                    option={o}
+                    selected={o.id === companyId}
+                    onPick={() => handlePick(o)}
+                  />
+                ))}
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function CompanyRow({
+  option,
+  selected,
+  suggested,
+  onPick,
+}: {
+  option: CompanyOption
+  selected: boolean
+  suggested?: boolean
+  onPick: () => void
+}) {
+  const [hover, setHover] = useState(false)
+  return (
+    <button
+      type="button"
+      onClick={onPick}
+      onMouseEnter={() => setHover(true)}
+      onMouseLeave={() => setHover(false)}
+      role="option"
+      aria-selected={selected}
+      className="w-full px-3 py-2 flex items-center gap-2 text-left transition-colors duration-100"
+      style={{
+        backgroundColor: hover ? 'rgba(171,199,255,0.08)' : 'transparent',
+      }}
+    >
+      <Building2
+        size={12}
+        style={{
+          color: suggested ? 'var(--color-obs-primary)' : 'var(--color-obs-text-muted)',
+          flexShrink: 0,
+        }}
+      />
+      <div className="flex-1 min-w-0">
+        <div
+          className="text-[12.5px] truncate"
+          style={{
+            color: 'var(--color-obs-text)',
+            fontWeight: selected ? 600 : 500,
+          }}
+        >
+          {option.name}
+        </div>
+        <div
+          className="text-[10.5px] truncate mt-0.5"
+          style={{ color: 'var(--color-obs-text-subtle)' }}
+        >
+          {option.domains.join(' / ')}
+        </div>
+      </div>
+      {selected && (
+        <CheckCircle2
+          size={13}
+          style={{ color: 'var(--color-obs-primary)', flexShrink: 0 }}
+        />
+      )}
+      {suggested && !selected && (
+        <span
+          className="text-[9.5px] font-semibold tracking-[0.06em] uppercase px-1.5 py-0.5 rounded"
+          style={{
+            backgroundColor: 'rgba(171,199,255,0.14)',
+            color: 'var(--color-obs-primary)',
+          }}
+        >
+          推測
+        </span>
+      )}
+    </button>
+  )
+}
+
+// ─── ContactHistoryTimeline (コール / メール / 会議 履歴 ─ Phase 1: モック) ───
+// 実装時は GoogleTimeline / 連携APIに差し替える前提
+type HistoryKind = 'call' | 'email' | 'meeting'
+
+type CallResult = '通話' | '不在' | '不通' | '折返し依頼'
+const CALL_RESULTS: CallResult[] = ['通話', '不在', '不通', '折返し依頼']
+
+type HistoryEntry = {
+  id: string
+  kind: HistoryKind
+  occurredAt: string // ISO
+  title: string
+  detail?: string
+  // call 用
+  direction?: 'inbound' | 'outbound'
+  durationSec?: number
+  result?: CallResult
+  callSummary?: string[]      // 展開時: コール要約サマリ(箇条書き)
+  callTranscript?: string     // 展開時: 文字起こしハイライト
+  // email 用
+  from?: string
+  to?: string
+  emailSubject?: string       // 展開時: 件名
+  emailBody?: string          // 展開時: 本文(プレーンテキスト)
+  emailAttachments?: { name: string; size: string }[]
+  // meeting 用
+  attendees?: string[]
+  meetUrl?: string
+  // Google Meet で自動生成された議事録ドキュメント (Google Docs) へのリンク
+  minutesDocUrl?: string
+  meetingAgenda?: string[]    // 展開時: アジェンダ
+  meetingMinutes?: { heading: string; items: string[] }[] // 展開時: 議事録セクション
+}
+
+const MOCK_CONTACT_HISTORY: HistoryEntry[] = [
+  {
+    id: 'h1',
+    kind: 'meeting',
+    occurredAt: '2026-03-28T14:00:00',
+    title: '初回オンライン商談',
+    detail: 'プロダクトデモ + 課題ヒアリング。次回までに比較表を送付予定。',
+    attendees: ['田中 誠 (株式会社テクノリード)', '開発 太郎', '佐藤 翔'],
+    meetUrl: 'https://meet.google.com/abc-defg-hij',
+    minutesDocUrl: 'https://docs.google.com/document/d/1abc-techno-lead-2026-03-28-minutes/edit',
+    durationSec: 50 * 60,
+    meetingAgenda: [
+      '会社紹介とプロダクトデモ (15分)',
+      '田中様の現行業務フローのヒアリング (15分)',
+      '想定ユースケース・期待効果のディスカッション (15分)',
+      'NEXT STEP の合意 (5分)',
+    ],
+    meetingMinutes: [
+      {
+        heading: '現状の課題',
+        items: [
+          '営業部 12名の SFA 利用率が 4 割程度に留まっており、データ精度が課題',
+          'Salesforce のコスト面で見直し時期に差し掛かっている (Q2 中に判断したい)',
+          '「インテントスコア」のような外部シグナルでの優先度付けは現行未対応',
+        ],
+      },
+      {
+        heading: '評価ポイント',
+        items: [
+          'モバイルでの入力体験が良いか (現場SR からの強い要望)',
+          '既存 Slack / Google Workspace との連携',
+          '導入から本格稼働まで 6 週間以内が望ましい',
+        ],
+      },
+      {
+        heading: 'NEXT STEP',
+        items: [
+          '4/3 (金) までに機能差分 + 料金の比較表を送付',
+          '4/10 週で 2 回目商談 (現場SR 2 名同席を想定)',
+          '田中様から CTO 川崎様の同席可否を確認',
+        ],
+      },
+    ],
+  },
+  {
+    id: 'h2',
+    kind: 'email',
+    occurredAt: '2026-03-21T09:12:00',
+    title: '【ご案内】3/28 14:00 商談のリマインドと事前資料',
+    detail: '事前資料のPDFと、当日のアジェンダ案を添付してお送りしました。',
+    from: '開発 太郎 <taro@frontoffice.jp>',
+    to: 'tanaka@techno-lead.co.jp',
+    emailSubject: '【ご案内】3/28 (金) 14:00 商談のリマインドと事前資料',
+    emailBody: `田中様
+
+お世話になっております、Front Office の開発です。
+
+3/28 (金) 14:00 〜 のオンライン商談のリマインドをさせていただきます。
+当日の Google Meet URL は別途、開始 30 分前にもお送りいたします。
+
+事前共有として、以下の 2 点を添付いたしました。
+お手すきの際にご確認いただけますと幸いです。
+
+  1. プロダクト概要資料 (PDF, 18 ページ)
+  2. 当日のアジェンダ案
+
+当日は田中様の現行業務フロー、特に SFA の利用状況をうかがいながら、
+弊社プロダクトでの解決余地をご提案できればと考えております。
+
+何かご不明点がございましたら、本メールへのご返信にてお気軽にお知らせください。
+
+どうぞよろしくお願いいたします。
+--
+開発 太郎 / Front Office
+taro@frontoffice.jp`,
+    emailAttachments: [
+      { name: 'FrontOffice_プロダクト概要_v2.pdf', size: '2.4 MB' },
+      { name: '20260328_商談アジェンダ.pdf',     size: '180 KB' },
+    ],
+  },
+  {
+    id: 'h3',
+    kind: 'call',
+    occurredAt: '2026-03-20T14:32:00',
+    title: '商談日程の確定コール',
+    detail: '3/28 14:00 で確定。Google Meet URL を当日午前中に送付する旨を共有。',
+    direction: 'outbound',
+    durationSec: 8 * 60 + 24,
+    result: '通話',
+    callSummary: [
+      '3/28 (金) 14:00 〜 で商談確定',
+      '田中様側からは現場 SR の 1 名(佐藤様) も同席予定',
+      'Google Meet URL は当日午前中までに送付することで合意',
+      '事前資料は 1 週間前を目処に送付して欲しいとの要望あり',
+    ],
+    callTranscript:
+      '「では 3/28 の 14 時で確定でお願いできればと。当日は弊社からもう一名、現場の佐藤も同席しますので、現場視点での質問が多くなるかと思います。事前の資料を 1 週間ぐらい前にいただけると、こちらでも論点整理してお返しできますので、ぜひお願いいたします。」',
+  },
+  {
+    id: 'h4',
+    kind: 'email',
+    occurredAt: '2026-03-17T09:00:00',
+    title: '会社紹介資料の送付',
+    detail: '会社紹介資料(PDF, 18ページ)を添付、追って商談日程の調整連絡をする旨を伝達。',
+    from: '開発 太郎 <taro@frontoffice.jp>',
+    to: 'tanaka@techno-lead.co.jp',
+    emailSubject: 'Front Office 会社紹介資料のご送付',
+    emailBody: `田中様
+
+お世話になっております、Front Office の開発と申します。
+先日はお問い合わせをいただき、誠にありがとうございました。
+
+弊社の会社紹介資料を添付いたしましたので、
+お手すきの際にご一読いただけますと幸いです。
+
+加えて、田中様のご状況や課題感を 30 分ほどお伺いできればと考えております。
+別途、商談日程の候補をいくつかお送りいたします。
+
+どうぞよろしくお願いいたします。
+--
+開発 太郎 / Front Office`,
+    emailAttachments: [
+      { name: 'FrontOffice_会社紹介_v3.pdf', size: '3.1 MB' },
+    ],
+  },
+  {
+    id: 'h5',
+    kind: 'call',
+    occurredAt: '2026-03-18T11:15:00',
+    title: '受付経由コール',
+    detail: '受付応答。本人不在のため折返し依頼を残す。',
+    direction: 'outbound',
+    durationSec: 1 * 60 + 20,
+    result: '不在',
+    callSummary: [
+      '受付経由で取り次ぎ依頼',
+      '田中様は外出中とのこと(13 時帰社予定)',
+      '折返し依頼を伝言で残す',
+      '念のため翌営業日午前中に再架電予定',
+    ],
+  },
+  {
+    id: 'h6',
+    kind: 'call',
+    occurredAt: '2026-03-15T10:00:00',
+    title: '初回コール(着信なし)',
+    direction: 'outbound',
+    durationSec: 0,
+    result: '不通',
+    callSummary: [
+      '記載番号に発信するも応答なし',
+      '留守番電話メッセージは設定なし',
+      '一旦メールでアプローチに切り替え予定',
+    ],
+  },
+]
+
+const HISTORY_KIND_META: Record<HistoryKind | 'all', { label: string; Icon: React.ElementType; tone: string }> = {
+  all:     { label: 'すべて', Icon: Inbox,     tone: 'var(--color-obs-text-muted)' },
+  call:    { label: 'コール', Icon: PhoneCall, tone: 'var(--color-obs-low)' },
+  email:   { label: 'メール', Icon: Mail,      tone: 'var(--color-obs-primary)' },
+  meeting: { label: '会議',   Icon: Calendar,  tone: 'var(--color-obs-middle)' },
+}
+
+const RESULT_TONE: Record<NonNullable<HistoryEntry['result']>, { bg: string; fg: string }> = {
+  '通話':       { bg: 'rgba(110,231,161,0.14)', fg: '#6ee7a1' },
+  '不在':       { bg: 'rgba(255,184,107,0.14)', fg: 'var(--color-obs-middle)' },
+  '不通':       { bg: 'rgba(255,107,107,0.14)', fg: 'var(--color-obs-hot)' },
+  '折返し依頼': { bg: 'rgba(126,198,255,0.14)', fg: 'var(--color-obs-low)' },
+}
+
+function formatHistoryDateTime(iso: string): { date: string; time: string } {
+  const d = new Date(iso)
+  const date = `${d.getMonth() + 1}/${d.getDate()}`
+  const time = `${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`
+  return { date, time }
+}
+
+function ContactHistoryTimeline() {
+  const [filter, setFilter] = useState<HistoryKind | 'all'>('all')
+
+  const filtered = useMemo(() => {
+    const arr = filter === 'all' ? MOCK_CONTACT_HISTORY : MOCK_CONTACT_HISTORY.filter((e) => e.kind === filter)
+    return [...arr].sort((a, b) => (a.occurredAt < b.occurredAt ? 1 : -1))
+  }, [filter])
+
+  const counts = useMemo(() => {
+    const acc = { all: MOCK_CONTACT_HISTORY.length, call: 0, email: 0, meeting: 0 }
+    for (const e of MOCK_CONTACT_HISTORY) acc[e.kind] += 1
+    return acc
+  }, [])
+
+  return (
+    <div>
+      {/* タブ */}
+      <div className="flex items-center gap-1.5 mb-4 flex-wrap">
+        {(['all', 'call', 'email', 'meeting'] as const).map((k) => {
+          const meta = HISTORY_KIND_META[k]
+          const active = filter === k
+          const count = counts[k]
+          const Icon = meta.Icon
+          return (
+            <button
+              key={k}
+              type="button"
+              onClick={() => setFilter(k)}
+              className="inline-flex items-center gap-1.5 h-7 pl-2.5 pr-2 rounded-full text-[11.5px] font-medium transition-colors duration-150"
+              style={{
+                backgroundColor: active
+                  ? 'var(--color-obs-primary-container)'
+                  : 'var(--color-obs-surface-low)',
+                color: active ? 'var(--color-obs-on-primary)' : 'var(--color-obs-text-muted)',
+                boxShadow: active ? 'none' : 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+              }}
+            >
+              <Icon size={11} strokeWidth={2} />
+              {meta.label}
+              <span
+                className="inline-flex items-center justify-center min-w-[18px] h-[18px] px-1 rounded-full text-[10px] tabular-nums"
+                style={{
+                  backgroundColor: active
+                    ? 'rgba(255,255,255,0.18)'
+                    : 'rgba(109,106,111,0.18)',
+                  color: active ? 'inherit' : 'var(--color-obs-text-subtle)',
+                }}
+              >
+                {count}
+              </span>
+            </button>
+          )
+        })}
+      </div>
+
+      {/* タイムライン */}
+      {filtered.length === 0 ? (
+        <div
+          className="px-3 py-8 text-center text-[12px] rounded-[10px]"
+          style={{
+            color: 'var(--color-obs-text-subtle)',
+            background: 'var(--color-obs-surface-low)',
+          }}
+        >
+          履歴がありません
+        </div>
+      ) : (
+        <div className="relative">
+          <div
+            className="absolute left-[15px] top-2 bottom-2 w-px"
+            style={{ background: 'rgba(109,106,111,0.22)' }}
+          />
+          <div className="space-y-3">
+            {filtered.map((e) => (
+              <HistoryRow key={e.id} entry={e} />
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+function HistoryRow({ entry }: { entry: HistoryEntry }) {
+  const [expanded, setExpanded] = useState(false)
+  // コール結果のローカル上書き(プルダウンで変更可能)
+  const [callResult, setCallResult] = useState<CallResult | undefined>(entry.result)
+  const [resultOpen, setResultOpen] = useState(false)
+  const resultRef = useRef<HTMLDivElement | null>(null)
+
+  // 結果プルダウンの外側クリック / Esc で閉じる
+  useEffect(() => {
+    if (!resultOpen) return
+    const onDoc = (e: MouseEvent) => {
+      if (resultRef.current && !resultRef.current.contains(e.target as Node)) {
+        setResultOpen(false)
+      }
+    }
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') setResultOpen(false)
+    }
+    document.addEventListener('mousedown', onDoc)
+    document.addEventListener('keydown', onKey)
+    return () => {
+      document.removeEventListener('mousedown', onDoc)
+      document.removeEventListener('keydown', onKey)
+    }
+  }, [resultOpen])
+
+  const meta = HISTORY_KIND_META[entry.kind]
+  const Icon = meta.Icon
+  const dt = formatHistoryDateTime(entry.occurredAt)
+
+  return (
+    <div className="relative pl-10">
+      {/* タイムラインドット */}
+      <div
+        className="absolute left-0 top-1.5 w-8 h-8 rounded-full flex items-center justify-center"
+        style={{
+          background: 'var(--color-obs-surface-low)',
+          boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.22)',
+          color: meta.tone,
+        }}
+      >
+        <Icon size={13} strokeWidth={2} />
+      </div>
+
+      {/* 本体カード(クリックで展開) */}
+      <div
+        className="rounded-[10px] overflow-hidden transition-shadow duration-200"
+        style={{
+          background: 'var(--color-obs-surface-low)',
+          boxShadow: expanded
+            ? 'inset 0 0 0 1px rgba(171,199,255,0.25), 0 4px 16px rgba(0,0,0,0.25)'
+            : 'inset 0 0 0 1px rgba(109,106,111,0.16)',
+        }}
+      >
+        <button
+          type="button"
+          onClick={() => setExpanded((v) => !v)}
+          aria-expanded={expanded}
+          className="w-full text-left px-3.5 py-2.5 transition-colors duration-150"
+          onMouseOver={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+              'rgba(171,199,255,0.04)'
+          }}
+          onMouseOut={(e) => {
+            ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+          }}
+        >
+          <div className="flex items-start gap-3">
+            <div className="min-w-0 flex-1">
+              <div
+                className="text-[12.5px] font-semibold leading-snug"
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                {entry.title}
+              </div>
+              {entry.detail && (
+                <div
+                  className="text-[11.5px] mt-1 leading-snug"
+                  style={{ color: 'var(--color-obs-text-muted)' }}
+                >
+                  {entry.detail}
+                </div>
+              )}
+            </div>
+            <div className="flex flex-col items-end gap-1 shrink-0">
+              <div
+                className="text-[10.5px] tabular-nums text-right leading-tight"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                <div>{dt.date}</div>
+                <div>{dt.time}</div>
+              </div>
+              <ChevronDown
+                size={13}
+                strokeWidth={2}
+                style={{
+                  color: 'var(--color-obs-text-subtle)',
+                  transform: expanded ? 'rotate(180deg)' : 'rotate(0deg)',
+                  transition: 'transform 150ms var(--ease-liquid)',
+                }}
+              />
+            </div>
+          </div>
+
+          {/* メタ情報行 */}
+          <div className="mt-2 flex items-center gap-2 flex-wrap text-[10.5px]">
+            {entry.kind === 'call' && (
+              <>
+                <span
+                  className="inline-flex items-center gap-1 px-1.5 h-5 rounded-[5px] font-medium"
+                  style={{
+                    background: 'rgba(126,198,255,0.10)',
+                    color: 'var(--color-obs-low)',
+                  }}
+                >
+                  {entry.direction === 'outbound' ? '発信' : '着信'}
+                </span>
+                {callResult && (
+                  <span
+                    className="inline-flex items-center px-1.5 h-5 rounded-[5px] font-medium"
+                    style={{
+                      background: RESULT_TONE[callResult].bg,
+                      color: RESULT_TONE[callResult].fg,
+                    }}
+                  >
+                    {callResult}
+                  </span>
+                )}
+                <span style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  通話時間 {formatDuration(entry.durationSec ?? 0)}
+                </span>
+              </>
+            )}
+
+            {entry.kind === 'email' && (
+              <>
+                {entry.from && (
+                  <span
+                    className="truncate max-w-[200px]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                    title={entry.from}
+                  >
+                    From: <span style={{ color: 'var(--color-obs-text-muted)' }}>{entry.from}</span>
+                  </span>
+                )}
+                {entry.to && (
+                  <span
+                    className="truncate max-w-[200px]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                    title={entry.to}
+                  >
+                    To: <span style={{ color: 'var(--color-obs-text-muted)' }}>{entry.to}</span>
+                  </span>
+                )}
+              </>
+            )}
+
+            {entry.kind === 'meeting' && (
+              <>
+                {entry.attendees && entry.attendees.length > 0 && (
+                  <span
+                    className="truncate max-w-[260px]"
+                    style={{ color: 'var(--color-obs-text-subtle)' }}
+                  >
+                    参加者:{' '}
+                    <span style={{ color: 'var(--color-obs-text-muted)' }}>
+                      {entry.attendees.length}名
+                    </span>
+                  </span>
+                )}
+                {entry.durationSec && (
+                  <span style={{ color: 'var(--color-obs-text-subtle)' }}>
+                    {formatDuration(entry.durationSec ?? 0)}
+                  </span>
+                )}
+              </>
+            )}
+          </div>
+        </button>
+
+        {/* ── 展開エリア ── */}
+        {expanded && (
+          <div
+            className="px-3.5 pt-3 pb-3.5"
+            style={{ borderTop: '1px solid rgba(109,106,111,0.14)' }}
+          >
+            {entry.kind === 'call' && (
+              <CallExpanded
+                entry={entry}
+                result={callResult}
+                onResultChange={(r) => {
+                  setCallResult(r)
+                  setResultOpen(false)
+                }}
+                resultOpen={resultOpen}
+                setResultOpen={setResultOpen}
+                resultRef={resultRef}
+              />
+            )}
+            {entry.kind === 'email' && <EmailExpanded entry={entry} />}
+            {entry.kind === 'meeting' && <MeetingExpanded entry={entry} />}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+}
+
+// ─── Call: 展開ビュー(要約サマリ + 結果プルダウン + 文字起こし) ──────────────
+function CallExpanded({
+  entry,
+  result,
+  onResultChange,
+  resultOpen,
+  setResultOpen,
+  resultRef,
+}: {
+  entry: HistoryEntry
+  result: CallResult | undefined
+  onResultChange: (r: CallResult) => void
+  resultOpen: boolean
+  setResultOpen: (v: boolean) => void
+  resultRef: React.RefObject<HTMLDivElement | null>
+}) {
+  return (
+    <div className="space-y-3">
+      {/* コール結果プルダウン */}
+      <div className="flex items-center gap-2">
+        <span className="text-[10.5px] tracking-[0.06em] uppercase" style={{ color: 'var(--color-obs-text-subtle)' }}>
+          コール結果
+        </span>
+        <div ref={resultRef} className="relative">
+          <button
+            type="button"
+            onClick={(e) => {
+              e.stopPropagation()
+              setResultOpen(!resultOpen)
+            }}
+            className="inline-flex items-center gap-1.5 h-7 pl-2.5 pr-2 rounded-[6px] text-[11.5px] font-medium transition-colors"
+            style={{
+              background: result ? RESULT_TONE[result].bg : 'var(--color-obs-surface-highest)',
+              color: result ? RESULT_TONE[result].fg : 'var(--color-obs-text-muted)',
+              boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.18)',
+            }}
+            aria-haspopup="listbox"
+            aria-expanded={resultOpen}
+          >
+            {result ?? '未設定'}
+            <ChevronDown
+              size={11}
+              strokeWidth={2}
+              style={{
+                transform: resultOpen ? 'rotate(180deg)' : 'rotate(0deg)',
+                transition: 'transform 150ms var(--ease-liquid)',
+              }}
+            />
+          </button>
+          {resultOpen && (
+            <div
+              className="absolute left-0 top-full mt-1 z-50 min-w-[140px] py-1 rounded-[8px]"
+              style={{
+                background: 'var(--color-obs-surface-highest)',
+                boxShadow: '0 12px 32px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(109,106,111,0.22)',
+              }}
+              onClick={(e) => e.stopPropagation()}
+            >
+              {CALL_RESULTS.map((r) => (
+                <button
+                  key={r}
+                  type="button"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    onResultChange(r)
+                  }}
+                  className="w-full text-left px-3 py-1.5 text-[12px] flex items-center gap-2 transition-colors"
+                  style={{
+                    color: r === result ? RESULT_TONE[r].fg : 'var(--color-obs-text)',
+                    fontWeight: r === result ? 600 : 500,
+                  }}
+                  onMouseOver={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor =
+                      'rgba(171,199,255,0.06)'
+                  }}
+                  onMouseOut={(e) => {
+                    ;(e.currentTarget as HTMLButtonElement).style.backgroundColor = 'transparent'
+                  }}
+                >
+                  <span
+                    className="w-1.5 h-1.5 rounded-full"
+                    style={{ background: RESULT_TONE[r].fg }}
+                  />
+                  {r}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* 要約サマリ(箇条書き) */}
+      {entry.callSummary && entry.callSummary.length > 0 && (
+        <div>
+          <div
+            className="text-[10.5px] tracking-[0.06em] uppercase mb-1"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            要約サマリ
+          </div>
+          <ul className="space-y-1">
+            {entry.callSummary.map((line, i) => (
+              <li
+                key={i}
+                className="text-[12px] leading-relaxed pl-3 relative"
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                <span
+                  className="absolute left-0 top-[8px] w-1 h-1 rounded-full"
+                  style={{ background: 'var(--color-obs-low)' }}
+                />
+                {line}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      {/* 文字起こしハイライト(引用) */}
+      {entry.callTranscript && (
+        <div>
+          <div
+            className="text-[10.5px] tracking-[0.06em] uppercase mb-1"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            文字起こしハイライト
+          </div>
+          <blockquote
+            className="text-[11.5px] leading-relaxed pl-3 italic"
+            style={{
+              color: 'var(--color-obs-text-muted)',
+              borderLeft: '2px solid rgba(126,198,255,0.4)',
+            }}
+          >
+            {entry.callTranscript}
+          </blockquote>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Email: 展開ビュー(件名 + 本文 + 添付) ───────────────────────────────────
+function EmailExpanded({ entry }: { entry: HistoryEntry }) {
+  return (
+    <div className="space-y-3">
+      {/* 件名 */}
+      {entry.emailSubject && (
+        <div>
+          <div
+            className="text-[10.5px] tracking-[0.06em] uppercase mb-0.5"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            件名
+          </div>
+          <div
+            className="text-[13px] font-semibold leading-snug"
+            style={{ color: 'var(--color-obs-text)' }}
+          >
+            {entry.emailSubject}
+          </div>
+        </div>
+      )}
+
+      {/* From/To 詳細 */}
+      <div className="grid grid-cols-[60px_1fr] gap-x-3 gap-y-0.5 text-[11.5px]">
+        {entry.from && (
+          <>
+            <span style={{ color: 'var(--color-obs-text-subtle)' }}>From</span>
+            <span style={{ color: 'var(--color-obs-text-muted)' }}>{entry.from}</span>
+          </>
+        )}
+        {entry.to && (
+          <>
+            <span style={{ color: 'var(--color-obs-text-subtle)' }}>To</span>
+            <span style={{ color: 'var(--color-obs-text-muted)' }}>{entry.to}</span>
+          </>
+        )}
+      </div>
+
+      {/* 本文 */}
+      {entry.emailBody && (
+        <div
+          className="rounded-[8px] px-3.5 py-3 text-[12px] leading-relaxed whitespace-pre-wrap"
+          style={{
+            background: 'var(--color-obs-surface-highest)',
+            color: 'var(--color-obs-text)',
+            boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.16)',
+          }}
+        >
+          {entry.emailBody}
+        </div>
+      )}
+
+      {/* 添付ファイル */}
+      {entry.emailAttachments && entry.emailAttachments.length > 0 && (
+        <div>
+          <div
+            className="text-[10.5px] tracking-[0.06em] uppercase mb-1.5"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            添付ファイル
+          </div>
+          <div className="flex flex-col gap-1.5">
+            {entry.emailAttachments.map((a, i) => (
+              <div
+                key={i}
+                className="flex items-center gap-2 px-2.5 h-7 rounded-[6px] text-[11.5px]"
+                style={{
+                  background: 'var(--color-obs-surface-highest)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.16)',
+                }}
+              >
+                <Paperclip size={11} style={{ color: 'var(--color-obs-text-muted)' }} />
+                <span className="flex-1 truncate" style={{ color: 'var(--color-obs-text)' }}>
+                  {a.name}
+                </span>
+                <span className="tabular-nums" style={{ color: 'var(--color-obs-text-subtle)' }}>
+                  {a.size}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  )
+}
+
+// ─── Meeting: 展開ビュー(アジェンダ + 議事録 + Meet リンク) ──────────────────
+function MeetingExpanded({ entry }: { entry: HistoryEntry }) {
+  return (
+    <div className="space-y-3">
+      {/* 参加者(全員) */}
+      {entry.attendees && entry.attendees.length > 0 && (
+        <div>
+          <div
+            className="text-[10.5px] tracking-[0.06em] uppercase mb-1"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            参加者
+          </div>
+          <div className="flex flex-wrap gap-1.5">
+            {entry.attendees.map((a, i) => (
+              <span
+                key={i}
+                className="inline-flex items-center px-2 h-6 rounded-full text-[11px]"
+                style={{
+                  background: 'var(--color-obs-surface-highest)',
+                  color: 'var(--color-obs-text)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.16)',
+                }}
+              >
+                {a}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* アジェンダ */}
+      {entry.meetingAgenda && entry.meetingAgenda.length > 0 && (
+        <div>
+          <div
+            className="text-[10.5px] tracking-[0.06em] uppercase mb-1"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            アジェンダ
+          </div>
+          <ol className="space-y-1 list-decimal pl-5">
+            {entry.meetingAgenda.map((line, i) => (
+              <li
+                key={i}
+                className="text-[12px] leading-relaxed"
+                style={{ color: 'var(--color-obs-text)' }}
+              >
+                {line}
+              </li>
+            ))}
+          </ol>
+        </div>
+      )}
+
+      {/* 議事録(セクション) */}
+      {entry.meetingMinutes && entry.meetingMinutes.length > 0 && (
+        <div>
+          <div
+            className="text-[10.5px] tracking-[0.06em] uppercase mb-1.5"
+            style={{ color: 'var(--color-obs-text-subtle)' }}
+          >
+            議事録
+          </div>
+          <div className="space-y-3">
+            {entry.meetingMinutes.map((sec, i) => (
+              <div
+                key={i}
+                className="rounded-[8px] px-3 py-2.5"
+                style={{
+                  background: 'var(--color-obs-surface-highest)',
+                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.14)',
+                }}
+              >
+                <div
+                  className="text-[12px] font-semibold mb-1"
+                  style={{ color: 'var(--color-obs-text)' }}
+                >
+                  {sec.heading}
+                </div>
+                <ul className="space-y-1">
+                  {sec.items.map((it, j) => (
+                    <li
+                      key={j}
+                      className="text-[11.5px] leading-relaxed pl-3 relative"
+                      style={{ color: 'var(--color-obs-text-muted)' }}
+                    >
+                      <span
+                        className="absolute left-0 top-[8px] w-1 h-1 rounded-full"
+                        style={{ background: 'var(--color-obs-text-subtle)' }}
+                      />
+                      {it}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* 議事録ドキュメント (Google Docs) へのリンク */}
+      {entry.minutesDocUrl && (
+        <a
+          href={entry.minutesDocUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center gap-1.5 h-7 px-3 rounded-[6px] text-[11.5px] font-medium transition-colors hover:opacity-90"
+          style={{
+            background: 'rgba(171,199,255,0.14)',
+            color: 'var(--color-obs-primary)',
+          }}
+          onClick={(e) => e.stopPropagation()}
+          title="Google Meet で自動生成された議事録 (Google Docs) を開く"
+        >
+          <FileText size={11} />
+          議事録を Docs で開く
+        </a>
+      )}
+    </div>
+  )
+}
+
+// ─── LeadSourceSelector (リード経由元) ────────────────────────────────────────
+// 大分類（ホームページ / イベント / 広告）+ サブカテゴリの2段構成。
+// サブカテゴリはデフォルト + ユーザーがカスタム追加可能（localStorage 永続化）。
+
+interface ResolvedCategory {
+  id: string
+  label: string
+  Icon: React.ElementType
+  iconFg: string
+  builtin: boolean
+  defaultSubs: readonly string[]
+}
+
+function resolveCategory(id: string, customLabel?: string): ResolvedCategory {
+  if (isBuiltinCategory(id)) {
+    const m = BUILTIN_CATEGORY_META[id]
+    return { id, label: m.label, Icon: m.Icon, iconFg: m.iconFg, builtin: true, defaultSubs: m.defaultSubs }
+  }
+  return {
+    id,
+    label: customLabel ?? '(カスタム)',
+    Icon: Tag,
+    iconFg: 'var(--color-obs-text-muted)',
+    builtin: false,
+    defaultSubs: [],
+  }
+}
+
+function LeadSourceTypeChip({
+  value,
+  customCategoryLabel,
+}: {
+  value: LeadSource
+  customCategoryLabel?: string
+}) {
+  const cat = resolveCategory(value.category, customCategoryLabel)
+  const Icon = cat.Icon
   return (
     <span
       className="inline-flex items-center gap-1.5 px-2 h-5 rounded-full text-[11px] font-medium tracking-[-0.005em] whitespace-nowrap"
       style={{
-        backgroundColor: s.chipBg,
-        color: s.fg,
+        backgroundColor: LEAD_SOURCE_CHIP_BG,
+        color: LEAD_SOURCE_FG,
       }}
     >
-      <Icon size={11} strokeWidth={2.2} style={{ color: s.iconFg }} />
-      {s.label}
+      <Icon size={11} strokeWidth={2.2} style={{ color: cat.iconFg }} />
+      <span style={{ color: 'var(--color-obs-text-subtle)' }}>{cat.label}</span>
+      <span style={{ color: 'var(--color-obs-text-muted)' }}>·</span>
+      <span style={{ color: 'var(--color-obs-text)' }}>{value.sub}</span>
     </span>
   )
+}
+
+// ─── localStorage 永続化ユーティリティ ──────────────────────────────────────
+
+type CustomSubsMap = Record<string, string[]>
+
+function loadCustomCategories(): CustomCategoryDef[] {
+  if (typeof window === 'undefined') return []
+  try {
+    const raw = localStorage.getItem(CUSTOM_CATEGORIES_KEY)
+    if (!raw) return []
+    const parsed = JSON.parse(raw)
+    if (!Array.isArray(parsed)) return []
+    return parsed.filter((c): c is CustomCategoryDef =>
+      c && typeof c.id === 'string' && typeof c.label === 'string',
+    )
+  } catch {
+    return []
+  }
+}
+
+function saveCustomCategories(cats: CustomCategoryDef[]) {
+  if (typeof window === 'undefined') return
+  try { localStorage.setItem(CUSTOM_CATEGORIES_KEY, JSON.stringify(cats)) } catch { /* ignore */ }
+}
+
+function loadCustomSubs(): CustomSubsMap {
+  if (typeof window === 'undefined') return {}
+  try {
+    const raw = localStorage.getItem(CUSTOM_SUBS_KEY)
+    if (!raw) return {}
+    const parsed = JSON.parse(raw)
+    if (!parsed || typeof parsed !== 'object') return {}
+    const out: CustomSubsMap = {}
+    for (const k of Object.keys(parsed)) {
+      const v = (parsed as Record<string, unknown>)[k]
+      if (Array.isArray(v)) out[k] = v.filter((x): x is string => typeof x === 'string')
+    }
+    return out
+  } catch {
+    return {}
+  }
+}
+
+function saveCustomSubs(subs: CustomSubsMap) {
+  if (typeof window === 'undefined') return
+  try { localStorage.setItem(CUSTOM_SUBS_KEY, JSON.stringify(subs)) } catch { /* ignore */ }
+}
+
+// 過去に seed された「展示会」「検索広告」を除去する
+// (デフォルトでは出さない方針に変更したが、すでにローカルストレージに残っているユーザー向けの後始末)
+function cleanupSeededDemoIfNeeded() {
+  if (typeof window === 'undefined') return
+  const existing = loadCustomSubs()
+  const eventHas = (existing.event ?? []).includes('展示会')
+  const adHas    = (existing.ad ?? []).includes('検索広告')
+  if (!eventHas && !adHas) return
+  saveCustomSubs({
+    ...existing,
+    event: (existing.event ?? []).filter((s) => s !== '展示会'),
+    ad:    (existing.ad ?? []).filter((s) => s !== '検索広告'),
+  })
 }
 
 function LeadSourceSelector({ value, onChange }: {
@@ -583,12 +1718,93 @@ function LeadSourceSelector({ value, onChange }: {
 }) {
   const [open, setOpen] = useState(false)
   const [hover, setHover] = useState(false)
+  const [customCategories, setCustomCategories] = useState<CustomCategoryDef[]>([])
+  const [customSubs, setCustomSubs] = useState<CustomSubsMap>({})
+  const [addingSubFor, setAddingSubFor] = useState<string | null>(null)
+  const [subDraft, setSubDraft] = useState('')
+  const [addingCategory, setAddingCategory] = useState(false)
+  const [categoryDraft, setCategoryDraft] = useState('')
+
+  useEffect(() => {
+    if (!open) return
+    cleanupSeededDemoIfNeeded()
+    setCustomCategories(loadCustomCategories())
+    setCustomSubs(loadCustomSubs())
+  }, [open])
 
   const active = hover || open
 
+  const orderedCategories: ResolvedCategory[] = [
+    ...BUILTIN_CATEGORY_IDS.map((id) => resolveCategory(id)),
+    ...customCategories.map((c) => resolveCategory(c.id, c.label)),
+  ]
+
+  const currentCustomLabel = customCategories.find((c) => c.id === value.category)?.label
+
+  const allSubsOf = (catId: string, defaultSubs: readonly string[]): { label: string; custom: boolean }[] => {
+    const customs = customSubs[catId] ?? []
+    return [
+      ...defaultSubs.map((s) => ({ label: s, custom: false })),
+      ...customs.map((s) => ({ label: s, custom: true })),
+    ]
+  }
+
+  const commitAddSub = (catId: string) => {
+    const label = subDraft.trim()
+    if (!label) { setAddingSubFor(null); return }
+    const cat = orderedCategories.find((c) => c.id === catId)
+    const exists =
+      (cat?.defaultSubs.includes(label) ?? false) ||
+      (customSubs[catId] ?? []).includes(label)
+    let next = customSubs
+    if (!exists) {
+      next = { ...customSubs, [catId]: [...(customSubs[catId] ?? []), label] }
+      setCustomSubs(next)
+      saveCustomSubs(next)
+    }
+    onChange({ category: catId, sub: label })
+    setAddingSubFor(null)
+    setSubDraft('')
+    setOpen(false)
+  }
+
+  const removeCustomSub = (catId: string, label: string) => {
+    const next = { ...customSubs, [catId]: (customSubs[catId] ?? []).filter((s) => s !== label) }
+    setCustomSubs(next)
+    saveCustomSubs(next)
+    if (value.category === catId && value.sub === label) {
+      const cat = orderedCategories.find((c) => c.id === catId)
+      const fallback = cat?.defaultSubs[0] ?? next[catId]?.[0] ?? ''
+      onChange({ category: catId, sub: fallback })
+    }
+  }
+
+  const commitAddCategory = () => {
+    const label = categoryDraft.trim()
+    if (!label) { setAddingCategory(false); return }
+    const id = `custom_${Date.now().toString(36)}_${Math.floor(Math.random() * 1000)}`
+    const next = [...customCategories, { id, label }]
+    setCustomCategories(next)
+    saveCustomCategories(next)
+    setAddingCategory(false)
+    setCategoryDraft('')
+  }
+
+  const removeCustomCategory = (catId: string) => {
+    const nextCats = customCategories.filter((c) => c.id !== catId)
+    setCustomCategories(nextCats)
+    saveCustomCategories(nextCats)
+    const nextSubs = { ...customSubs }
+    delete nextSubs[catId]
+    setCustomSubs(nextSubs)
+    saveCustomSubs(nextSubs)
+    if (value.category === catId) {
+      onChange({ category: 'homepage', sub: BUILTIN_CATEGORY_META.homepage.defaultSubs[0]! })
+    }
+  }
+
   return (
     <div className="flex items-start max-w-full">
-      {/* タイプチップ + ドロップダウン（detail表示は廃止） */}
       <div className="relative">
         <button
           onClick={e => { e.stopPropagation(); setOpen(v => !v) }}
@@ -599,9 +1815,9 @@ function LeadSourceSelector({ value, onChange }: {
             background: active ? 'rgba(171,199,255,0.10)' : 'transparent',
             boxShadow: active ? 'inset 0 0 0 1px var(--color-obs-primary)' : 'none',
           }}
-          title="クリックして経由元の種別を変更"
+          title="クリックして経由元を変更"
         >
-          <LeadSourceTypeChip type={value.type} />
+          <LeadSourceTypeChip value={value} customCategoryLabel={currentCustomLabel} />
           <ChevronDown
             size={12}
             className="transition-transform"
@@ -614,35 +1830,172 @@ function LeadSourceSelector({ value, onChange }: {
         <AnimatePresence>
           {open && (
             <>
-              <div className="fixed inset-0 z-30" onClick={() => setOpen(false)} />
+              <div
+                className="fixed inset-0 z-30"
+                onClick={() => {
+                  setOpen(false)
+                  setAddingSubFor(null)
+                  setAddingCategory(false)
+                }}
+              />
               <motion.div
                 initial={{ opacity: 0, y: -4, scale: 0.97 }}
                 animate={{ opacity: 1, y: 0, scale: 1 }}
                 exit={{ opacity: 0, y: -4, scale: 0.97 }}
                 transition={{ duration: 0.15 }}
-                className="absolute top-full left-0 mt-1.5 z-40 rounded-[10px] py-1.5 min-w-[200px]"
+                className="absolute top-full left-0 mt-1.5 z-40 rounded-[10px] py-1 min-w-[280px] max-h-[440px] overflow-y-auto"
                 style={{
                   background: 'var(--color-obs-surface-highest)',
                   boxShadow: '0 12px 32px rgba(0,0,0,0.4), inset 0 0 0 1px rgba(109,106,111,0.18)',
                 }}
               >
-                {ALL_LEAD_SOURCE_TYPES.map(t => {
-                  const s = LEAD_SOURCE_STYLES[t]
-                  const Icon = s.Icon
-                  const selected = t === value.type
+                {orderedCategories.map((cat) => {
+                  const Icon = cat.Icon
+                  const subs = allSubsOf(cat.id, cat.defaultSubs)
                   return (
-                    <button
-                      key={t}
-                      onClick={e => { e.stopPropagation(); onChange({ ...value, type: t }); setOpen(false) }}
-                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
-                      style={{ color: 'var(--color-obs-text)', fontWeight: selected ? 600 : 500 }}
-                    >
-                      <Icon size={12} style={{ color: s.iconFg }} strokeWidth={2.2} />
-                      {s.label}
-                      {selected && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
-                    </button>
+                    <div key={cat.id} className="py-1.5">
+                      <div
+                        className="px-3 py-1 flex items-center gap-1.5 group"
+                        style={{ color: 'var(--color-obs-text-subtle)' }}
+                      >
+                        <Icon size={11} strokeWidth={2.2} style={{ color: cat.iconFg }} />
+                        <span className="text-[10.5px] font-bold tracking-[0.06em] uppercase flex-1">
+                          {cat.label}
+                        </span>
+                        {!cat.builtin && (
+                          <button
+                            onClick={(e) => { e.stopPropagation(); removeCustomCategory(cat.id) }}
+                            className="opacity-0 group-hover:opacity-100 transition-opacity px-1.5 py-0.5 rounded-[5px] hover:bg-[rgba(255,107,107,0.12)]"
+                            title="このカテゴリを削除"
+                          >
+                            <Trash2 size={10} style={{ color: 'var(--color-obs-text-muted)' }} />
+                          </button>
+                        )}
+                      </div>
+
+                      {subs.map(({ label, custom }) => {
+                        const selected = value.category === cat.id && value.sub === label
+                        return (
+                          <div key={label} className="flex items-center group">
+                            <button
+                              onClick={e => {
+                                e.stopPropagation()
+                                onChange({ category: cat.id, sub: label })
+                                setOpen(false)
+                              }}
+                              className="flex-1 flex items-center gap-2 px-3 py-1.5 text-[12.5px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
+                              style={{ color: 'var(--color-obs-text)', fontWeight: selected ? 600 : 500 }}
+                            >
+                              <span>{label}</span>
+                              {selected && <span className="ml-auto" style={{ color: 'var(--color-obs-primary)' }}>✓</span>}
+                            </button>
+                            {custom && (
+                              <button
+                                onClick={e => { e.stopPropagation(); removeCustomSub(cat.id, label) }}
+                                className="opacity-0 group-hover:opacity-100 transition-opacity px-2 py-1 mr-1 rounded-[5px] hover:bg-[rgba(255,107,107,0.12)]"
+                                title="このカスタム項目を削除"
+                              >
+                                <Trash2 size={11} style={{ color: 'var(--color-obs-text-muted)' }} />
+                              </button>
+                            )}
+                          </div>
+                        )
+                      })}
+
+                      {addingSubFor === cat.id ? (
+                        <div className="flex items-center gap-1 px-3 py-1.5">
+                          <input
+                            autoFocus
+                            value={subDraft}
+                            onChange={(e) => setSubDraft(e.target.value)}
+                            onClick={(e) => e.stopPropagation()}
+                            onKeyDown={(e) => {
+                              e.stopPropagation()
+                              if (e.key === 'Enter') { e.preventDefault(); commitAddSub(cat.id) }
+                              else if (e.key === 'Escape') { e.preventDefault(); setAddingSubFor(null) }
+                            }}
+                            placeholder="例: BOXIL / アイスマイリー"
+                            className="flex-1 bg-transparent outline-none text-[12.5px] px-2 py-1 rounded-[5px]"
+                            style={{
+                              color: 'var(--color-obs-text)',
+                              boxShadow: 'inset 0 0 0 1px var(--color-obs-primary)',
+                            }}
+                          />
+                          <button
+                            onClick={(e) => { e.stopPropagation(); commitAddSub(cat.id) }}
+                            className="text-[11px] px-2 py-1 rounded-[5px]"
+                            style={{
+                              background: 'var(--color-obs-primary-container)',
+                              color: 'var(--color-obs-on-primary)',
+                            }}
+                          >
+                            追加
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            setAddingSubFor(cat.id)
+                            setSubDraft('')
+                          }}
+                          className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors"
+                          style={{ color: 'var(--color-obs-text-subtle)' }}
+                        >
+                          <Plus size={11} strokeWidth={2.2} />
+                          カスタム追加
+                        </button>
+                      )}
+                    </div>
                   )
                 })}
+
+                {/* 大分類のカスタム追加 */}
+                <div
+                  className="mt-1 pt-1.5 px-1"
+                  style={{ borderTop: '1px solid rgba(109,106,111,0.18)' }}
+                >
+                  {addingCategory ? (
+                    <div className="flex items-center gap-1 px-2 py-1.5">
+                      <input
+                        autoFocus
+                        value={categoryDraft}
+                        onChange={(e) => setCategoryDraft(e.target.value)}
+                        onClick={(e) => e.stopPropagation()}
+                        onKeyDown={(e) => {
+                          e.stopPropagation()
+                          if (e.key === 'Enter') { e.preventDefault(); commitAddCategory() }
+                          else if (e.key === 'Escape') { e.preventDefault(); setAddingCategory(false) }
+                        }}
+                        placeholder="新しいカテゴリ名（例: パートナー）"
+                        className="flex-1 bg-transparent outline-none text-[12.5px] px-2 py-1 rounded-[5px]"
+                        style={{
+                          color: 'var(--color-obs-text)',
+                          boxShadow: 'inset 0 0 0 1px var(--color-obs-primary)',
+                        }}
+                      />
+                      <button
+                        onClick={(e) => { e.stopPropagation(); commitAddCategory() }}
+                        className="text-[11px] px-2 py-1 rounded-[5px]"
+                        style={{
+                          background: 'var(--color-obs-primary-container)',
+                          color: 'var(--color-obs-on-primary)',
+                        }}
+                      >
+                        追加
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      onClick={(e) => { e.stopPropagation(); setAddingCategory(true); setCategoryDraft('') }}
+                      className="w-full flex items-center gap-2 px-3 py-1.5 text-[12px] text-left hover:bg-[rgba(171,199,255,0.08)] transition-colors rounded-[5px]"
+                      style={{ color: 'var(--color-obs-primary)', fontWeight: 600 }}
+                    >
+                      <Plus size={11} strokeWidth={2.2} />
+                      カテゴリを追加
+                    </button>
+                  )}
+                </div>
               </motion.div>
             </>
           )}
@@ -802,6 +2155,30 @@ function EditContactModal({ contact, onClose, onSave }: {
               />
             </div>
 
+            {/* 紐付け企業 */}
+            <div>
+              <label
+                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
+                紐付け企業
+              </label>
+              <CompanyPicker
+                companyId={form.companyId}
+                companyName={form.company}
+                email={form.email}
+                onSelect={(id, name) =>
+                  setForm((f) => ({ ...f, companyId: id, company: name }))
+                }
+              />
+              <p
+                className="mt-1.5 text-[10.5px] leading-snug"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                メールアドレスのドメインから推測候補を提示します。検索でも紐付け可能です。
+              </p>
+            </div>
+
             {/* 部署 + 役職 */}
             <div className="grid grid-cols-2 gap-3">
               <div>
@@ -868,42 +2245,6 @@ function EditContactModal({ contact, onClose, onSave }: {
                 className="w-full h-[36px] px-3 text-[14px] rounded-[8px] outline-none"
                 style={{ ...inputBaseStyle, color: 'var(--color-obs-text)' }}
               />
-            </div>
-
-            {/* 角度 */}
-            <div>
-              <label
-                className="text-[11px] font-semibold uppercase tracking-[0.06em] mb-1.5 block"
-                style={{ color: 'var(--color-obs-primary)' }}
-              >
-                角度
-              </label>
-              <div className="flex flex-wrap gap-1.5">
-                {RANK_OPTIONS_FULL.map(r => {
-                  const cfg = rankConfigOf(r)
-                  const label = rankLabel(r)
-                  const active = form.rank === r
-                  return (
-                    <button
-                      key={label}
-                      type="button"
-                      onClick={() => setForm(f => ({ ...f, rank: r }))}
-                      className="inline-flex items-center gap-1.5 px-3 h-[36px] rounded-[8px] text-[12px] font-medium transition-all"
-                      style={active ? {
-                        backgroundColor: cfg.bg,
-                        color: cfg.fg,
-                        boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
-                      } : {
-                        background: 'var(--color-obs-surface-low)',
-                        color: 'var(--color-obs-text-muted)',
-                      }}
-                    >
-                      <span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: active ? cfg.fg : 'var(--color-obs-text-subtle)' }} />
-                      {label}
-                    </button>
-                  )
-                })}
-              </div>
             </div>
 
             {/* ステータス */}
@@ -1047,28 +2388,34 @@ function ISFieldRow({
 
 export default function ContactDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = React.use(params)
-  const { startCall } = useCallStore()
 
   const initialContact = MOCK_CONTACTS[id] ?? MOCK_CONTACTS['1']!
   const [contact, setContact] = useState<ContactDetail>(initialContact)
-  const [activityTab, setActivityTab] = useState<'all' | 'call' | 'email' | 'note'>('all')
   const [showEditModal, setShowEditModal] = useState(false)
-
-  const filteredActivities = useMemo(() => {
-    if (activityTab === 'all') return MOCK_ACTIVITIES
-    if (activityTab === 'call') return MOCK_ACTIVITIES.filter(a => a.type === 'call')
-    if (activityTab === 'email') return MOCK_ACTIVITIES.filter(a => a.type === 'email')
-    return MOCK_ACTIVITIES.filter(a => a.type === 'note')
-  }, [activityTab])
-
-  function handleCall() {
-    startCall({
-      contactId: contact.id,
-      contactName: contact.name,
-      company: contact.company,
-      phone: contact.phone,
-    })
+  // 独立したタスクカード用 state(モック)
+  const [tasks, setTasks] = useState<SimpleTask[]>([])
+  const handleCreateTask = () => {
+    const today = new Date()
+    const due = new Date(today)
+    due.setDate(due.getDate() + 7)
+    const dueIso = `${due.getFullYear()}-${String(due.getMonth() + 1).padStart(2, '0')}-${String(due.getDate()).padStart(2, '0')}`
+    setTasks((prev) => [
+      ...prev,
+      {
+        id: `t_${Date.now()}`,
+        title: contact.nextAction
+          ? `${contact.nextAction}: ${contact.name} 様`
+          : '新しいタスク',
+        done: false,
+        dueAt: contact.nextActionAt ?? dueIso,
+        memo: contact.nextActionMemo || undefined,
+      },
+    ])
   }
+  const toggleTaskDone = (id: string) =>
+    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, done: !t.done } : t)))
+  const deleteTask = (id: string) =>
+    setTasks((prev) => prev.filter((t) => t.id !== id))
 
   const nestedInputStyle: React.CSSProperties = {
     background: 'var(--color-obs-surface-low)',
@@ -1089,20 +2436,6 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
           コンタクト一覧
         </Link>
 
-        <motion.button
-          whileTap={{ scale: 0.97 }}
-          whileHover={{ filter: 'brightness(1.06)' }}
-          onClick={handleCall}
-          className="flex items-center gap-2 px-5 py-2.5 text-sm font-semibold rounded-[9px] transition-all"
-          style={{
-            background: 'var(--color-obs-primary-container)',
-            color: 'var(--color-obs-on-primary)',
-            boxShadow: '0 8px 24px rgba(0,113,227,0.20)',
-          }}
-        >
-          <Phone size={15} strokeWidth={2.4} />
-          今すぐコール
-        </motion.button>
       </div>
 
       {/* ── Main Layout ── */}
@@ -1211,7 +2544,7 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             </div>
           </motion.div>
 
-          {/* Activity Timeline */}
+          {/* Activity Timeline (コール / メール / 会議 / ノートを統合) */}
           <motion.div
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
@@ -1219,113 +2552,25 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
             className="rounded-[12px] overflow-hidden"
             style={CARD_STYLE}
           >
-            {/* Tab Header */}
             <div
-              className="px-5 py-3 flex items-center justify-between"
+              className="px-5 pt-4 pb-2"
               style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.15)' }}
             >
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-obs-text)' }}>アクティビティ</h2>
-              <div
-                className="flex items-center gap-1 rounded-[8px] p-0.5"
-                style={{
-                  background: 'var(--color-obs-surface-low)',
-                  boxShadow: 'inset 0 0 0 1px rgba(109,106,111,0.12)',
-                }}
+              <h2
+                className="text-[15px] font-bold tracking-[-0.01em]"
+                style={{ color: 'var(--color-obs-text)' }}
               >
-                {(['all', 'call', 'email', 'note'] as const).map(tab => (
-                  <button
-                    key={tab}
-                    onClick={() => setActivityTab(tab)}
-                    className="px-2.5 py-1 rounded-[6px] text-xs font-medium transition-all duration-100"
-                    style={
-                      activityTab === tab
-                        ? {
-                            background: 'var(--color-obs-surface-highest)',
-                            color: 'var(--color-obs-text)',
-                          }
-                        : { color: 'var(--color-obs-text-muted)' }
-                    }
-                  >
-                    {{ all: '全件', call: 'コール', email: 'メール', note: 'ノート' }[tab]}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Timeline */}
-            <div className="px-5 py-3">
-              <motion.div
-                initial="hidden"
-                animate="visible"
-                key={activityTab}
-                variants={{ visible: { transition: { staggerChildren: 0.05 } } }}
-                className="space-y-2"
-              >
-                {filteredActivities.map(activity => (
-                  <motion.div
-                    key={activity.id}
-                    variants={{
-                      hidden: { opacity: 0, y: 8 },
-                      visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
-                    }}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-[10px] transition-colors hover:bg-[rgba(171,199,255,0.05)]"
-                  >
-                    {/* Icon */}
-                    <ActivityIcon type={activity.type} />
-
-                    {/* Content (1行) */}
-                    <div className="flex-1 min-w-0 flex items-center gap-2">
-                      {activity.description ? (
-                        <p className="text-[13px] truncate" style={{ color: 'var(--color-obs-text)' }}>{activity.description}</p>
-                      ) : (
-                        <p className="text-[13px] truncate" style={{ color: 'var(--color-obs-text-muted)' }}>{activity.title}</p>
-                      )}
-                      {activity.result && (
-                        <span className="shrink-0">
-                          <StatusObsBadge status={activity.result} size="sm" />
-                        </span>
-                      )}
-                      {activity.durationSec !== undefined && activity.durationSec > 0 && (
-                        <span
-                          className="text-[11px] tabular-nums shrink-0"
-                          style={{ color: 'var(--color-obs-text-muted)' }}
-                        >
-                          {formatDuration(activity.durationSec)}
-                        </span>
-                      )}
-                    </div>
-
-                    {/* 日時 */}
-                    <span
-                      className="text-[11px] tabular-nums shrink-0"
-                      style={{ color: 'var(--color-obs-text-muted)' }}
-                    >
-                      {formatDateTime(activity.timestamp)}
-                    </span>
-                  </motion.div>
-                ))}
-              </motion.div>
-            </div>
-          </motion.div>
-
-          {/* ─── Google 連携タイムライン（メール/会議） ─── */}
-          <motion.div
-            initial={{ opacity: 0, y: 12 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.3, delay: 0.12, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-[12px] overflow-hidden"
-            style={CARD_STYLE}
-          >
-            <div
-              className="px-5 py-3 flex items-center gap-2"
-              style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.15)' }}
-            >
-              <h2 className="text-sm font-semibold" style={{ color: 'var(--color-obs-text)' }}>
-                Gmail / Meet 履歴
+                アクティビティ
               </h2>
+              <p
+                className="mt-0.5 text-[11px] leading-snug"
+                style={{ color: 'var(--color-obs-text-subtle)' }}
+              >
+                コール・メール・会議の履歴を時系列で表示します(会議はカレンダーで作成された商談のうち本人が参加するもの)
+              </p>
             </div>
             <div className="px-5 py-4">
-              <GoogleTimeline scope="contact" id={id} />
+              <ContactHistoryTimeline />
             </div>
           </motion.div>
         </div>
@@ -1333,81 +2578,11 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
         {/* ── Right Sidebar ── */}
         <div className="w-[300px] shrink-0 space-y-4">
 
-          {/* ステータスカード */}
+          {/* ネクストアクション統合カード = タスクと連動 (ステータスを上部に統合) */}
           <motion.div
             initial={{ opacity: 0, x: 12 }}
             animate={{ opacity: 1, x: 0 }}
             transition={{ duration: 0.3, delay: 0.1, ease: [0.16, 1, 0.3, 1] }}
-            className="rounded-[12px] p-5"
-            style={CARD_STYLE}
-          >
-            <h3
-              className="text-xs font-semibold uppercase tracking-[0.06em] mb-3"
-              style={{ color: 'var(--color-obs-text-muted)' }}
-            >
-              ステータス
-            </h3>
-            <motion.div
-              initial="hidden"
-              animate="visible"
-              variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
-            >
-              <ISFieldRow label="ステータス" editable>
-                <StatusSelector
-                  value={contact.status}
-                  onChange={v => setContact(c => ({ ...c, status: v }))}
-                />
-              </ISFieldRow>
-
-              <ISFieldRow label="リード経由元" editable vertical>
-                <LeadSourceSelector
-                  value={contact.leadSource}
-                  onChange={v => setContact(c => ({ ...c, leadSource: v }))}
-                />
-              </ISFieldRow>
-
-              <ISFieldRow label="コール試行">
-                <div className="flex items-center gap-1.5 justify-end">
-                  <PhoneCall size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
-                  <span className="text-sm font-medium" style={{ color: 'var(--color-obs-text)' }}>{contact.callAttempts}回</span>
-                </div>
-              </ISFieldRow>
-            </motion.div>
-
-            {/* メモ */}
-            <div
-              className="mt-4 pt-3"
-              style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.15)' }}
-            >
-              <label
-                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
-                style={{ color: 'var(--color-obs-primary)' }}
-              >
-                メモ
-                <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
-              </label>
-              <textarea
-                value={contact.statusMemo}
-                onChange={e => setContact(c => ({ ...c, statusMemo: e.target.value }))}
-                placeholder="ステータスに関するメモを入力..."
-                rows={3}
-                className="w-full px-3 py-2 text-[12px] outline-none rounded-[8px] resize-none transition-all"
-                style={{ ...nestedInputStyle, color: 'var(--color-obs-text)' }}
-                onFocus={e => {
-                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
-                }}
-                onBlur={e => {
-                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
-                }}
-              />
-            </div>
-          </motion.div>
-
-          {/* ネクストアクション統合カード = タスクと連動 */}
-          <motion.div
-            initial={{ opacity: 0, x: 12 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.3, delay: 0.15, ease: [0.16, 1, 0.3, 1] }}
             className="rounded-[12px] p-5"
             style={CARD_STYLE}
           >
@@ -1431,6 +2606,21 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                 <CheckCircle2 size={9} />
                 タスク連動
               </span>
+            </div>
+
+            {/* ステータス */}
+            <div className="mb-3">
+              <label
+                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
+                ステータス
+                <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
+              </label>
+              <StatusSelector
+                value={contact.status}
+                onChange={v => setContact(c => ({ ...c, status: v }))}
+              />
             </div>
 
             {/* アクション種別 */}
@@ -1512,6 +2702,233 @@ export default function ContactDetailPage({ params }: { params: Promise<{ id: st
                 value={contact.nextActionMemo}
                 onChange={e => setContact(c => ({ ...c, nextActionMemo: e.target.value }))}
                 placeholder="次回アクションに関するメモを入力..."
+                rows={3}
+                className="w-full px-3 py-2 text-[12px] outline-none rounded-[8px] resize-none transition-all"
+                style={{ ...nestedInputStyle, color: 'var(--color-obs-text)' }}
+                onFocus={e => {
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px var(--color-obs-primary)'
+                }}
+                onBlur={e => {
+                  e.currentTarget.style.boxShadow = 'inset 0 0 0 1px rgba(109,106,111,0.12)'
+                }}
+              />
+            </div>
+
+          </motion.div>
+
+          {/* ── タスクカード(独立) ─────────────────────────────────── */}
+          <motion.div
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.14, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-[12px] overflow-hidden"
+            style={CARD_STYLE}
+          >
+            {/* Header */}
+            <div
+              className="px-5 pt-4 pb-3 flex items-center gap-2"
+              style={{ boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.15)' }}
+            >
+              <CheckCircle2 size={13} style={{ color: 'var(--color-obs-primary)' }} />
+              <h3
+                className="flex-1 text-xs font-semibold uppercase tracking-[0.06em]"
+                style={{ color: 'var(--color-obs-text-muted)' }}
+              >
+                タスク
+              </h3>
+              <span
+                className="inline-flex items-center justify-center min-w-[20px] h-5 px-1.5 rounded-full text-[10px] font-bold tabular-nums"
+                style={{
+                  background: 'rgba(171,199,255,0.12)',
+                  color: 'var(--color-obs-primary)',
+                }}
+              >
+                {tasks.length}
+              </span>
+              <button
+                type="button"
+                onClick={handleCreateTask}
+                className="inline-flex items-center gap-1 px-2.5 h-[26px] rounded-[7px] text-[10.5px] font-semibold transition-all hover:brightness-110"
+                style={{
+                  background: 'var(--color-obs-primary-container)',
+                  color: 'var(--color-obs-on-primary)',
+                }}
+              >
+                <Plus size={10} strokeWidth={2.4} />
+                作成
+              </button>
+            </div>
+
+            {/* Body */}
+            {tasks.length === 0 ? (
+              <div className="px-4 py-6 text-center">
+                <p className="text-[11.5px]" style={{ color: 'var(--color-obs-text-muted)' }}>
+                  タスクが登録されていません
+                </p>
+                <button
+                  type="button"
+                  onClick={handleCreateTask}
+                  className="mt-2 inline-flex items-center gap-1 text-[10.5px] font-bold transition-colors hover:text-[var(--color-obs-text)]"
+                  style={{ color: 'var(--color-obs-primary)' }}
+                >
+                  <Plus size={10} strokeWidth={2.5} />
+                  最初のタスクを作成
+                </button>
+              </div>
+            ) : (
+              <div>
+                {tasks.map((task, i) => {
+                  const dueDate = task.dueAt ? new Date(task.dueAt) : null
+                  const isOverdue =
+                    dueDate && !task.done && dueDate < new Date(new Date().toDateString())
+                  const dueLabel = dueDate
+                    ? `${dueDate.getMonth() + 1}/${dueDate.getDate()}`
+                    : null
+                  return (
+                    <div
+                      key={task.id}
+                      className="flex items-center gap-2 px-3.5 py-2.5 transition-colors hover:bg-[rgba(171,199,255,0.04)] group"
+                      style={
+                        i < tasks.length - 1
+                          ? { boxShadow: 'inset 0 -1px 0 rgba(109,106,111,0.10)' }
+                          : undefined
+                      }
+                    >
+                      <button
+                        type="button"
+                        onClick={() => toggleTaskDone(task.id)}
+                        className="w-4 h-4 rounded-[4px] flex items-center justify-center shrink-0 transition-all"
+                        style={{
+                          backgroundColor: task.done
+                            ? 'var(--color-obs-primary-container)'
+                            : 'var(--color-obs-surface-low)',
+                          boxShadow: task.done
+                            ? 'none'
+                            : 'inset 0 0 0 1px rgba(109,106,111,0.25)',
+                        }}
+                        aria-label={task.done ? '未完了に戻す' : '完了にする'}
+                      >
+                        {task.done && (
+                          <CheckCircle2
+                            size={10}
+                            strokeWidth={2.5}
+                            style={{ color: 'var(--color-obs-on-primary)' }}
+                          />
+                        )}
+                      </button>
+
+                      <div className="flex-1 min-w-0">
+                        <p
+                          className="text-[12px] font-medium truncate"
+                          style={{
+                            color: task.done
+                              ? 'var(--color-obs-text-subtle)'
+                              : 'var(--color-obs-text)',
+                            textDecoration: task.done ? 'line-through' : 'none',
+                          }}
+                        >
+                          {task.title}
+                        </p>
+                        <div className="flex items-center gap-1.5 mt-0.5">
+                          {dueLabel && (
+                            <span
+                              className="inline-flex items-center gap-1 px-1.5 py-[1px] rounded-[4px] text-[9.5px] font-bold tabular-nums whitespace-nowrap"
+                              style={{
+                                background: isOverdue
+                                  ? 'rgba(255,107,107,0.14)'
+                                  : 'rgba(171,199,255,0.10)',
+                                color: isOverdue
+                                  ? 'var(--color-obs-hot)'
+                                  : 'var(--color-obs-primary)',
+                              }}
+                            >
+                              <Calendar size={8} strokeWidth={2.5} />
+                              {dueLabel}
+                            </span>
+                          )}
+                          {task.memo && (
+                            <p
+                              className="text-[10.5px] truncate"
+                              style={{ color: 'var(--color-obs-text-muted)' }}
+                            >
+                              {task.memo}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => deleteTask(task.id)}
+                        className="w-6 h-6 flex items-center justify-center rounded-[5px] transition-colors opacity-0 group-hover:opacity-100 hover:bg-[rgba(255,107,107,0.12)]"
+                        title="削除"
+                      >
+                        <Trash2 size={10} style={{ color: 'var(--color-obs-hot)' }} />
+                      </button>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </motion.div>
+
+          {/* リード/活動量カード(ステータスはネクストアクションへ移動済み) */}
+          <motion.div
+            initial={{ opacity: 0, x: 12 }}
+            animate={{ opacity: 1, x: 0 }}
+            transition={{ duration: 0.3, delay: 0.18, ease: [0.16, 1, 0.3, 1] }}
+            className="rounded-[12px] p-5"
+            style={CARD_STYLE}
+          >
+            <h3
+              className="text-xs font-semibold uppercase tracking-[0.06em] mb-3"
+              style={{ color: 'var(--color-obs-text-muted)' }}
+            >
+              リード / 活動量
+            </h3>
+            <motion.div
+              initial="hidden"
+              animate="visible"
+              variants={{ visible: { transition: { staggerChildren: 0.04 } } }}
+            >
+              <ISFieldRow label="リード経由元" editable vertical>
+                <LeadSourceSelector
+                  value={contact.leadSource}
+                  onChange={v => setContact(c => ({ ...c, leadSource: v }))}
+                />
+              </ISFieldRow>
+
+              <ISFieldRow label="コール試行">
+                <div className="flex items-center gap-1.5 justify-end">
+                  <PhoneCall size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--color-obs-text)' }}>{contact.callAttempts}回</span>
+                </div>
+              </ISFieldRow>
+
+              <ISFieldRow label="メール回数">
+                <div className="flex items-center gap-1.5 justify-end">
+                  <Mail size={12} style={{ color: 'var(--color-obs-text-muted)' }} />
+                  <span className="text-sm font-medium" style={{ color: 'var(--color-obs-text)' }}>{contact.mailCount}回</span>
+                </div>
+              </ISFieldRow>
+            </motion.div>
+
+            {/* メモ */}
+            <div
+              className="mt-4 pt-3"
+              style={{ boxShadow: 'inset 0 1px 0 rgba(109,106,111,0.15)' }}
+            >
+              <label
+                className="text-[10px] font-semibold uppercase tracking-[0.04em] mb-1.5 flex items-center gap-1"
+                style={{ color: 'var(--color-obs-primary)' }}
+              >
+                メモ
+                <Pencil size={9} style={{ color: 'var(--color-obs-primary)', opacity: 0.7 }} />
+              </label>
+              <textarea
+                value={contact.statusMemo}
+                onChange={e => setContact(c => ({ ...c, statusMemo: e.target.value }))}
+                placeholder="活動状況に関するメモを入力..."
                 rows={3}
                 className="w-full px-3 py-2 text-[12px] outline-none rounded-[8px] resize-none transition-all"
                 style={{ ...nestedInputStyle, color: 'var(--color-obs-text)' }}

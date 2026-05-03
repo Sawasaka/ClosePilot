@@ -15,10 +15,6 @@ import {
   Zap,
   Radio,
   HelpCircle,
-  Mail,
-  FileText,
-  Globe,
-  Check,
 } from 'lucide-react'
 import {
   ObsButton,
@@ -38,42 +34,9 @@ type DealStage =
   | 'PROJECT_PLANNED' | 'MULTI_MEETING' | 'POC'
   | 'LOST_DEAL' | 'CLOSED_WON' | 'CHURN' | 'LOST'
 
-type Signal = 'Hot' | 'Middle' | 'Low'
+import { SignalBadge, type Signal } from '@/components/crm/SignalBadge'
+
 type ChipTone = 'neutral' | 'hot' | 'middle' | 'low' | 'primary'
-
-// シグナル：自社1stパーティーデータ（サイト訪問・資料DL・メール開封等）から算出
-function signalToTone(s: Signal): ChipTone {
-  if (s === 'Hot') return 'hot'
-  if (s === 'Middle') return 'middle'
-  return 'low'
-}
-function signalLabel(s: Signal): string {
-  if (s === 'Hot') return '強'
-  if (s === 'Middle') return '中'
-  return '弱'
-}
-function signalIcon(s: Signal) {
-  if (s === 'Hot') return Zap
-  if (s === 'Middle') return Activity
-  return Radio
-}
-// 1stパーティ シグナル：3チャネル（メール開封・資料DL・サイト訪問）の有無を直近7日で集計
-// - 強：3つすべて
-// - 中：2つ揃う or 「資料DL」「サイト訪問」のいずれか単独
-// - 弱：メール開封のみ
-type SignalChannel = 'email' | 'doc' | 'site'
-const SIGNAL_CHANNELS: { key: SignalChannel; label: string; Icon: typeof Mail }[] = [
-  { key: 'email', label: 'メール開封', Icon: Mail },
-  { key: 'doc',   label: '資料DL',     Icon: FileText },
-  { key: 'site',  label: 'サイト訪問', Icon: Globe },
-]
-
-// 各シグナル段階のサンプル充足パターン（実装時はGA4/MA/サイトログ等から取得）
-const SIGNAL_HITS: Record<Signal, Record<SignalChannel, boolean>> = {
-  Hot:    { email: true,  doc: true,  site: true },   // 3つすべて
-  Middle: { email: true,  doc: false, site: true },   // 2つ揃う（メール+サイト）
-  Low:    { email: true,  doc: false, site: false },  // メールのみ
-}
 
 // 取引詳細(deals/[id])のタスク種別と完全に連動
 type NextActionType = 'call' | 'email' | 'meeting' | 'proposal' | 'followup' | 'other' | null
@@ -110,22 +73,6 @@ const MOCK_DEALS: Deal[] = [
   { id: 'd8', name: '株式会社テクノリード - 新規',     company: '株式会社テクノリード', contact: '田中 誠',   owner: '田中太郎', rank: 'A', stage: 'IS',              signal: 'Middle', amount: 1200000, probability: 20, expectedCloseAt: '2026-05-15', updatedAt: '2026-03-23', nextAction: 'call', taskDueAt: null },
 ]
 
-// ─── Next Action Config ─────────────────────────────────────────────────────────
-
-interface NextActionConfig {
-  label: string
-  tone: ChipTone
-}
-
-const NEXT_ACTION_CONFIG: Record<Exclude<NextActionType, null>, NextActionConfig> = {
-  call:     { label: 'コール',     tone: 'low' },       // 青系 → low
-  email:    { label: 'メール',     tone: 'primary' },   // 紫/青系 → primary
-  meeting:  { label: '商談',       tone: 'low' },       // 緑系 → neutral系、Obsidian準拠でlow
-  proposal: { label: '提案書送付', tone: 'middle' },    // 黄系 → middle
-  followup: { label: 'フォロー',   tone: 'primary' },   // ピンク→primary代替
-  other:    { label: 'その他',     tone: 'neutral' },
-}
-
 // ─── Stage Config ───────────────────────────────────────────────────────────────
 
 interface StageConfig {
@@ -140,7 +87,7 @@ const STAGE_CONFIG: Record<DealStage, StageConfig> = {
   MEETING_DONE:    { label: '商談済み',        tone: 'primary' },
   PROJECT_PLANNED: { label: 'PJ化予定あり',    tone: 'primary' },
   MULTI_MEETING:   { label: '複数商談済み',    tone: 'primary' },
-  POC:             { label: 'POC実施中',       tone: 'primary' },
+  POC:             { label: 'POC',             tone: 'primary' },
   LOST_DEAL:       { label: '失注',           tone: 'hot' },
   CLOSED_WON:      { label: '受注',           tone: 'low' },
   CHURN:           { label: 'チャーン',       tone: 'hot' },
@@ -332,7 +279,7 @@ export default function DealsPage() {
         <ObsCard depth="low" padding="none" radius="xl">
           {/* Header */}
           <div
-            className="grid grid-cols-[300px_90px_1fr_140px_140px_120px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
+            className="grid grid-cols-[300px_90px_1fr_140px_140px] gap-x-3 px-5 py-3 text-[11px] font-medium tracking-[0.08em] uppercase"
             style={{ color: 'var(--color-obs-text-subtle)' }}
           >
             {[
@@ -341,7 +288,6 @@ export default function DealsPage() {
               { label: '',               key: null,                    sortable: false, signal: false },
               { label: '担当者',         key: null,                    sortable: false, signal: false },
               { label: 'ステージ',       key: 'stage' as SortKey,      sortable: true,  signal: false },
-              { label: 'ネクストアクション', key: null,                  sortable: false, signal: false },
             ].map((col, i) => (
               <div
                 key={i}
@@ -398,7 +344,7 @@ export default function DealsPage() {
                       visible: { opacity: 1, y: 0, transition: { duration: 0.25, ease: [0.16, 1, 0.3, 1] } },
                     }}
                     onClick={() => router.push(`/deals/${deal.id}`)}
-                    className="grid grid-cols-[300px_90px_1fr_140px_140px_120px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer"
+                    className="grid grid-cols-[300px_90px_1fr_140px_140px] gap-x-3 items-center px-5 py-3.5 transition-colors duration-150 group cursor-pointer"
                     style={{
                       transitionTimingFunction: 'var(--ease-liquid)',
                       boxShadow: 'inset 0 -1px 0 0 var(--color-obs-surface)',
@@ -452,17 +398,6 @@ export default function DealsPage() {
                       <ObsChip tone={stage.tone}>
                         {stage.label}
                       </ObsChip>
-                    </div>
-
-                    {/* ネクストアクション */}
-                    <div>
-                      {deal.nextAction ? (
-                        <ObsChip tone={NEXT_ACTION_CONFIG[deal.nextAction].tone}>
-                          {NEXT_ACTION_CONFIG[deal.nextAction].label}
-                        </ObsChip>
-                      ) : (
-                        <span className="text-[11px]" style={{ color: 'var(--color-obs-text-subtle)' }}>—</span>
-                      )}
                     </div>
                   </motion.div>
                 )
@@ -682,96 +617,3 @@ function SignalHeader({ label }: { label: string }) {
   )
 }
 
-// ─── Signal Badge（1stパーティーデータ） ─────────────────────────────────────
-// シグナルバッジ：3チャネルの充足チェックリストをホバーで表示
-function SignalBadge({ signal }: { signal: Signal }) {
-  const [hover, setHover] = useState(false)
-  const Icon = signalIcon(signal)
-  const tone = signalToTone(signal)
-  const label = signalLabel(signal)
-  const hits = SIGNAL_HITS[signal]
-  const hitCount = (Object.values(hits) as boolean[]).filter(Boolean).length
-
-  // tone → 色マッピング
-  const colorMap: Record<ChipTone, { fg: string; bg: string; ring: string }> = {
-    hot:     { fg: 'var(--color-obs-hot)',     bg: 'rgba(255,107,107,0.14)', ring: 'rgba(255,107,107,0.32)' },
-    middle:  { fg: 'var(--color-obs-middle)',  bg: 'rgba(255,184,107,0.14)', ring: 'rgba(255,184,107,0.32)' },
-    low:     { fg: 'var(--color-obs-low)',     bg: 'rgba(126,198,255,0.14)', ring: 'rgba(126,198,255,0.32)' },
-    primary: { fg: 'var(--color-obs-primary)', bg: 'rgba(171,199,255,0.14)', ring: 'rgba(171,199,255,0.32)' },
-    neutral: { fg: 'var(--color-obs-text-muted)', bg: 'rgba(143,140,144,0.14)', ring: 'rgba(143,140,144,0.32)' },
-  }
-  const c = colorMap[tone]
-
-  return (
-    <div
-      className="relative inline-block"
-      onMouseEnter={() => setHover(true)}
-      onMouseLeave={() => setHover(false)}
-    >
-      <span
-        className="inline-flex items-center gap-1 h-6 px-2 rounded-full text-[11px] font-semibold cursor-help"
-        style={{ backgroundColor: c.bg, color: c.fg, boxShadow: `inset 0 0 0 1px ${c.ring}` }}
-      >
-        <Icon size={11} strokeWidth={2.4} />
-        {label}
-      </span>
-
-      {hover && (
-        <div
-          className="absolute left-0 top-full mt-1.5 z-30 w-[240px] rounded-[var(--radius-obs-md)] overflow-hidden animate-[fadeIn_0.18s_ease-out]"
-          style={{
-            backgroundColor: 'var(--color-obs-surface-highest)',
-            boxShadow: '0 12px 40px rgba(0,0,0,0.5), inset 0 0 0 1px rgba(65,71,83,0.4)',
-          }}
-        >
-          <div
-            className="px-3 py-2 flex items-center justify-between"
-            style={{ backgroundColor: 'var(--color-obs-surface-low)' }}
-          >
-            <span className="inline-flex items-center gap-1.5 text-[10.5px] font-bold tracking-[0.1em] uppercase" style={{ color: c.fg }}>
-              <Icon size={11} strokeWidth={2.4} />
-              シグナル {label}
-            </span>
-            <span className="text-[10.5px] tabular-nums font-medium" style={{ color: 'var(--color-obs-text-subtle)' }}>
-              {hitCount} / 3
-            </span>
-          </div>
-          <div className="px-3 py-2 space-y-1.5">
-            {SIGNAL_CHANNELS.map((ch) => {
-              const ok = hits[ch.key]
-              const ChIcon = ch.Icon
-              return (
-                <div key={ch.key} className="flex items-center justify-between text-[11.5px]">
-                  <span
-                    className="inline-flex items-center gap-1.5"
-                    style={{ color: ok ? 'var(--color-obs-text)' : 'var(--color-obs-text-subtle)' }}
-                  >
-                    <ChIcon size={11} strokeWidth={2.2} />
-                    {ch.label}
-                  </span>
-                  {ok ? (
-                    <Check size={12} strokeWidth={3} style={{ color: '#6ee7a1' }} />
-                  ) : (
-                    <span className="text-[10.5px]" style={{ color: 'var(--color-obs-text-subtle)' }}>—</span>
-                  )}
-                </div>
-              )
-            })}
-          </div>
-          <div
-            className="px-3 py-1.5 text-[10px]"
-            style={{
-              color: 'var(--color-obs-text-subtle)',
-              backgroundColor: 'var(--color-obs-surface-low)',
-            }}
-          >
-            <span className="inline-flex items-center gap-1">
-              <Activity size={9} />
-              過去7日 / 1stパーティーデータ
-            </span>
-          </div>
-        </div>
-      )}
-    </div>
-  )
-}

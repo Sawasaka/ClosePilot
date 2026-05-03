@@ -8,6 +8,7 @@ import {
   ExternalLink,
   FileText,
   Mail,
+  Phone,
   Video,
 } from 'lucide-react'
 
@@ -65,7 +66,7 @@ export function GoogleTimeline({
   const [data, setData] = useState<TimelineData | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [filter, setFilter] = useState<'all' | 'email' | 'meeting' | 'transcript'>('all')
+  const [filter, setFilter] = useState<'all' | 'call' | 'email' | 'meeting' | 'transcript'>('all')
 
   useEffect(() => {
     let cancelled = false
@@ -93,6 +94,12 @@ export function GoogleTimeline({
     <div className="flex flex-col gap-3">
       <div className="flex items-center gap-2">
         <FilterChip label="すべて" active={filter === 'all'} onClick={() => setFilter('all')} />
+        <FilterChip
+          label="コール"
+          active={filter === 'call'}
+          onClick={() => setFilter('call')}
+          icon={<Phone size={11} />}
+        />
         <FilterChip
           label="メール"
           active={filter === 'email'}
@@ -374,7 +381,7 @@ type MergedItem =
 
 function mergeAndSort(
   data: TimelineData | null,
-  filter: 'all' | 'email' | 'meeting' | 'transcript',
+  filter: 'all' | 'call' | 'email' | 'meeting' | 'transcript',
 ): MergedItem[] {
   if (!data) return []
   const out: MergedItem[] = []
@@ -388,9 +395,16 @@ function mergeAndSort(
       out.push({ kind: 'meeting', id: m.id, at: new Date(m.startsAt).getTime(), data: m })
     }
   }
-  if ((filter === 'all' || filter === 'transcript') && data.transcripts) {
+  if (data.transcripts) {
     for (const t of data.transcripts) {
-      out.push({ kind: 'transcript', id: t.id, at: new Date(t.createdAt).getTime(), data: t })
+      // コール: type === 'CALL'、議事録: type === 'MEETING'
+      if (filter === 'all') {
+        out.push({ kind: 'transcript', id: t.id, at: new Date(t.createdAt).getTime(), data: t })
+      } else if (filter === 'call' && t.type === 'CALL') {
+        out.push({ kind: 'transcript', id: t.id, at: new Date(t.createdAt).getTime(), data: t })
+      } else if (filter === 'transcript' && t.type === 'MEETING') {
+        out.push({ kind: 'transcript', id: t.id, at: new Date(t.createdAt).getTime(), data: t })
+      }
     }
   }
   out.sort((a, b) => b.at - a.at)
